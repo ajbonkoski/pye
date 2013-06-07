@@ -1,0 +1,17 @@
+include ../common.mk
+
+CFLAGS  = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_SCREEN)
+LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON) $(LDFLAGS_SCREEN)
+LIB_DEP = $(LIB_COMMON) $(LIB_SCREEN)
+
+CORE_OBJS = main.o
+CORE_BIN=$(BIN_PATH)/pye
+
+ALL=$(CORE_BIN)
+all: $(ALL)
+
+$(CORE_BIN): $(CORE_OBJS) $(LIB_DEP)
+	$(CC) -o $@ $(CORE_OBJS) $(LDFLAGS)
+
+clean:
+	rm -f *.o $(ALL)
