@@ -101,7 +101,8 @@ static void destroy(screen_t *scrn)
 {
     screen_terminal_t *this = cast_this(scrn);
 
-    // TODO: close the terminal
+    if(!ttclose())
+        ERROR("Failed to properly close terminal\n");
 
     free(this);
     free(scrn);
