@@ -16,8 +16,10 @@ struct screen
     void (*set_cursor)(screen_t *this, uint x, uint y);
     void (*get_cursor)(screen_t *this, uint *x, uint *y);
     void (*write)(screen_t *this, const char *s, size_t num);
+    void (*destroy)(screen_t *this);
 };
 
+screen_t *screen_create_by_name(const char *name);
 
 #ifdef __cplusplus
 }

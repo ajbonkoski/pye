@@ -94,6 +94,16 @@ static void write(screen_t *scrn, const char *s, size_t num)
     ASSERT_UNIMPL();
 }
 
+static void destroy(screen_t *scrn)
+{
+    screen_terminal_t *this = cast_this(scrn);
+
+    // TODO: close the terminal
+
+    free(this);
+    free(scrn);
+}
+
 static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
 {
     screen_terminal_t *this = calloc(1, sizeof(screen_terminal_t));
@@ -114,6 +124,7 @@ screen_t *screen_terminal_create(void)
     s->set_cursor = set_cursor;
     s->get_cursor = get_cursor;
     s->write = write;
+    s->destroy = destroy;
 
     return s;
 }
