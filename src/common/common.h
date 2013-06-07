@@ -18,6 +18,7 @@ extern "C" {
 
 // better assert()
 #define ASSERT(cond, msg) assert((cond) && msg)
+#define ASSERT_FAIL(msg) assert(0 && msg)
 #define ASSERT_UNIMPL() assert(0 && "Unimplemented");
 
 // define booleans
