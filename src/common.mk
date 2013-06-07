@@ -49,12 +49,14 @@ endif
 ############################################################
 
 # common library
+LIB_COMMON     := $(LIB_PATH)/libcommon.a
 CFLAGS_COMMON  := -I$(SRC_PATH)
-LDFLAGS_COMMON := $(LIB_PATH)/libcommon.a
+LDFLAGS_COMMON := $(LIB_COMMON)
 
 # screen library
-CFLAGS_SCREEN   :=
-LDFLAGS_SCREEEN := $(LIB_PATH)/libscreen.a
+LIB_SCREEN      := $(LIB_PATH)/libscreen.a
+CFLAGS_SCREEN   := -I$(SRC_PATH)
+LDFLAGS_SCREEN  := $(LIB_SCREEN) -ltermcap
 
 %.o: %.c %.h
 	@echo "    [$@]"
