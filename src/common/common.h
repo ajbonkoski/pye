@@ -24,8 +24,8 @@ extern "C" {
 // define booleans
 #ifndef __cplusplus
 typedef enum {
-    true = 0,
-    false = 1
+    false = 0,
+    true = 1
 } bool;
 #endif
 
