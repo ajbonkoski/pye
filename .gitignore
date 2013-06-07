@@ -1,0 +1,6 @@
+## ignore temp files
+\#*#
+*~
+
+## ignore binaries
+*.o
