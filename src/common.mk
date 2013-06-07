@@ -52,6 +52,10 @@ endif
 CFLAGS_COMMON  := -I$(SRC_PATH)
 LDFLAGS_COMMON := $(LIB_PATH)/libcommon.a
 
+# screen library
+CFLAGS_SCREEN   :=
+LDFLAGS_SCREEEN := $(LIB_PATH)/libscreen.a
+
 %.o: %.c %.h
 	@echo "    [$@]"
 	$(CC) $(CFLAGS) -c $<
