@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+uint64_t timeutil_utime(void);
 inline int32_t  timeutil_usleep(__useconds_t us) { return usleep(us);      }
 inline uint32_t timeutil_msleep(__useconds_t ms) { return usleep(ms*1000); }
 inline uint32_t timeutil_sleep(unsigned int s)   { return sleep(s);        }
