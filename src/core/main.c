@@ -7,17 +7,24 @@
 
 #define RUNTIME 5*1000*1000
 
-void key_pressed(void *usr, key_event_t *e)
+void key_pressed1(void *usr, key_event_t *e)
 {
     FILE *fh = (FILE *)usr;
     putc(e->key_code, fh);
+}
+
+void key_pressed2(void *usr, key_event_t *e)
+{
+    fprintf(stderr, "%c", e->key_code);
 }
 
 int main(int argc, char *argv[])
 {
     screen_t *scrn = screen_create_by_name("terminal");
     FILE *fh = fopen("out", "w");
-    scrn->register_kbrd_callback(scrn, key_pressed, fh);
+
+    scrn->register_kbrd_callback(scrn, key_pressed1, fh);
+    scrn->register_kbrd_callback(scrn, key_pressed2, fh);
 
     scrn->main_loop(scrn);
 

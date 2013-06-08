@@ -6,6 +6,7 @@
 #include <term.h>
 
 #include "common/timeutil.h"
+#include "common/varray.h"
 #include "termio.h"
 #include "screen_terminal.h"
 
@@ -27,9 +28,8 @@ typedef struct
     bool eolexist;               /* does clear to EOL exist */
     bool open;
 
-    // key event callback data
-    key_event_func_t key_callback;
-    void *key_usr;
+    // key event delegates data
+    varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
 
 } screen_terminal_t;
 screen_terminal_t *cast_this(screen_t *s)
@@ -37,6 +37,13 @@ screen_terminal_t *cast_this(screen_t *s)
     ASSERT(s->impl_type == IMPL_TYPE, "expected a screen_terminal object");
     return (screen_terminal_t *)s->impl;
 }
+
+typedef struct
+{
+    key_event_func_t key_callback;
+    void *key_usr;
+
+} key_event_delegate_t;
 
 static bool tcapopen(screen_terminal_t *this)
 {
@@ -99,8 +106,19 @@ static void get_cursor(screen_t *scrn, uint *x, uint *y)
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
 {
     screen_terminal_t *this = cast_this(scrn);
-    this->key_callback = f;
-    this->key_usr = usr;
+    key_event_delegate_t *k = calloc(1, sizeof(key_event_delegate_t));
+    k->key_callback = f;
+    k->key_usr = usr;
+    varray_add(this->key_delegates, k);
+}
+
+
+static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e)
+{
+    key_event_delegate_t *d;
+    varray_iter(d, this->key_delegates) {
+        d->key_callback(d->key_usr, e);
+    }
 }
 
 // limit the runtime for testing because we don't
@@ -121,9 +139,7 @@ static void main_loop(screen_t *scrn)
         key_event_t ke;
         memset(&ke, 0, sizeof(key_event_t));
         ke.key_code = (u32)c;
-
-        if(this->key_callback != NULL)
-            this->key_callback(this->key_usr, &ke);
+        trigger_key_callbacks(this, &ke);
     }
 
 }
@@ -141,6 +157,8 @@ static void destroy(screen_t *scrn)
     if(!ttclose())
         ERROR("Failed to properly close terminal\n");
 
+    varray_map(this->key_delegates, free);
+    varray_destroy(this->key_delegates);
     free(this);
     free(scrn);
 }
@@ -149,6 +167,7 @@ static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
 {
     screen_terminal_t *this = calloc(1, sizeof(screen_terminal_t));
     this->super = s;
+    this->key_delegates = varray_create();
 
     // open the terminal screen
     if(!tcapopen(this))
