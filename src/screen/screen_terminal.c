@@ -5,6 +5,7 @@
 
 #include <term.h>
 
+#include "common/timeutil.h"
 #include "termio.h"
 #include "screen_terminal.h"
 
@@ -25,6 +26,10 @@ typedef struct
     bool revexist;
     bool eolexist;               /* does clear to EOL exist */
     bool open;
+
+    // key event callback data
+    key_event_func_t key_callback;
+    void *key_usr;
 
 } screen_terminal_t;
 screen_terminal_t *cast_this(screen_t *s)
@@ -91,7 +96,39 @@ static void get_cursor(screen_t *scrn, uint *x, uint *y)
     ASSERT_UNIMPL();
 }
 
-static void write(screen_t *scrn, const char *s, size_t num)
+static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
+{
+    screen_terminal_t *this = cast_this(scrn);
+    this->key_callback = f;
+    this->key_usr = usr;
+}
+
+// limit the runtime for testing because we don't
+// have proper exiting currently
+#define RUNTIME 5*1000*1000
+static void main_loop(screen_t *scrn)
+{
+    screen_terminal_t *this = cast_this(scrn);
+
+    u64 start_utime = timeutil_utime();
+    while(true) {
+        u64 utime = timeutil_utime();
+        u64 diff = utime - start_utime;
+        if(diff >= RUNTIME)
+            break;
+
+        int c = ttgetc();
+        key_event_t ke;
+        memset(&ke, 0, sizeof(key_event_t));
+        ke.key_code = (u32)c;
+
+        if(this->key_callback != NULL)
+            this->key_callback(this->key_usr, &ke);
+    }
+
+}
+
+static void _write(screen_t *scrn, const char *s, size_t num)
 {
     //screen_terminal_t *this = cast_this(scrn);
     ASSERT_UNIMPL();
@@ -127,7 +164,9 @@ screen_t *screen_terminal_create(void)
     s->impl_type = IMPL_TYPE;
     s->set_cursor = set_cursor;
     s->get_cursor = get_cursor;
-    s->write = write;
+    s->register_kbrd_callback = register_kbrd_callback;
+    s->main_loop = main_loop;
+    s->write = _write;
     s->destroy = destroy;
 
     return s;
