@@ -5,3 +5,6 @@
 
 ## ignore binaries
 *.o
+
+## directories to ignore
+stats/
