@@ -50,6 +50,14 @@ bool varray_iter_next(varray_t *this, int *it, void **val)
     return true;
 }
 
+void varray_map(varray_t *this, void (*f)(void *))
+{
+    void *obj;
+    varray_iter(obj, this) {
+        f(this);
+    }
+}
+
 void varray_destroy(varray_t *this)
 {
     if(this->data != NULL)

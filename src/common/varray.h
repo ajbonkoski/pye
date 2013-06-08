@@ -14,6 +14,7 @@ void  varray_add(varray_t *this, void *obj);
 void *varray_get(varray_t *this, uint i);
 uint  varray_size(varray_t *this);
 bool  varray_iter_next(varray_t *this, int *it, void **val);
+void  varray_map(varray_t *this, void (*f)(void *));
 void  varray_destroy(varray_t *this);
 
 // helper macros
