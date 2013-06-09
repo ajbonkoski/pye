@@ -17,6 +17,17 @@ bool key_pressed(void *usr, key_event_t *e)
     if(c == 'g')
         scrn->set_cursor(scrn, 0, 0);
 
+    if(c == 's') {
+        uint w, h;
+        scrn->get_size(scrn, &w, &h);
+        sprintf(buffer, "|w=%d h=%d|", w, h);
+        scrn->write(scrn, buffer, strlen(buffer));
+    }
+
+    if(c == 'c') {
+        scrn->clear(scrn);
+    }
+
     return true;
 }
 

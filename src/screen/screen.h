@@ -27,6 +27,7 @@ struct screen
     void (*clear)(screen_t *this);
     void (*set_cursor)(screen_t *this, uint x, uint y);
     void (*get_cursor)(screen_t *this, uint *x, uint *y);
+    void (*get_size)(screen_t *this, uint *w, uint *h);
     void (*register_kbrd_callback)(screen_t *this, key_event_func_t f, void *usr);
     void (*write)(screen_t *this, const char *s, size_t num);
     void (*main_loop)(screen_t *this);

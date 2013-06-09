@@ -1,14 +1,11 @@
+#include "screen_terminal.h"
 
-//#include <sys/ioctl.h>
-//#include <termios.h>
-//#include <unistd.h>
-
+#include <sys/ioctl.h>
 #include <term.h>
 
 #include "common/timeutil.h"
 #include "common/varray.h"
 #include "termio.h"
-#include "screen_terminal.h"
 
 #define IMPL_TYPE 0xb62ccfb6
 
@@ -110,6 +107,14 @@ static void get_cursor(screen_t *scrn, uint *x, uint *y)
     ASSERT_UNIMPL();
 }
 
+static void get_size(screen_t *this, uint *w, uint *h)
+{
+    struct winsize ws;
+    ioctl (0, TIOCGWINSZ, &ws);
+    *w = ws.ws_col;
+    *h = ws.ws_row;
+}
+
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
 {
     screen_terminal_t *this = cast_this(scrn);
@@ -157,7 +162,10 @@ static void main_quit(screen_t *scrn)
 static void _write(screen_t *scrn, const char *s, size_t num)
 {
     //screen_terminal_t *this = cast_this(scrn);
-    ASSERT_UNIMPL();
+    for(size_t i = 0; i < num; i++)
+        ttputc((int)s[i]);
+
+    ttflush();
 }
 
 static void destroy(screen_t *scrn)
@@ -198,6 +206,7 @@ screen_t *screen_terminal_create(void)
     s->clear = clear;
     s->set_cursor = set_cursor;
     s->get_cursor = get_cursor;
+    s->get_size = get_size;
     s->register_kbrd_callback = register_kbrd_callback;
     s->main_loop = main_loop;
     s->main_quit = main_quit;
