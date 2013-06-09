@@ -16,8 +16,6 @@
    (pEmacs: https://github.com/hughbarney/pEmacs on 6/7/2013) */
 
 #define TCAPSLEN 64
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -92,6 +90,12 @@ static bool tcapopen(screen_terminal_t *this)
     this->open = ttopen();
     DEBUG("Terminal Opening: %s", this->open ? "SUCCESS" : "FAILURE");
     return this->open;
+}
+
+static void clear(screen_t *scrn)
+{
+    //screen_terminal_t *this = cast_this(scrn);
+    ASSERT_UNIMPL();
 }
 
 static void set_cursor(screen_t *scrn, uint x, uint y)
@@ -191,6 +195,7 @@ screen_t *screen_terminal_create(void)
     screen_t *s = calloc(1, sizeof(screen_t));
     s->impl = screen_terminal_create_internal(s);
     s->impl_type = IMPL_TYPE;
+    s->clear = clear;
     s->set_cursor = set_cursor;
     s->get_cursor = get_cursor;
     s->register_kbrd_callback = register_kbrd_callback;

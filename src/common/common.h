@@ -12,16 +12,6 @@
 extern "C" {
 #endif
 
-// define debugging and error macros
-#define ENABLE_DEBUG 0
-#define DEBUG(...) do { if(ENABLE_DEBUG) fprintf(stderr, __VA_ARGS__); } while(0)
-#define ERROR(...) fprintf(stderr, __VA_ARGS__)
-
-// better assert()
-#define ASSERT(cond, msg) assert((cond) && msg)
-#define ASSERT_FAIL(msg) assert(0 && msg)
-#define ASSERT_UNIMPL() assert(0 && "Unimplemented");
-
 // define booleans
 #ifndef __cplusplus
 typedef enum {
@@ -39,6 +29,18 @@ typedef int32_t   i32;
 typedef uint32_t  u32;
 typedef int64_t   i64;
 typedef uint64_t  u64;
+
+// define debugging and error macros
+#define ENABLE_DEBUG 0
+#define DEBUG(...) do { if(ENABLE_DEBUG) fprintf(stderr, __VA_ARGS__); } while(0)
+#define ERROR(...) fprintf(stderr, __VA_ARGS__)
+
+// better assert()
+void set_crash_func(void (*shutdown_func)(void *usr), void *usr);
+bool do_crash();
+#define ASSERT(cond, msg) assert(((cond) && msg) || do_crash())
+#define ASSERT_FAIL(msg) assert((0 && msg) || do_crash())
+#define ASSERT_UNIMPL() assert((0 && "Unimplemented") || do_crash());
 
 #ifdef __cplusplus
 }
