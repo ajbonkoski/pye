@@ -54,7 +54,7 @@ void varray_map(varray_t *this, void (*f)(void *))
 {
     void *obj;
     varray_iter(obj, this) {
-        f(this);
+        f(obj);
     }
 }
 

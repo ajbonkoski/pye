@@ -22,6 +22,9 @@
 typedef struct
 {
     screen_t *super;
+    bool good;
+    bool running;
+
     char *CM, *CE, *CL, *SO, *SE;
     char tcapbuf[TCAPSLEN];     /* capabilities actually used */
     bool revexist;
@@ -127,9 +130,10 @@ static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e)
 static void main_loop(screen_t *scrn)
 {
     screen_terminal_t *this = cast_this(scrn);
+    this->running = true;
 
     u64 start_utime = timeutil_utime();
-    while(true) {
+    while(this->good && this->running) {
         u64 utime = timeutil_utime();
         u64 diff = utime - start_utime;
         if(diff >= RUNTIME)
@@ -142,6 +146,16 @@ static void main_loop(screen_t *scrn)
         trigger_key_callbacks(this, &ke);
     }
 
+    if(!this->good) {
+        ERROR("Exiting mainloop due to errors\n");
+        return;
+    }
+}
+
+static void main_quit(screen_t *scrn)
+{
+    screen_terminal_t *this = cast_this(scrn);
+    this->running = false;
 }
 
 static void _write(screen_t *scrn, const char *s, size_t num)
@@ -167,11 +181,15 @@ static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
 {
     screen_terminal_t *this = calloc(1, sizeof(screen_terminal_t));
     this->super = s;
+    this->good = true;
+    this->running = false;
     this->key_delegates = varray_create();
 
     // open the terminal screen
-    if(!tcapopen(this))
+    if(!tcapopen(this)) {
         ERROR("Failed to open terminal screen\n");
+        this->good = false;
+    }
 
     return this;
 }
@@ -185,6 +203,7 @@ screen_t *screen_terminal_create(void)
     s->get_cursor = get_cursor;
     s->register_kbrd_callback = register_kbrd_callback;
     s->main_loop = main_loop;
+    s->main_quit = main_quit;
     s->write = _write;
     s->destroy = destroy;
 

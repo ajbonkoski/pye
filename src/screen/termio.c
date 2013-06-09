@@ -26,6 +26,7 @@ bool ttopen()
         ERROR("Can't read terminal capabilites\n");
         return false;
     }
+
     cfmakeraw(&nstate);		/* set raw mode */
     nstate.c_cc[VMIN] = 1;
     nstate.c_cc[VTIME] = 0;	/* block indefinitely for a single char */
