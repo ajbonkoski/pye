@@ -15,7 +15,8 @@ typedef struct
 
 } key_event_t;
 
-typedef void (*key_event_func_t)(void *usr, key_event_t *e);
+// true means "handled", false means "not handled"
+typedef bool (*key_event_func_t)(void *usr, key_event_t *e);
 
 typedef struct screen screen_t;
 struct screen

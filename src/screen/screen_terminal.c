@@ -120,25 +120,17 @@ static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e)
 {
     key_event_delegate_t *d;
     varray_iter(d, this->key_delegates) {
-        d->key_callback(d->key_usr, e);
+        if(d->key_callback(d->key_usr, e))
+            break;
     }
 }
 
-// limit the runtime for testing because we don't
-// have proper exiting currently
-#define RUNTIME 5*1000*1000
 static void main_loop(screen_t *scrn)
 {
     screen_terminal_t *this = cast_this(scrn);
     this->running = true;
 
-    u64 start_utime = timeutil_utime();
     while(this->good && this->running) {
-        u64 utime = timeutil_utime();
-        u64 diff = utime - start_utime;
-        if(diff >= RUNTIME)
-            break;
-
         int c = ttgetc();
         key_event_t ke;
         memset(&ke, 0, sizeof(key_event_t));
