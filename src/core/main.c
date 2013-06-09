@@ -11,36 +11,39 @@ bool key_pressed(void *usr, key_event_t *e)
 
     char c = e->key_code;
     char buffer[256];
-    sprintf(buffer, "%c(%d) ", c, c);
-    scrn->write(scrn, buffer, strlen(buffer));
 
     if(c == 'g')
         scrn->set_cursor(scrn, 0, 0);
 
-    if(c == 's') {
+    else if(c == 's') {
         uint w, h;
         scrn->get_size(scrn, &w, &h);
         sprintf(buffer, "|w=%d h=%d|", w, h);
         scrn->write(scrn, buffer, strlen(buffer));
     }
 
-    if(c == 'c') {
+    else if(c == 'c') {
         scrn->clear(scrn);
+    }
+
+    else if(c == 'l') {
+        uint x, y;
+        scrn->get_cursor(scrn, &x, &y);
+        sprintf(buffer, "|x=%d y=%d|", x, y);
+        scrn->write(scrn, buffer, strlen(buffer));
+    }
+
+    else {
+        sprintf(buffer, "%c(%d) ", c, c);
+        scrn->write(scrn, buffer, strlen(buffer));
     }
 
     return true;
 }
 
-void shutdown_func(void *usr)
-{
-    screen_t *this = (screen_t *)usr;
-    this->destroy(this);
-}
-
 int main(int argc, char *argv[])
 {
     screen_t *scrn = screen_create_by_name("terminal");
-    set_crash_func(shutdown_func, scrn);
     scrn->register_kbrd_callback(scrn, key_pressed, scrn);
     scrn->main_loop(scrn);
     scrn->destroy(scrn);

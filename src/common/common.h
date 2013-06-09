@@ -36,7 +36,8 @@ typedef uint64_t  u64;
 #define ERROR(...) fprintf(stderr, __VA_ARGS__)
 
 // better assert()
-void set_crash_func(void (*shutdown_func)(void *usr), void *usr);
+typedef void (*crash_func_t)(void *);
+void set_crash_func(crash_func_t crash_func, void *usr);
 bool do_crash();
 #define ASSERT(cond, msg) assert(((cond) && msg) || do_crash())
 #define ASSERT_FAIL(msg) assert((0 && msg) || do_crash())

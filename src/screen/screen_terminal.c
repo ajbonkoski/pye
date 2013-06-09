@@ -13,6 +13,8 @@
    (pEmacs: https://github.com/hughbarney/pEmacs on 6/7/2013) */
 
 #define TCAPSLEN 64
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -25,6 +27,11 @@ typedef struct
     bool revexist;
     bool eolexist;               /* does clear to EOL exist */
     bool open;
+
+    uint width;
+    uint height;
+    uint x;
+    uint y;
 
     // key event delegates data
     varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
@@ -42,6 +49,21 @@ typedef struct
     void *key_usr;
 
 } key_event_delegate_t;
+
+// forward declarations
+static bool tcapopen(screen_terminal_t *this);
+static void clear(screen_t *scrn);
+static void get_size(screen_t *scrn, uint *w, uint *h);
+static void set_cursor(screen_t *scrn, uint x, uint y);
+static void get_cursor(screen_t *scrn, uint *x, uint *y);
+static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr);
+static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e);
+static void main_loop(screen_t *scrn);
+static void main_quit(screen_t *scrn);
+static void _write(screen_t *scrn, const char *s, size_t num);
+static void destroy(screen_t *scrn);
+static screen_terminal_t *screen_terminal_create_internal(screen_t *s);
+
 
 static bool tcapopen(screen_terminal_t *this)
 {
@@ -86,33 +108,43 @@ static bool tcapopen(screen_terminal_t *this)
 
     this->open = ttopen();
     DEBUG("Terminal Opening: %s", this->open ? "SUCCESS" : "FAILURE");
+
+    // set the crash_func()
+    set_crash_func((crash_func_t)destroy, this->super);
     return this->open;
 }
 
 static void clear(screen_t *scrn)
 {
-    //screen_terminal_t *this = cast_this(scrn);
-    ASSERT_UNIMPL();
+    uint w, h;
+    get_size(scrn, &w, &h);
+    set_cursor(scrn, 0, 0);
+    _write(scrn, NULL, w*h);
+    set_cursor(scrn, 0, 0);
 }
 
-static void set_cursor(screen_t *scrn, uint x, uint y)
-{
-    screen_terminal_t *this = cast_this(scrn);
-    tputs(tgoto(this->CM, x, y), 1, ttputc);
-}
-
-static void get_cursor(screen_t *scrn, uint *x, uint *y)
-{
-    //screen_terminal_t *this = cast_this(scrn);
-    ASSERT_UNIMPL();
-}
-
-static void get_size(screen_t *this, uint *w, uint *h)
+static void get_size(screen_t *scrn, uint *w, uint *h)
 {
     struct winsize ws;
     ioctl (0, TIOCGWINSZ, &ws);
     *w = ws.ws_col;
     *h = ws.ws_row;
+}
+
+static void set_cursor(screen_t *scrn, uint x, uint y)
+{
+    screen_terminal_t *this = cast_this(scrn);
+    ASSERT(this != NULL, "this should never happen");
+    tputs(tgoto(this->CM, x, y), 1, ttputc);
+    this->x = x;
+    this->y = y;
+}
+
+static void get_cursor(screen_t *scrn, uint *x, uint *y)
+{
+    screen_terminal_t *this = cast_this(scrn);
+    *x = this->x;
+    *y = this->y;
 }
 
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
@@ -159,11 +191,25 @@ static void main_quit(screen_t *scrn)
     this->running = false;
 }
 
+static void inc_cursor(screen_terminal_t *this, size_t count)
+{
+    this->x += count;
+    if(this->x > this->width) {
+        this->x -= this->width;
+        this->y++;
+    }
+}
+
 static void _write(screen_t *scrn, const char *s, size_t num)
 {
     //screen_terminal_t *this = cast_this(scrn);
-    for(size_t i = 0; i < num; i++)
-        ttputc((int)s[i]);
+    for(size_t i = 0; i < num; i++) {
+        if(s != NULL)
+            ttputc((int)s[i]);
+        else
+            ttputc((int)' ');
+        inc_cursor(cast_this(scrn), 1);
+    }
 
     ttflush();
 }
@@ -198,11 +244,21 @@ static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
     return this;
 }
 
+// stuff that can't/shouldn't be done during create()
+void internal_initialize(screen_t *scrn)
+{
+    screen_terminal_t *this = cast_this(scrn);
+
+    // do screen init (like cursor placement and clearing)
+    if(this->open == true) {
+        get_size(scrn, &this->width, &this->height);
+        clear(scrn);
+    }
+}
+
 screen_t *screen_terminal_create(void)
 {
     screen_t *s = calloc(1, sizeof(screen_t));
-    s->impl = screen_terminal_create_internal(s);
-    s->impl_type = IMPL_TYPE;
     s->clear = clear;
     s->set_cursor = set_cursor;
     s->get_cursor = get_cursor;
@@ -212,6 +268,11 @@ screen_t *screen_terminal_create(void)
     s->main_quit = main_quit;
     s->write = _write;
     s->destroy = destroy;
+
+    s->impl_type = IMPL_TYPE;
+    s->impl = screen_terminal_create_internal(s);
+
+    internal_initialize(s);
 
     return s;
 }

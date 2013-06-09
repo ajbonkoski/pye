@@ -1,16 +1,16 @@
 #include "common.h"
 
-static void (*shutdown_func)(void *usr);
+crash_func_t crash_func;
 static void *usr;
 
-void set_crash_func(void (*shutdown_func_)(void *usr), void *usr_)
+void set_crash_func(crash_func_t crash_func_, void *usr_)
 {
-    shutdown_func = shutdown_func_;
+    crash_func = crash_func_;
     usr = usr_;
 }
 
 bool do_crash()
 {
-    shutdown_func(usr);
+    crash_func(usr);
     return false;
 }
