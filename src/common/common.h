@@ -32,8 +32,13 @@ typedef uint64_t  u64;
 
 // define debugging and error macros
 #define ENABLE_DEBUG 0
-#define DEBUG(...) do { if(ENABLE_DEBUG) fprintf(stderr, __VA_ARGS__); } while(0)
-#define ERROR(...) fprintf(stderr, __VA_ARGS__)
+FILE *common_get_debug_file(void);
+#define DEBUG(...) do { if(ENABLE_DEBUG) { \
+    FILE *debug_file = common_get_debug_file(); \
+    fprintf(debug_file, __VA_ARGS__); } } while(0)
+#define ERROR(...) do { \
+    FILE *debug_file = common_get_debug_file(); \
+    fprintf(debug_file, __VA_ARGS__); } while(0)
 
 // better assert()
 typedef void (*crash_func_t)(void *);

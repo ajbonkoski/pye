@@ -5,6 +5,9 @@
 #include "screen/screen.h"
 #include "screen/termio.h"
 
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
 bool key_pressed(void *usr, key_event_t *e)
 {
     screen_t *scrn = (screen_t *)usr;
@@ -18,8 +21,8 @@ bool key_pressed(void *usr, key_event_t *e)
     else if(c == 's') {
         uint w, h;
         scrn->get_size(scrn, &w, &h);
-        sprintf(buffer, "|w=%d h=%d|", w, h);
-        scrn->write(scrn, buffer, strlen(buffer));
+        DEBUG("|w=%d h=%d|\n", w, h);
+        //scrn->write(scrn, buffer, strlen(buffer));
     }
 
     else if(c == 'c') {
@@ -29,8 +32,8 @@ bool key_pressed(void *usr, key_event_t *e)
     else if(c == 'l') {
         uint x, y;
         scrn->get_cursor(scrn, &x, &y);
-        sprintf(buffer, "|x=%d y=%d|", x, y);
-        scrn->write(scrn, buffer, strlen(buffer));
+        DEBUG("|x=%d y=%d|", x, y);
+        //scrn->write(scrn, buffer, strlen(buffer));
     }
 
     else {

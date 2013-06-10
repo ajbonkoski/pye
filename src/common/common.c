@@ -7,8 +7,10 @@
 static crash_func_t crash_func = NULL;
 static void *usr = NULL;
 static bool sigsegv_handler_init = false;
+static FILE *debug_file = NULL;
+#define DEBUG_FILENAME "debug.log"
 
-void sigsegv_handler(int signum)
+static void sigsegv_handler(int signum)
 {
     do_crash();
     signal(signum, SIG_DFL);
@@ -35,3 +37,14 @@ bool do_crash()
 
     return false;
 }
+
+FILE *common_get_debug_file(void)
+{
+    if(debug_file == NULL) {
+        debug_file = fopen(DEBUG_FILENAME, "w");
+        setbuf(debug_file, NULL); // disable buffering
+    }
+
+    return debug_file;
+}
+
