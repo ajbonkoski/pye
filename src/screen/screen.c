@@ -15,7 +15,7 @@ typedef struct
     void *curbuffer;
 
 } screen_internal_t;
-screen_internal_t *cast_this(screen_t *s)
+static screen_internal_t *cast_this(screen_t *s)
 {
     ASSERT(s->impl_type == IMPL_TYPE, "expected a screen_internal_t object");
     return (screen_internal_t *)s->impl;
@@ -65,7 +65,7 @@ static void write_mb(screen_t *scrn, const char *str)
     char *buf = malloc(this->disp_width * sizeof(char));
     bool at_end = false;
     for(int i = 0; i < this->disp_width; i++) {
-        if(str[i] == '\0')
+        if(str == NULL || str[i] == '\0')
             at_end = true;
         if(!at_end) {
             buf[i] = str[i];

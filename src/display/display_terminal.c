@@ -40,7 +40,7 @@ typedef struct
     varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
 
 } display_terminal_t;
-display_terminal_t *cast_this(display_t *d)
+static display_terminal_t *cast_this(display_t *d)
 {
     ASSERT(d->impl_type == IMPL_TYPE, "expected a display_terminal object");
     return (display_terminal_t *)d->impl;
