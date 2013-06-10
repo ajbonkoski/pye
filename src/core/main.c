@@ -2,42 +2,41 @@
 
 #include "common/common.h"
 #include "common/timeutil.h"
-#include "screen/screen.h"
-#include "screen/termio.h"
+#include "display/display.h"
 
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
 bool key_pressed(void *usr, key_event_t *e)
 {
-    screen_t *scrn = (screen_t *)usr;
+    display_t *disp = (display_t *)usr;
 
     char c = e->key_code;
     //char buffer[256];
 
     if(c == 'g')
-        scrn->set_cursor(scrn, 0, 0);
+        disp->set_cursor(disp, 0, 0);
 
     else if(c == 's') {
         uint w, h;
-        scrn->get_size(scrn, &w, &h);
+        disp->get_size(disp, &w, &h);
         DEBUG("|w=%d h=%d|\n", w, h);
-        //scrn->write(scrn, buffer, strlen(buffer));
+        //disp->write(disp, buffer, strlen(buffer));
     }
 
     else if(c == 'c') {
-        scrn->clear(scrn);
+        disp->clear(disp);
     }
 
     else if(c == 'l') {
         uint x, y;
-        scrn->get_cursor(scrn, &x, &y);
+        disp->get_cursor(disp, &x, &y);
         DEBUG("|x=%d y=%d|", x, y);
-        //scrn->write(scrn, buffer, strlen(buffer));
+        //disp->write(disp, buffer, strlen(buffer));
     }
 
     else {
-        scrn->write(scrn, &c, 1);
+        disp->write(disp, &c, 1);
     }
 
     return true;
@@ -45,9 +44,9 @@ bool key_pressed(void *usr, key_event_t *e)
 
 int main(int argc, char *argv[])
 {
-    screen_t *scrn = screen_create_by_name("terminal");
-    scrn->register_kbrd_callback(scrn, key_pressed, scrn);
-    scrn->main_loop(scrn);
-    scrn->destroy(scrn);
+    display_t *disp = display_create_by_name("terminal");
+    disp->register_kbrd_callback(disp, key_pressed, disp);
+    disp->main_loop(disp);
+    disp->destroy(disp);
     return 0;
 }

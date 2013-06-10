@@ -1,9 +1,9 @@
-#include "screen.h"
+#include "display.h"
 
 #include <string.h>
 #include <signal.h>
 
-#include "screen_terminal.h"
+#include "display_terminal.h"
 
 #define KEY_CTRL_C 3
 #define KEY_CTRL_Z 26
@@ -12,7 +12,7 @@
 // the standard event handler, to implement basic Unix interupt key commands
 static bool key_handler(void *usr, key_event_t *e)
 {
-    screen_t *this = (screen_t *)usr;
+    display_t *this = (display_t *)usr;
 
     switch(e->key_code) {
         case KEY_CTRL_C:
@@ -26,21 +26,21 @@ static bool key_handler(void *usr, key_event_t *e)
     return false;
 }
 
-screen_t *screen_create_by_name(const char *name)
+display_t *display_create_by_name(const char *name)
 {
-    #define CHECK(str, f) if(strcmp(str, name) == 0) s = f();
-    screen_t *s = NULL;
+    #define CHECK(str, f) if(strcmp(str, name) == 0) d = f();
+    display_t *d = NULL;
 
-    CHECK("terminal", screen_terminal_create);
+    CHECK("terminal", display_terminal_create);
 
-    if(s != NULL)
-        s->register_kbrd_callback(s, key_handler, s);
+    if(d != NULL)
+        d->register_kbrd_callback(d, key_handler, d);
 
     else {
-        ERROR("Failed to recognize '%s' in screen_create_by_name\n", name);
+        ERROR("Failed to recognize '%s' in display_create_by_name\n", name);
         ASSERT_FAIL("Fatal Error");
     }
 
-    return s;
+    return d;
     #undef CHECK
 }

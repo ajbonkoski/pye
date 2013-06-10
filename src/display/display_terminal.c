@@ -1,4 +1,4 @@
-#include "screen_terminal.h"
+#include "display_terminal.h"
 
 #include <sys/ioctl.h>
 #include <term.h>
@@ -21,7 +21,7 @@
 
 typedef struct
 {
-    screen_t *super;
+    display_t *super;
     bool good;
     bool running;
 
@@ -39,11 +39,11 @@ typedef struct
     // key event delegates data
     varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
 
-} screen_terminal_t;
-screen_terminal_t *cast_this(screen_t *s)
+} display_terminal_t;
+display_terminal_t *cast_this(display_t *d)
 {
-    ASSERT(s->impl_type == IMPL_TYPE, "expected a screen_terminal object");
-    return (screen_terminal_t *)s->impl;
+    ASSERT(d->impl_type == IMPL_TYPE, "expected a display_terminal object");
+    return (display_terminal_t *)d->impl;
 }
 
 typedef struct
@@ -54,21 +54,21 @@ typedef struct
 } key_event_delegate_t;
 
 // forward declarations
-static bool tcapopen(screen_terminal_t *this);
-static void clear(screen_t *scrn);
-static void get_size(screen_t *scrn, uint *w, uint *h);
-static void set_cursor(screen_t *scrn, uint x, uint y);
-static void get_cursor(screen_t *scrn, uint *x, uint *y);
-static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr);
-static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e);
-static void main_loop(screen_t *scrn);
-static void main_quit(screen_t *scrn);
-static void _write(screen_t *scrn, const char *s, size_t num);
-static void destroy(screen_t *scrn);
-static screen_terminal_t *screen_terminal_create_internal(screen_t *s);
+static bool tcapopen(display_terminal_t *this);
+static void clear(display_t *disp);
+static void get_size(display_t *disp, uint *w, uint *h);
+static void set_cursor(display_t *disp, uint x, uint y);
+static void get_cursor(display_t *disp, uint *x, uint *y);
+static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *usr);
+static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e);
+static void main_loop(display_t *disp);
+static void main_quit(display_t *disp);
+static void _write(display_t *disp, const char *s, size_t num);
+static void destroy(display_t *disp);
+static display_terminal_t *display_terminal_create_internal(display_t *s);
 
 
-static bool tcapopen(screen_terminal_t *this)
+static bool tcapopen(display_terminal_t *this)
 {
     ASSERT(this->open == false, "Terminal is already open");
 
@@ -117,44 +117,44 @@ static bool tcapopen(screen_terminal_t *this)
     return this->open;
 }
 
-static void clear(screen_t *scrn)
+static void clear(display_t *disp)
 {
     uint w, h;
-    get_size(scrn, &w, &h);
-    set_cursor(scrn, 0, 0);
-    _write(scrn, NULL, w*h);
-    set_cursor(scrn, 0, 0);
+    get_size(disp, &w, &h);
+    set_cursor(disp, 0, 0);
+    _write(disp, NULL, w*h);
+    set_cursor(disp, 0, 0);
 }
 
-static void get_size(screen_t *scrn, uint *w, uint *h)
+static void get_size(display_t *disp, uint *w, uint *h)
 {
     struct winsize ws;
     ioctl (0, TIOCGWINSZ, &ws);
     *w = ws.ws_col;
     *h = ws.ws_row;
 
-    ASSERT(*w >= MIN_WIDTH && *h >= MIN_HEIGHT, "The screen is far to small...");
+    ASSERT(*w >= MIN_WIDTH && *h >= MIN_HEIGHT, "The display is far to small...");
 }
 
-static void set_cursor(screen_t *scrn, uint x, uint y)
+static void set_cursor(display_t *disp, uint x, uint y)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
     ASSERT(this != NULL, "this should never happen");
     tputs(tgoto(this->CM, x, y), 1, ttputc);
     this->x = x;
     this->y = y;
 }
 
-static void get_cursor(screen_t *scrn, uint *x, uint *y)
+static void get_cursor(display_t *disp, uint *x, uint *y)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
     *x = this->x;
     *y = this->y;
 }
 
-static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
+static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *usr)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
     key_event_delegate_t *k = calloc(1, sizeof(key_event_delegate_t));
     k->key_callback = f;
     k->key_usr = usr;
@@ -162,7 +162,7 @@ static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr
 }
 
 
-static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e)
+static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e)
 {
     key_event_delegate_t *d;
     varray_iter(d, this->key_delegates) {
@@ -171,9 +171,9 @@ static void trigger_key_callbacks(screen_terminal_t *this, key_event_t *e)
     }
 }
 
-static void main_loop(screen_t *scrn)
+static void main_loop(display_t *disp)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
     this->running = true;
 
     while(this->good && this->running) {
@@ -190,13 +190,13 @@ static void main_loop(screen_t *scrn)
     }
 }
 
-static void main_quit(screen_t *scrn)
+static void main_quit(display_t *disp)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
     this->running = false;
 }
 
-static void inc_cursor(screen_terminal_t *this, size_t count)
+static void inc_cursor(display_terminal_t *this, size_t count)
 {
     this->x += count;
     while(this->x >= this->width) {
@@ -205,23 +205,23 @@ static void inc_cursor(screen_terminal_t *this, size_t count)
     }
 }
 
-static void _write(screen_t *scrn, const char *s, size_t num)
+static void _write(display_t *disp, const char *s, size_t num)
 {
-    //screen_terminal_t *this = cast_this(scrn);
+    //display_terminal_t *this = cast_this(disp);
     for(size_t i = 0; i < num; i++) {
         if(s != NULL)
             ttputc((int)s[i]);
         else
             ttputc((int)' ');
-        inc_cursor(cast_this(scrn), 1);
+        inc_cursor(cast_this(disp), 1);
     }
 
     ttflush();
 }
 
-static void destroy(screen_t *scrn)
+static void destroy(display_t *disp)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
 
     if(!ttclose())
         ERROR("Failed to properly close terminal\n");
@@ -229,20 +229,20 @@ static void destroy(screen_t *scrn)
     varray_map(this->key_delegates, free);
     varray_destroy(this->key_delegates);
     free(this);
-    free(scrn);
+    free(disp);
 }
 
-static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
+static display_terminal_t *display_terminal_create_internal(display_t *d)
 {
-    screen_terminal_t *this = calloc(1, sizeof(screen_terminal_t));
-    this->super = s;
+    display_terminal_t *this = calloc(1, sizeof(display_terminal_t));
+    this->super = d;
     this->good = true;
     this->running = false;
     this->key_delegates = varray_create();
 
-    // open the terminal screen
+    // open the terminal display
     if(!tcapopen(this)) {
-        ERROR("Failed to open terminal screen\n");
+        ERROR("Failed to open terminal display\n");
         this->good = false;
     }
 
@@ -250,35 +250,35 @@ static screen_terminal_t *screen_terminal_create_internal(screen_t *s)
 }
 
 // stuff that can't/shouldn't be done during create()
-void internal_initialize(screen_t *scrn)
+void internal_initialize(display_t *disp)
 {
-    screen_terminal_t *this = cast_this(scrn);
+    display_terminal_t *this = cast_this(disp);
 
-    // do screen init (like cursor placement and clearing)
+    // do display init (like cursor placement and clearing)
     if(this->open == true) {
-        get_size(scrn, &this->width, &this->height);
-        clear(scrn);
+        get_size(disp, &this->width, &this->height);
+        clear(disp);
     }
 }
 
-screen_t *screen_terminal_create(void)
+display_t *display_terminal_create(void)
 {
-    screen_t *s = calloc(1, sizeof(screen_t));
-    s->clear = clear;
-    s->set_cursor = set_cursor;
-    s->get_cursor = get_cursor;
-    s->get_size = get_size;
-    s->register_kbrd_callback = register_kbrd_callback;
-    s->main_loop = main_loop;
-    s->main_quit = main_quit;
-    s->write = _write;
-    s->destroy = destroy;
+    display_t *d = calloc(1, sizeof(display_t));
+    d->clear = clear;
+    d->set_cursor = set_cursor;
+    d->get_cursor = get_cursor;
+    d->get_size = get_size;
+    d->register_kbrd_callback = register_kbrd_callback;
+    d->main_loop = main_loop;
+    d->main_quit = main_quit;
+    d->write = _write;
+    d->destroy = destroy;
 
-    s->impl_type = IMPL_TYPE;
-    s->impl = screen_terminal_create_internal(s);
+    d->impl_type = IMPL_TYPE;
+    d->impl = display_terminal_create_internal(d);
 
-    internal_initialize(s);
+    internal_initialize(d);
 
-    return s;
+    return d;
 }
 

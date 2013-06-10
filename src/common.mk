@@ -54,9 +54,9 @@ CFLAGS_COMMON  := -I$(SRC_PATH)
 LDFLAGS_COMMON := $(LIB_COMMON)
 
 # screen library
-LIB_SCREEN      := $(LIB_PATH)/libscreen.a
-CFLAGS_SCREEN   := -I$(SRC_PATH)
-LDFLAGS_SCREEN  := $(LIB_SCREEN) $(LDFLAGS_COMMON) -ltermcap
+LIB_DISPLAY      := $(LIB_PATH)/libdisplay.a
+CFLAGS_DISPLAY   := -I$(SRC_PATH)
+LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LDFLAGS_COMMON) -ltermcap
 
 %.o: %.c %.h
 	@echo "    [$@]"
