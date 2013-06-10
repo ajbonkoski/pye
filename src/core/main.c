@@ -13,7 +13,7 @@ bool key_pressed(void *usr, key_event_t *e)
     screen_t *scrn = (screen_t *)usr;
 
     char c = e->key_code;
-    char buffer[256];
+    //char buffer[256];
 
     if(c == 'g')
         scrn->set_cursor(scrn, 0, 0);
@@ -37,8 +37,7 @@ bool key_pressed(void *usr, key_event_t *e)
     }
 
     else {
-        sprintf(buffer, "%c(%d) ", c, c);
-        scrn->write(scrn, buffer, strlen(buffer));
+        scrn->write(scrn, &c, 1);
     }
 
     return true;

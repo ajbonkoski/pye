@@ -16,6 +16,9 @@
 #undef ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
+#define MIN_WIDTH   10
+#define MIN_HEIGHT   3
+
 typedef struct
 {
     screen_t *super;
@@ -129,6 +132,8 @@ static void get_size(screen_t *scrn, uint *w, uint *h)
     ioctl (0, TIOCGWINSZ, &ws);
     *w = ws.ws_col;
     *h = ws.ws_row;
+
+    ASSERT(*w >= MIN_WIDTH && *h >= MIN_HEIGHT, "The screen is far to small...");
 }
 
 static void set_cursor(screen_t *scrn, uint x, uint y)
@@ -194,7 +199,7 @@ static void main_quit(screen_t *scrn)
 static void inc_cursor(screen_terminal_t *this, size_t count)
 {
     this->x += count;
-    if(this->x > this->width) {
+    while(this->x >= this->width) {
         this->x -= this->width;
         this->y++;
     }
