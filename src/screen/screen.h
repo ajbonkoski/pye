@@ -16,6 +16,7 @@ struct screen
     uint impl_type;
 
     void (*add_buffer)(screen_t *this, void *buffer);
+    // the varray returned should be considered constant (user should neither modify nor delete it)
     varray_t *(*list_buffers)(screen_t *this);
     void (*set_buffer)(screen_t *this, uint id);
     void (*write_mb)(screen_t *this, const char *str); // write to the message bar
