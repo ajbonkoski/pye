@@ -6,5 +6,8 @@
 ## ignore binaries
 *.o
 
+## special files that shouldn't be commited
+debug.log
+
 ## directories to ignore
 stats/
