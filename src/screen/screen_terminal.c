@@ -110,7 +110,7 @@ static bool tcapopen(screen_terminal_t *this)
     DEBUG("Terminal Opening: %s", this->open ? "SUCCESS" : "FAILURE");
 
     // set the crash_func()
-    set_crash_func((crash_func_t)destroy, this->super);
+    set_crash_func((crash_func_t)ttclose, NULL);
     return this->open;
 }
 
