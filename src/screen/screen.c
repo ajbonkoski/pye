@@ -12,7 +12,7 @@ typedef struct
     uint disp_width;
 
     varray_t *buffers;
-    void *curbuffer;
+    buffer_t *cb;  /* the current buffer */
 
 } screen_internal_t;
 static screen_internal_t *cast_this(screen_t *s)
@@ -22,19 +22,19 @@ static screen_internal_t *cast_this(screen_t *s)
 }
 
 // forward declarations
-static void add_buffer(screen_t *scrn, void *buffer);
+static void add_buffer(screen_t *scrn, buffer_t *buffer);
 static varray_t *list_buffers(screen_t *scrn);
 static void set_buffer(screen_t *scrn, uint id);
 static void write_mb(screen_t *scrn, const char *str);
 static void destroy(screen_t *scrn);
 
 
-static void add_buffer(screen_t *scrn, void *buffer)
+static void add_buffer(screen_t *scrn, buffer_t *buffer)
 {
     screen_internal_t *this = cast_this(scrn);
     varray_add(this->buffers, buffer);
-    if(this->curbuffer == NULL)
-        this->curbuffer = buffer;
+    if(this->cb == NULL)
+        this->cb = buffer;
 }
 
 static varray_t *list_buffers(screen_t *scrn)
@@ -47,7 +47,7 @@ static void set_buffer(screen_t *scrn, uint id)
 {
     screen_internal_t *this = cast_this(scrn);
     ASSERT(id >= 0 && id < varray_size(this->buffers), "Index out-of-bounds error");
-    this->curbuffer = varray_get(this->buffers, id);
+    this->cb = varray_get(this->buffers, id);
 }
 
 static void write_mb(screen_t *scrn, const char *str)
@@ -84,6 +84,10 @@ static void destroy(screen_t *scrn)
 {
     screen_internal_t *this = cast_this(scrn);
 
+    buffer_t *buffer;
+    varray_iter(buffer, this->buffers) {
+        buffer->destroy(buffer);
+    }
     varray_destroy(this->buffers);
 
     free(this);
@@ -95,13 +99,14 @@ static bool key_handler(void *usr, key_event_t *e)
     screen_internal_t *this = (screen_internal_t *)usr;
 
     u32 c = e->key_code;
-    char ch = (char)c;
+    //char ch = (char)c;
     char buffer[256];
 
     uint w, h, x, y;
     this->display->get_size(this->display, &w, &h);
     this->display->get_cursor(this->display, &x, &y);
 
+    // message buffer keystrokes
     if(c == KBRD_CTRL('r')) {
         sprintf(buffer, "|w=%d h=%d|", w, h);
         write_mb(this->super, buffer);
@@ -116,32 +121,38 @@ static bool key_handler(void *usr, key_event_t *e)
         write_mb(this->super, NULL);
     }
 
-    else if(c == KBRD_ARROW_LEFT) {
-        if(x > 0)
-            this->display->set_cursor(this->display, x-1, y);
-    }
-
-    else if(c == KBRD_ARROW_RIGHT) {
-        if(x < w-1)
-            this->display->set_cursor(this->display, x+1, y);
-
-    }
-
-    else if(c == KBRD_ARROW_UP) {
-        if(y > 0)
-            this->display->set_cursor(this->display, x, y-1);
-
-    }
-
-    else if(c == KBRD_ARROW_DOWN) {
-        if(y < h-2)
-            this->display->set_cursor(this->display, x, y+1);
-
-    }
-
+    // "normal" keystrokes - reroute these to the buffer
     else {
-        this->display->write(this->display, &ch, 1);
+        if(this->cb != NULL)
+            this->cb->input_key(this->cb, c);
     }
+
+    /* else if(c == KBRD_ARROW_LEFT) { */
+    /*     if(x > 0) */
+    /*         this->display->set_cursor(this->display, x-1, y); */
+    /* } */
+
+    /* else if(c == KBRD_ARROW_RIGHT) { */
+    /*     if(x < w-1) */
+    /*         this->display->set_cursor(this->display, x+1, y); */
+
+    /* } */
+
+    /* else if(c == KBRD_ARROW_UP) { */
+    /*     if(y > 0) */
+    /*         this->display->set_cursor(this->display, x, y-1); */
+
+    /* } */
+
+    /* else if(c == KBRD_ARROW_DOWN) { */
+    /*     if(y < h-2) */
+    /*         this->display->set_cursor(this->display, x, y+1); */
+
+    /* } */
+
+    /* else { */
+    /*     this->display->write(this->display, &ch, 1); */
+    /* } */
 
     //DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));
 
