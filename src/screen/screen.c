@@ -90,6 +90,64 @@ static void destroy(screen_t *scrn)
     free(scrn);
 }
 
+static bool key_handler(void *usr, key_event_t *e)
+{
+    screen_internal_t *this = (screen_internal_t *)usr;
+
+    u32 c = e->key_code;
+    char ch = (char)c;
+    char buffer[256];
+
+    uint w, h, x, y;
+    this->display->get_size(this->display, &w, &h);
+    this->display->get_cursor(this->display, &x, &y);
+
+    if(c == KBRD_CTRL('r')) {
+        sprintf(buffer, "|w=%d h=%d|", w, h);
+        write_mb(this->super, buffer);
+    }
+
+    else if(c == KBRD_CTRL('l')) {
+        sprintf(buffer, "|x=%d y=%d|", x, y);
+        write_mb(this->super, buffer);
+    }
+
+    else if(c == KBRD_CTRL('g')) {
+        write_mb(this->super, NULL);
+    }
+
+    else if(c == KBRD_ARROW_LEFT) {
+        if(x > 0)
+            this->display->set_cursor(this->display, x-1, y);
+    }
+
+    else if(c == KBRD_ARROW_RIGHT) {
+        if(x < w-1)
+            this->display->set_cursor(this->display, x+1, y);
+
+    }
+
+    else if(c == KBRD_ARROW_UP) {
+        if(y > 0)
+            this->display->set_cursor(this->display, x, y-1);
+
+    }
+
+    else if(c == KBRD_ARROW_DOWN) {
+        if(y < w-2)
+            this->display->set_cursor(this->display, x, y+1);
+
+    }
+
+    else {
+        this->display->write(this->display, &ch, 1);
+    }
+
+    //DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));
+
+    return true;
+}
+
 static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
 {
     screen_internal_t *this = calloc(1, sizeof(screen_internal_t));
@@ -97,6 +155,7 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
     this->display = disp;
     uint w, h;
     this->display->get_size(this->display, &w, &h);
+    this->display->register_kbrd_callback(this->display, key_handler, this);
     this->mb_y = h-1;
     this->disp_width = w;
     this->buffers = varray_create();
