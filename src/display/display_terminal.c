@@ -6,6 +6,7 @@
 #include "common/timeutil.h"
 #include "common/varray.h"
 #include "termio.h"
+#include "kbrd_terminal.h"
 
 #define IMPL_TYPE 0xb62ccfb6
 
@@ -37,6 +38,7 @@ typedef struct
     uint y;
 
     // key event delegates data
+    kbrd_terminal_t *kt;
     varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
 
 } display_terminal_t;
@@ -61,6 +63,7 @@ static void set_cursor(display_t *disp, uint x, uint y);
 static void get_cursor(display_t *disp, uint *x, uint *y);
 static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *usr);
 static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e);
+static void flush(display_t *disp);
 static void main_loop(display_t *disp);
 static void main_quit(display_t *disp);
 static void _write(display_t *disp, const char *s, size_t num);
@@ -171,6 +174,12 @@ static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e)
     }
 }
 
+static void flush(display_t *disp)
+{
+    //display_terminal_t *this = cast_this(disp);
+    ttflush();
+}
+
 static void main_loop(display_t *disp)
 {
     display_terminal_t *this = cast_this(disp);
@@ -178,10 +187,10 @@ static void main_loop(display_t *disp)
 
     while(this->good && this->running) {
         int c = ttgetc();
-        key_event_t ke;
-        memset(&ke, 0, sizeof(key_event_t));
-        ke.key_code = (u32)c;
-        trigger_key_callbacks(this, &ke);
+        key_event_t ke_mem;
+        key_event_t *ke = kbrd_terminal_keycode(this->kt, (char)c, &ke_mem);
+        if(ke != NULL)
+            trigger_key_callbacks(this, ke);
     }
 
     if(!this->good) {
@@ -226,6 +235,7 @@ static void destroy(display_t *disp)
     if(!ttclose())
         ERROR("Failed to properly close terminal\n");
 
+    kbrd_terminal_destroy(this->kt);
     varray_map(this->key_delegates, free);
     varray_destroy(this->key_delegates);
     free(this);
@@ -238,6 +248,7 @@ static display_terminal_t *display_terminal_create_internal(display_t *d)
     this->super = d;
     this->good = true;
     this->running = false;
+    this->kt = kbrd_terminal_create();
     this->key_delegates = varray_create();
 
     // open the terminal display
@@ -269,6 +280,7 @@ display_t *display_terminal_create(void)
     d->get_cursor = get_cursor;
     d->get_size = get_size;
     d->register_kbrd_callback = register_kbrd_callback;
+    d->flush = flush;
     d->main_loop = main_loop;
     d->main_quit = main_quit;
     d->write = _write;

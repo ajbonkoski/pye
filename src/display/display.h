@@ -15,6 +15,11 @@ typedef struct
 
 } key_event_t;
 
+#define KBRD_ARROW_LEFT  ((1)<<8)
+#define KBRD_ARROW_RIGHT ((2)<<8)
+#define KBRD_ARROW_UP    ((3)<<8)
+#define KBRD_ARROW_DOWN  ((4)<<8)
+
 // true means "handled", false means "not handled"
 typedef bool (*key_event_func_t)(void *usr, key_event_t *e);
 
@@ -30,6 +35,7 @@ struct display
     void (*get_size)(display_t *this, uint *w, uint *h);
     void (*register_kbrd_callback)(display_t *this, key_event_func_t f, void *usr);
     void (*write)(display_t *this, const char *s, size_t num);
+    void (*flush)(display_t *this);
     void (*main_loop)(display_t *this);
     void (*main_quit)(display_t *this);
     void (*destroy)(display_t *this);

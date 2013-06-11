@@ -77,7 +77,8 @@ static void write_mb(screen_t *scrn, const char *str)
     free(buf);
 
     // step 4: restore cursor position
-    this->display->set_cursor(this->display, x, y);
+    this->display->flush(this->display);
+    //this->display->set_cursor(this->display, x, y);
 }
 
 static void destroy(screen_t *scrn)

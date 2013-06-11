@@ -3,7 +3,7 @@ include ../common.mk
 CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON)
 LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON)
 
-DISPLAY_OBJS = display.o display_terminal.o termio.o
+DISPLAY_OBJS = display.o display_terminal.o termio.o kbrd_terminal.o
 
 LIBDISPLAY=$(LIB_PATH)/libdisplay.a
 
