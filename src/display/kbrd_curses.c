@@ -27,7 +27,7 @@ static key_event_t *make_event(key_event_t *ke, u32 mod, u32 kc, u32 rel)
 key_event_t *kbrd_curses_keycode(kbrd_curses_t *this, int ch, key_event_t *e)
 {
     // normal keys
-    if(ch >= 0x20 && ch <= 127)
+    if(ch <= 127)
         return make_event(e, 0, ch, 0);
 
     // special keys

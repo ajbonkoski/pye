@@ -70,7 +70,7 @@ static void get_size(display_t *disp, uint *w, uint *h)
 
 static void set_cursor(display_t *disp, uint x, uint y)
 {
-    move(x, y);
+    move(y, x);
     refresh();
 }
 

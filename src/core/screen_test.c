@@ -30,13 +30,15 @@ bool key_pressed(void *usr, key_event_t *e)
     this->disp->get_size(this->disp, &w, &h);
     this->disp->get_cursor(this->disp, &x, &y);
 
-    if(c == KEY_CTRL('s')) {
+    if(c == KEY_CTRL('r')) {
         sprintf(buffer, "|w=%d h=%d|", w, h);
+        DEBUG("%s\n", buffer);
         this->scrn->write_mb(this->scrn, buffer);
     }
 
     else if(c == KEY_CTRL('l')) {
         sprintf(buffer, "|x=%d y=%d|", x, y);
+        DEBUG("%s\n", buffer);
         this->scrn->write_mb(this->scrn, buffer);
     }
 
