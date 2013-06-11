@@ -134,7 +134,7 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_ARROW_DOWN) {
-        if(y < w-2)
+        if(y < h-2)
             this->display->set_cursor(this->display, x, y+1);
 
     }
