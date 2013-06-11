@@ -64,7 +64,7 @@ bool key_pressed(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_ARROW_DOWN) {
-        if(y < w-2)
+        if(y < h-2)
             this->disp->set_cursor(this->disp, x, y+1);
 
     }
@@ -73,7 +73,7 @@ bool key_pressed(void *usr, key_event_t *e)
         this->disp->write(this->disp, &ch, 1);
     }
 
-    DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));
+    //DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));
 
     return true;
 }
