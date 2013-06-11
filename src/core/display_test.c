@@ -7,6 +7,8 @@
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
+#define DISPLAY_TYPE "curses"
+
 bool key_pressed(void *usr, key_event_t *e)
 {
     display_t *disp = (display_t *)usr;
@@ -44,7 +46,7 @@ bool key_pressed(void *usr, key_event_t *e)
 
 int main(int argc, char *argv[])
 {
-    display_t *disp = display_create_by_name("terminal");
+    display_t *disp = display_create_by_name(DISPLAY_TYPE);
     disp->register_kbrd_callback(disp, key_pressed, disp);
     disp->main_loop(disp);
     disp->destroy(disp);

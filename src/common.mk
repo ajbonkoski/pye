@@ -56,7 +56,7 @@ LDFLAGS_COMMON := $(LIB_COMMON)
 # display library
 LIB_DISPLAY      := $(LIB_PATH)/libdisplay.a
 CFLAGS_DISPLAY   := -I$(SRC_PATH)
-LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LDFLAGS_COMMON) -ltermcap
+LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LDFLAGS_COMMON) -ltermcap -lcurses
 
 # screen library
 LIB_SCREEN       := $(LIB_PATH)/libscreen.a

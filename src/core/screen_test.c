@@ -8,6 +8,7 @@
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
+#define DISPLAY_TYPE "curses"
 #define KEY_CTRL(ch) (ch-'a'+1)
 
 typedef struct
@@ -78,7 +79,7 @@ bool key_pressed(void *usr, key_event_t *e)
 int main(int argc, char *argv[])
 {
     app_t this;
-    this.disp = display_create_by_name("terminal");
+    this.disp = display_create_by_name(DISPLAY_TYPE);
     this.disp->register_kbrd_callback(this.disp, key_pressed, &this);
     this.scrn = screen_create(this.disp);
 
