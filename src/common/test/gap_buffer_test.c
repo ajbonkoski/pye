@@ -9,7 +9,7 @@ bool check(gap_buffer_t *gp, const char *s)
         return false;
 
     for(int i = 0; i < sz; i++) {
-        if(s[i] != gap_buffer_get(gp, i))
+        if(s[i] != *(char *)gap_buffer_get(gp, i))
             return false;
     }
 
@@ -30,14 +30,15 @@ void ANNOUNCE(gap_buffer_t *gb)
 } while(0)
 
 #define TESTCASE2(method, i, c, exp) do {                   \
-        gap_buffer_ ## method (gb, i, c);                   \
+        char ch = c;                                        \
+        gap_buffer_ ## method (gb, i, (void *)&ch);         \
         ANNOUNCE(gb);                                       \
         ASSERT(check(gb, exp), "failed at gb=='" exp "'");  \
 } while(0)
 
 int main(int argc, char *argv[])
 {
-    gap_buffer_t *gb = gap_buffer_create();
+    gap_buffer_t *gb = gap_buffer_create(sizeof(char));
 
     TESTCASE2(insert, 0, 'a', "a");
     TESTCASE2(insert, 0, 'b', "ba");

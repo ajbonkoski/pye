@@ -7,24 +7,26 @@ struct gap_buffer
     size_t size;      // number of characters actually used
     size_t alloc;     // how many char are allocated
     size_t gap_start; // index of where the gap begins
-    char *data;
+    size_t elemsize;
+    u8 *data;
 };
 
 #define gap_size() (this->alloc - this->size)
 
 
-gap_buffer_t *gap_buffer_create(void)
+gap_buffer_t *gap_buffer_create(size_t elemsize)
 {
     gap_buffer_t *this = calloc(1, sizeof(gap_buffer_t));
     this->size = 0;
     this->alloc = INITIAL_ALLOC;
     this->gap_start = 0;
-    this->data = malloc(this->alloc * sizeof(char));
+    this->elemsize = elemsize;
+    this->data = malloc(this->alloc * this->elemsize);
 
     return this;
 }
 
-gap_buffer_t *gap_buffer_create_from_str(const char *str, size_t n)
+gap_buffer_t *gap_buffer_create_from_str(const u8 *str, size_t n)
 {
     ASSERT_UNIMPL();
     return NULL;
@@ -39,13 +41,16 @@ void gap_buffer_destroy(gap_buffer_t *this)
 
 static void reallocate_buffer(gap_buffer_t *this)
 {
+    // alias's
+    size_t es = this->elemsize;
+
     // allocate
     size_t nalloc = 2*this->alloc;
-    char *ndata = malloc(nalloc*sizeof(char));
+    u8 *ndata = malloc(nalloc * this->elemsize);
 
     // copy first half
-    for(size_t i = 0; i < this->gap_start; i++) {
-        ndata[i] = this->data[i];
+    for(size_t i = 0; i < this->gap_start * es; i += es) {
+        memcpy(ndata+i, this->data+i, es);
     }
 
     // compute locations
@@ -54,10 +59,10 @@ static void reallocate_buffer(gap_buffer_t *this)
     size_t newend = nalloc - endsize;
 
     // copy last half
-    char *ptr = this->data + end;
-    char *nptr = ndata + newend;
-    for(size_t i = 0; i < endsize; i++) {
-        nptr[i] = ptr[i];
+    u8 *ptr = this->data + end * this->elemsize;
+    u8 *nptr = ndata + newend * this->elemsize;
+    for(size_t i = 0; i < endsize * es; i += es) {
+        memcpy(nptr+i, ptr+i, es);
     }
 
     // update the gap_buffer struct
@@ -69,6 +74,7 @@ static void reallocate_buffer(gap_buffer_t *this)
 void gap_buffer_set_focus(gap_buffer_t *this, uint i)
 {
     ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_set_focus'");
+    size_t es = this->elemsize;
 
     // if already there, save some work
     if(i == this->gap_start)
@@ -83,13 +89,28 @@ void gap_buffer_set_focus(gap_buffer_t *this, uint i)
 
     size_t end = this->gap_start + gapsz;
 
-    while(i < this->gap_start) {
-        this->data[--end] = this->data[--this->gap_start];
+    {
+        u8 *p1 = this->data + end * es;
+        u8 *p2 = this->data + this->gap_start * es;
+        while(i < this->gap_start) {
+            p1-=es;
+            p2-=es;
+            --this->gap_start;
+            memcpy(p1, p2, es);
+        }
     }
 
-    while(i > this->gap_start) {
-        this->data[this->gap_start++] = this->data[end++];
+    {
+        u8 *p1 = this->data + this->gap_start * es;
+        u8 *p2 = this->data + end * es;
+        while(i > this->gap_start) {
+            memcpy(p1, p2, es);
+            p1+=es;
+            p2+=es;
+            ++this->gap_start;
+        }
     }
+
 }
 
 size_t gap_buffer_size(gap_buffer_t *this)
@@ -97,31 +118,38 @@ size_t gap_buffer_size(gap_buffer_t *this)
     return this->size;
 }
 
-char gap_buffer_get(gap_buffer_t *this, uint i)
+void *gap_buffer_get(gap_buffer_t *this, uint i)
 {
     ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_get'");
-    if(i < this->gap_start)
-        return this->data[i];
+    size_t es = this->elemsize;
 
-    return this->data[i + gap_size()];
+    if(i < this->gap_start)
+        return this->data + i*es;
+    else
+        return this->data + (i + gap_size()) * es;
 }
 
-char *gap_buffer_to_str(gap_buffer_t *this)
+void *gap_buffer_to_str(gap_buffer_t *this)
 {
+    size_t es = this->elemsize;
     size_t sz = gap_buffer_size(this);
-    char *str = malloc((sz+1)*sizeof(char));
+    void *str = malloc((sz+1)*es);
     for(size_t i = 0; i < sz; i++) {
-        str[i] = gap_buffer_get(this, i);
+        void *val = gap_buffer_get(this, i);
+        memcpy(str + i*es, val, es);
     }
-    str[sz] = '\0';
+    memset(str + sz*es, 0, es);
     return str;
 }
 
-void gap_buffer_insert(gap_buffer_t *this, uint i, char c)
+void gap_buffer_insert(gap_buffer_t *this, uint i, void *c)
 {
     ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_insert'");
     gap_buffer_set_focus(this, i);
-    this->data[this->gap_start++] = c;
+    size_t es = this->elemsize;
+    size_t gs = this->gap_start;
+    memcpy(this->data + gs*es, c, es);
+    this->gap_start++;
     this->size++;
 }
 
@@ -160,7 +188,8 @@ gap_buffer_t *gap_buffer_split(gap_buffer_t *this, uint i)
     size_t end = this->gap_start + gap_size();
     size_t endsize = this->alloc - end;
 
-    gap_buffer_t *gb = gap_buffer_create_from_str(this->data + end, endsize);
+    size_t es = this->elemsize;
+    gap_buffer_t *gb = gap_buffer_create_from_str(this->data + end*es, endsize*es);
     this->size = this->gap_start;
     return gb;
 }
