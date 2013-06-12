@@ -76,13 +76,28 @@ static enum edit_result move_cursor_delta(buffer_internal_t *this, uint dx, uint
 
 static enum edit_result delete_char_left(buffer_internal_t *this)
 {
-    if(this->cursor_x == 0)
-        return ER_NONE;
+    if(this->cursor_x == 0) {
+        if(this->cursor_y == 0)
+            return ER_NONE;
 
-    gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
-    gap_buffer_dell(gb, this->cursor_x);
-    this->cursor_x--;
-    return ER_ALL;
+        gap_buffer_t *prev = get_line_gb(this, this->cursor_y-1);
+        uint prev_len = gap_buffer_size(prev);
+        gap_buffer_t *cur = get_line_gb(this, this->cursor_y);
+        gap_buffer_delr(this->data, this->cursor_y);
+        gap_buffer_join(prev, cur);
+
+        this->cursor_x = prev_len;
+        this->cursor_y -= 1;
+
+        return ER_ALL;
+    }
+
+    else {
+        gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
+        gap_buffer_dell(gb, this->cursor_x);
+        this->cursor_x--;
+        return ER_ALL;
+    }
 }
 
 static enum edit_result delete_char_right(buffer_internal_t *this)

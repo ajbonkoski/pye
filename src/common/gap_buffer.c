@@ -197,5 +197,38 @@ gap_buffer_t *gap_buffer_split(gap_buffer_t *this, uint i)
 // merge 'other' onto the end of 'this' and free 'other'
 void gap_buffer_join(gap_buffer_t *this, gap_buffer_t *other)
 {
-    ASSERT_UNIMPL();
+    // this is an expensive implementation... TODO: optimize
+
+    // alias's
+    uint es = this->elemsize;
+
+    // get the total size
+    uint this_size = this->size;
+    uint other_size = other->size;
+    uint total_size = this_size + other_size;
+
+    // get a string of the data
+    u8 *this_str = gap_buffer_to_str(this);
+    u8 *other_str = gap_buffer_to_str(other);
+    u8 *total_str = malloc((total_size+1) * es);
+    memcpy(total_str, this_str, this_size * es);
+    memcpy(total_str + this_size * es, other_str, other_size * es);
+    memset(total_str + total_size * es, 0, es);
+
+    // some quick cleanup before moving on
+    free(this_str);
+    free(other_str);
+    gap_buffer_destroy(other);
+
+    // reset 'this' internal state
+    this->size = 0;
+    this->gap_start = 0;
+
+    // insert each element
+    u8 *ptr = total_str;
+    for(uint i = 0; i < total_size; i++) {
+        gap_buffer_insert(this, i, ptr);
+        ptr += es;
+    }
+
 }
