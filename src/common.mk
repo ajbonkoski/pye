@@ -56,12 +56,17 @@ LDFLAGS_COMMON := $(LIB_COMMON)
 # display library
 LIB_DISPLAY      := $(LIB_PATH)/libdisplay.a
 CFLAGS_DISPLAY   := -I$(SRC_PATH)
-LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LDFLAGS_COMMON) -ltermcap -lcurses
+LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LIB_COMMON) -ltermcap -lcurses
 
 # screen library
 LIB_SCREEN       := $(LIB_PATH)/libscreen.a
 CFLAGS_SCREEN    := -I$(SRC_PATH)
-LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LDFLAGS_COMMON)
+LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LIB_COMMON)
+
+# screen library
+LIB_BUFFER       := $(LIB_PATH)/libbuffer.a
+CFLAGS_BUFFER    := -I$(SRC_PATH)
+LDFLAGS_BUFFER   := $(LIB_BUFFER) $(LIB_COMMON)
 
 %.o: %.c %.h
 	@echo "    [$@]"

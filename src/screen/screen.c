@@ -94,6 +94,13 @@ static void destroy(screen_t *scrn)
     free(scrn);
 }
 
+static void update_cursor(screen_internal_t *this)
+{
+    uint x, y;
+    this->cb->get_cursor(this->cb, &x, &y);
+    this->display->set_cursor(this->display, x, y);
+}
+
 static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
@@ -123,8 +130,19 @@ static bool key_handler(void *usr, key_event_t *e)
 
     // "normal" keystrokes - reroute these to the buffer
     else {
-        if(this->cb != NULL)
-            this->cb->input_key(this->cb, c);
+        if(this->cb != NULL) {
+            enum edit_result er = this->cb->input_key(this->cb, c);
+            switch(er) {
+                case ER_CURSOR:
+                    update_cursor(this);
+                case ER_ALL:
+                    break;
+                case ER_NONE:
+                    break;
+                default:
+                    DEBUG("unrecognized enum value for edit_result: %d\n", er);
+            }
+        }
     }
 
     /* else if(c == KBRD_ARROW_LEFT) { */
