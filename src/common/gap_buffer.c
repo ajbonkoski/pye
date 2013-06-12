@@ -76,16 +76,16 @@ void gap_buffer_set_focus(gap_buffer_t *this, uint i)
     ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_set_focus'");
     size_t es = this->elemsize;
 
-    // if already there, save some work
-    if(i == this->gap_start)
-        return;
-
     size_t gapsz = gap_size();
     if(gapsz <= 0) {
         this->gap_start = i;
         reallocate_buffer(this);
         return;
     }
+
+    // if already there, save some work
+    if(i == this->gap_start)
+        return;
 
     size_t end = this->gap_start + gapsz;
 
@@ -146,6 +146,7 @@ void gap_buffer_insert(gap_buffer_t *this, uint i, void *c)
 {
     ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_insert'");
     gap_buffer_set_focus(this, i);
+    ASSERT(this->alloc != this->size, "");
     size_t es = this->elemsize;
     size_t gs = this->gap_start;
     memcpy(this->data + gs*es, c, es);

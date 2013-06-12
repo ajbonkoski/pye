@@ -28,6 +28,10 @@ static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
 static void destroy(buffer_t *b);
 
+static inline gap_buffer_t *get_line_gb(buffer_internal_t *this, uint i) {
+    return *(gap_buffer_t **)gap_buffer_get(this->data, i);
+}
+
 static enum edit_result insert_char(buffer_internal_t *this, char c)
 {
     gap_buffer_t *line = *(gap_buffer_t **)gap_buffer_get(this->data, this->cursor_y);
@@ -65,6 +69,28 @@ static enum edit_result move_cursor_delta(buffer_internal_t *this, uint dx, uint
     //return ER_NONE;
 }
 
+static enum edit_result delete_char_left(buffer_internal_t *this)
+{
+    if(this->cursor_x == 0)
+        return ER_NONE;
+
+    gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
+    gap_buffer_dell(gb, this->cursor_x);
+    this->cursor_x--;
+    return ER_ALL;
+}
+
+static enum edit_result delete_char_right(buffer_internal_t *this)
+{
+    gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
+    if(this->cursor_x > gap_buffer_size(gb))
+        return ER_NONE;
+
+    DEBUG("DELR\n");
+    gap_buffer_delr(gb, this->cursor_x);
+    return ER_ALL;
+}
+
 static void get_cursor(buffer_t *b, uint *x, uint *y)
 {
     buffer_internal_t *this = cast_this(b);
@@ -99,6 +125,8 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         case KBRD_ARROW_RIGHT: return move_cursor_delta(this,  1,  0);
         case KBRD_ARROW_UP:    return move_cursor_delta(this,  0, -1);
         case KBRD_ARROW_DOWN:  return move_cursor_delta(this,  0,  1);
+        case KBRD_BACKSPACE:   return delete_char_left(this);
+        case KBRD_DEL:         return delete_char_right(this);
 
         default:
             DEBUG("WRN: char '%c' not handled in buffer->input_key()\n", c);

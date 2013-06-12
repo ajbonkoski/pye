@@ -98,6 +98,12 @@ static void display_write_line(screen_internal_t *this, const char *line, int li
 {
     this->display->set_cursor(this->display, 0, lineno);
     this->display->write(this->display, line, strlen(line));
+
+    // write some blanks (to the end of the line)
+    uint x, y, w, h;
+    this->display->get_size(this->display, &w, &h);
+    this->display->get_cursor(this->display, &x, &y);
+    this->display->write(this->display, NULL, w-(x+1));
 }
 
 static void update_cursor(screen_internal_t *this)
