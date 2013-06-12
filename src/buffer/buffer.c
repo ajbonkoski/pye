@@ -32,6 +32,7 @@ static enum edit_result insert_char(buffer_internal_t *this, char c)
 {
     gap_buffer_t *line = *(gap_buffer_t **)gap_buffer_get(this->data, this->cursor_y);
     gap_buffer_insert(line, this->cursor_x, &c);
+    this->cursor_x++;
     return ER_ALL;
 }
 

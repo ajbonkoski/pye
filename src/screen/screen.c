@@ -94,11 +94,28 @@ static void destroy(screen_t *scrn)
     free(scrn);
 }
 
+static void display_write_line(screen_internal_t *this, const char *line, int lineno)
+{
+    this->display->set_cursor(this->display, 0, lineno);
+    this->display->write(this->display, line, strlen(line));
+}
+
 static void update_cursor(screen_internal_t *this)
 {
     uint x, y;
     this->cb->get_cursor(this->cb, &x, &y);
     this->display->set_cursor(this->display, x, y);
+}
+
+static void update_all(screen_internal_t *this)
+{
+    uint numlines = this->cb->num_lines(this->cb);
+    for(int i = 0; i < numlines; i++) {
+        char *line = this->cb->get_line_data(this->cb, i);
+        display_write_line(this, line, i);
+        free(line);
+    }
+    update_cursor(this);
 }
 
 static bool key_handler(void *usr, key_event_t *e)
@@ -133,12 +150,9 @@ static bool key_handler(void *usr, key_event_t *e)
         if(this->cb != NULL) {
             enum edit_result er = this->cb->input_key(this->cb, c);
             switch(er) {
-                case ER_CURSOR:
-                    update_cursor(this);
-                case ER_ALL:
-                    break;
-                case ER_NONE:
-                    break;
+                case ER_CURSOR: update_cursor(this);  break;
+                case ER_ALL:    update_all(this);     break;
+                case ER_NONE:   /* noop */            break;
                 default:
                     DEBUG("unrecognized enum value for edit_result: %d\n", er);
             }
