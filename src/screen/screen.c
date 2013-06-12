@@ -1,7 +1,9 @@
 #include "screen.h"
+#include "fileio/fileio.h"
 
 #define IMPL_TYPE 0x7c870c4b
 #define BLANK ' '
+#define FILENAME "testfile.txt"
 
 typedef struct
 {
@@ -22,19 +24,20 @@ static screen_internal_t *cast_this(screen_t *s)
 }
 
 // forward declarations
-static void add_buffer(screen_t *scrn, buffer_t *buffer);
+static uint add_buffer(screen_t *scrn, buffer_t *buffer);
 static varray_t *list_buffers(screen_t *scrn);
 static void set_buffer(screen_t *scrn, uint id);
 static void write_mb(screen_t *scrn, const char *str);
 static void destroy(screen_t *scrn);
 
 
-static void add_buffer(screen_t *scrn, buffer_t *buffer)
+static uint add_buffer(screen_t *scrn, buffer_t *buffer)
 {
     screen_internal_t *this = cast_this(scrn);
     varray_add(this->buffers, buffer);
     if(this->cb == NULL)
         this->cb = buffer;
+    return varray_size(this->buffers) - 1;
 }
 
 static varray_t *list_buffers(screen_t *scrn)
@@ -130,7 +133,8 @@ static bool key_handler(void *usr, key_event_t *e)
 
     u32 c = e->key_code;
     //char ch = (char)c;
-    char buffer[256];
+    const int BUFSZ = 256;
+    char buffer[BUFSZ];
 
     uint w, h, x, y;
     this->display->get_size(this->display, &w, &h);
@@ -151,6 +155,29 @@ static bool key_handler(void *usr, key_event_t *e)
         write_mb(this->super, NULL);
     }
 
+    else if(c == KBRD_CTRL('f')) {
+        screen_t *s = this->super;
+        buffer_t *b = fileio_load_buffer(FILENAME);
+        if(b == NULL) {
+            snprintf(buffer, BUFSZ, "failed to read: %s", FILENAME);
+            write_mb(s, buffer);
+        } else {
+            s->set_buffer(s, s->add_buffer(s, b));
+            update_all(this);
+        }
+    }
+
+    else if(c == KBRD_CTRL('w')) {
+        const char *filename = this->cb->get_filename(this->cb);
+        bool success = fileio_save_buffer(this->cb, filename);
+        if(!success) {
+            snprintf(buffer, BUFSZ, "failed to save: %s", filename);
+        } else {
+            snprintf(buffer, BUFSZ, "successfully saved: %s", filename);
+        }
+        write_mb(this->super, buffer);
+    }
+
     // "normal" keystrokes - reroute these to the buffer
     else {
         if(this->cb != NULL) {
@@ -164,35 +191,6 @@ static bool key_handler(void *usr, key_event_t *e)
             }
         }
     }
-
-    /* else if(c == KBRD_ARROW_LEFT) { */
-    /*     if(x > 0) */
-    /*         this->display->set_cursor(this->display, x-1, y); */
-    /* } */
-
-    /* else if(c == KBRD_ARROW_RIGHT) { */
-    /*     if(x < w-1) */
-    /*         this->display->set_cursor(this->display, x+1, y); */
-
-    /* } */
-
-    /* else if(c == KBRD_ARROW_UP) { */
-    /*     if(y > 0) */
-    /*         this->display->set_cursor(this->display, x, y-1); */
-
-    /* } */
-
-    /* else if(c == KBRD_ARROW_DOWN) { */
-    /*     if(y < h-2) */
-    /*         this->display->set_cursor(this->display, x, y+1); */
-
-    /* } */
-
-    /* else { */
-    /*     this->display->write(this->display, &ch, 1); */
-    /* } */
-
-    //DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));
 
     return true;
 }

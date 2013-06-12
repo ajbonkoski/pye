@@ -63,10 +63,15 @@ LIB_SCREEN       := $(LIB_PATH)/libscreen.a
 CFLAGS_SCREEN    := -I$(SRC_PATH)
 LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LIB_COMMON)
 
-# screen library
+# buffer library
 LIB_BUFFER       := $(LIB_PATH)/libbuffer.a
 CFLAGS_BUFFER    := -I$(SRC_PATH)
 LDFLAGS_BUFFER   := $(LIB_BUFFER) $(LIB_COMMON)
+
+# fileio library
+LIB_FILEIO       := $(LIB_PATH)/libfileio.a
+CFLAGS_FILEIO    := -I$(SRC_PATH)
+LDFLAGS_FILEIO   := $(LIB_FILEIO) $(LIB_COMMON) $(LDFLAGS_BUFFER)
 
 %.o: %.c %.h
 	@echo "    [$@]"

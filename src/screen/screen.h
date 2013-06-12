@@ -16,7 +16,8 @@ struct screen
     void *impl;
     uint impl_type;
 
-    void (*add_buffer)(screen_t *this, buffer_t *buffer);
+    // returns the buffer's id
+    uint (*add_buffer)(screen_t *this, buffer_t *buffer);
     // the varray returned should be considered constant (user should neither modify nor delete it)
     varray_t *(*list_buffers)(screen_t *this);
     void (*set_buffer)(screen_t *this, uint id);

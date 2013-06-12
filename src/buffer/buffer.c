@@ -11,6 +11,8 @@ typedef struct
 {
     buffer_t *super;
 
+    char *filename;
+
     uint cursor_x;
     uint cursor_y;
     gap_buffer_t *data;
@@ -119,11 +121,49 @@ static enum edit_result goto_line_end(buffer_internal_t *this)
     return ER_CURSOR;
 }
 
+static void set_filename(buffer_t *b, const char *filename)
+{
+    buffer_internal_t *this = cast_this(b);
+    if(this->filename != NULL)
+        free(this->filename);
+    this->filename = strdup(filename);
+}
+
+static const char *get_filename(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    return this->filename;
+}
+
 static void get_cursor(buffer_t *b, uint *x, uint *y)
 {
     buffer_internal_t *this = cast_this(b);
     *x = this->cursor_x;
     *y = this->cursor_y;
+}
+
+static void set_cursor(buffer_t *b, uint x, uint y)
+{
+    buffer_internal_t *this = cast_this(b);
+    this->cursor_x  =x;
+    this->cursor_y = y;
+}
+
+static void endline(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    gap_buffer_t *ngb = gap_buffer_create(sizeof(char));
+    gap_buffer_insert(this->data, this->cursor_y+1, &ngb);
+    this->cursor_y += 1;
+    this->cursor_x = 0;
+}
+
+static void insert(buffer_t *b, char c)
+{
+    buffer_internal_t *this = cast_this(b);
+    gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
+    gap_buffer_insert(gb, this->cursor_x, &c);
+    this->cursor_x += 1;
 }
 
 static char *get_line_data(buffer_t *b, uint i)
@@ -200,7 +240,12 @@ buffer_t *buffer_create(void)
     buffer_t *b = calloc(1, sizeof(buffer_t));
     b->impl = buffer_create_internal(b);
     b->impl_type = IMPL_TYPE;
+    b->set_filename = set_filename;
+    b->get_filename = get_filename;
     b->get_cursor = get_cursor;
+    b->set_cursor = set_cursor;
+    b->endline = endline;
+    b->insert = insert;
     b->get_line_data = get_line_data;
     b->num_lines = num_lines;
     b->input_key = input_key;
