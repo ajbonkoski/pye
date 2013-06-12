@@ -1,6 +1,6 @@
 #include "gap_buffer.h"
 
-#define INITIAL_ALLOC 15
+#define INITIAL_ALLOC 5
 
 struct gap_buffer
 {
@@ -68,7 +68,7 @@ static void reallocate_buffer(gap_buffer_t *this)
 
 void gap_buffer_set_focus(gap_buffer_t *this, uint i)
 {
-    ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_set_focus'");
+    ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_set_focus'");
 
     // if already there, save some work
     if(i == this->gap_start)
@@ -88,7 +88,7 @@ void gap_buffer_set_focus(gap_buffer_t *this, uint i)
     }
 
     while(i > this->gap_start) {
-        this->data[++this->gap_start] = this->data[++end];
+        this->data[this->gap_start++] = this->data[end++];
     }
 }
 
@@ -106,9 +106,20 @@ char gap_buffer_get(gap_buffer_t *this, uint i)
     return this->data[i + gap_size()];
 }
 
+char *gap_buffer_to_str(gap_buffer_t *this)
+{
+    size_t sz = gap_buffer_size(this);
+    char *str = malloc((sz+1)*sizeof(char));
+    for(size_t i = 0; i < sz; i++) {
+        str[i] = gap_buffer_get(this, i);
+    }
+    str[sz] = '\0';
+    return str;
+}
+
 void gap_buffer_insert(gap_buffer_t *this, uint i, char c)
 {
-    ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_insert'");
+    ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_insert'");
     gap_buffer_set_focus(this, i);
     this->data[this->gap_start++] = c;
     this->size++;
@@ -130,7 +141,7 @@ void gap_buffer_delr(gap_buffer_t *this, uint i)
 // delete the char to the left of the cursor
 void gap_buffer_dell(gap_buffer_t *this, uint i)
 {
-    ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_dell'");
+    ASSERT(0 < i && i <= this->size, "index out-of-bounds in 'gap_buffer_dell'");
     if(i == 0) {
         DEBUG("WRN: i=0 in gap_buffer_dell\n");
         return;

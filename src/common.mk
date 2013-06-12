@@ -65,9 +65,9 @@ LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LDFLAGS_COMMON)
 
 %.o: %.c %.h
 	@echo "    [$@]"
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.o: %.c
 	@echo "    [$@]"
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
