@@ -2,6 +2,9 @@
 
 #define INITIAL_ALLOC 5
 
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
 struct gap_buffer
 {
     size_t size;      // number of characters actually used
@@ -162,10 +165,6 @@ void gap_buffer_insert(gap_buffer_t *this, uint i, void *c)
 void gap_buffer_delr(gap_buffer_t *this, uint i)
 {
     ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_delr'");
-    if(i == this->size-1) {
-        DEBUG("WRN: i=size-1 in gap_buffer_delr\n");
-        return;
-    }
 
     gap_buffer_set_focus(this, i);
     this->size--;
@@ -175,10 +174,6 @@ void gap_buffer_delr(gap_buffer_t *this, uint i)
 void gap_buffer_dell(gap_buffer_t *this, uint i)
 {
     ASSERT(0 < i && i <= this->size, "index out-of-bounds in 'gap_buffer_dell'");
-    if(i == 0) {
-        DEBUG("WRN: i=0 in gap_buffer_dell\n");
-        return;
-    }
 
     gap_buffer_set_focus(this, i);
     this->gap_start--;
