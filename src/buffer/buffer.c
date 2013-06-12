@@ -157,6 +157,13 @@ static void destroy(buffer_t *b)
     buffer_internal_t *this = cast_this(b);
 
     // free the gap buffers
+    size_t numlines = gap_buffer_size(this->data);
+    for(size_t i = 0; i < numlines; i++) {
+        gap_buffer_t *line = *(gap_buffer_t **)gap_buffer_get(this->data, i);
+        gap_buffer_destroy(line);
+    }
+    gap_buffer_destroy(this->data);
+
     free(this);
     free(b);
 }
