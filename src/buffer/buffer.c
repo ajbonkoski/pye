@@ -106,6 +106,19 @@ static enum edit_result split_line(buffer_internal_t *this)
     return ER_ALL;
 }
 
+static enum edit_result goto_line_start(buffer_internal_t *this)
+{
+    this->cursor_x = 0;
+    return ER_CURSOR;
+}
+
+static enum edit_result goto_line_end(buffer_internal_t *this)
+{
+    gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
+    this->cursor_x = gap_buffer_size(gb);
+    return ER_CURSOR;
+}
+
 static void get_cursor(buffer_t *b, uint *x, uint *y)
 {
     buffer_internal_t *this = cast_this(b);
@@ -144,6 +157,8 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         case KBRD_DEL:         return delete_char_right(this);
         case '\n':
         case KBRD_ENTER:       return split_line(this);
+        case KBRD_CTRL('a'):   return goto_line_start(this);
+        case KBRD_CTRL('e'):   return goto_line_end(this);
 
         default:
             DEBUG("WRN: char '%c' not handled in buffer->input_key()\n", c);
