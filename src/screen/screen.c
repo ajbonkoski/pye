@@ -118,12 +118,23 @@ static void update_cursor(screen_internal_t *this)
 
 static void update_all(screen_internal_t *this)
 {
+    uint w, h;
+    this->display->get_size(this->display, &w, &h);
+
+    // write the lines in the buffer_t
     uint numlines = this->cb->num_lines(this->cb);
-    for(int i = 0; i < numlines; i++) {
+    int i;
+    for(i = 0; i < numlines && i < h-1; i++) {
         char *line = this->cb->get_line_data(this->cb, i);
         display_write_line(this, line, i);
         free(line);
     }
+
+    // clear the remainer of the screen
+    for(; i < h-1; i++) {
+        this->display->write(this->display, NULL, w);
+    }
+
     update_cursor(this);
 }
 
