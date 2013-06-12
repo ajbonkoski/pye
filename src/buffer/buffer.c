@@ -4,6 +4,9 @@
 
 #define IMPL_TYPE 0x689a9794
 
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
 typedef struct
 {
     buffer_t *super;
@@ -83,11 +86,23 @@ static enum edit_result delete_char_left(buffer_internal_t *this)
 static enum edit_result delete_char_right(buffer_internal_t *this)
 {
     gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
-    if(this->cursor_x > gap_buffer_size(gb))
+    if(this->cursor_x >= gap_buffer_size(gb))
         return ER_NONE;
 
     DEBUG("DELR\n");
     gap_buffer_delr(gb, this->cursor_x);
+    return ER_ALL;
+}
+
+static enum edit_result split_line(buffer_internal_t *this)
+{
+    gap_buffer_t *gb = *(gap_buffer_t **)gap_buffer_get(this->data, this->cursor_y);
+    gap_buffer_t *ngb = gap_buffer_split(gb, this->cursor_x);
+    gap_buffer_insert(this->data, this->cursor_y+1, &ngb);
+
+    this->cursor_y += 1;
+    this->cursor_x = 0;
+
     return ER_ALL;
 }
 
@@ -127,6 +142,8 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         case KBRD_ARROW_DOWN:  return move_cursor_delta(this,  0,  1);
         case KBRD_BACKSPACE:   return delete_char_left(this);
         case KBRD_DEL:         return delete_char_right(this);
+        case '\n':
+        case KBRD_ENTER:       return split_line(this);
 
         default:
             DEBUG("WRN: char '%c' not handled in buffer->input_key()\n", c);

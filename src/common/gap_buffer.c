@@ -26,10 +26,14 @@ gap_buffer_t *gap_buffer_create(size_t elemsize)
     return this;
 }
 
-gap_buffer_t *gap_buffer_create_from_str(const u8 *str, size_t n)
+gap_buffer_t *gap_buffer_create_from_str(const u8 *str, size_t numelts, size_t elemsize)
 {
-    ASSERT_UNIMPL();
-    return NULL;
+    gap_buffer_t *this = gap_buffer_create(elemsize);
+    for(int i = 0; i < numelts; i++) {
+        gap_buffer_insert(this, i, ((u8 *)str) + i*elemsize);
+    }
+
+    return this;
 }
 
 void gap_buffer_destroy(gap_buffer_t *this)
@@ -184,13 +188,13 @@ void gap_buffer_dell(gap_buffer_t *this, uint i)
 // splits 'this' at location i and returns a new gap_buffer with the data
 gap_buffer_t *gap_buffer_split(gap_buffer_t *this, uint i)
 {
-    ASSERT(0 <= i && i < this->size, "index out-of-bounds in 'gap_buffer_split'");
+    ASSERT(0 <= i && i <= this->size, "index out-of-bounds in 'gap_buffer_split'");
     gap_buffer_set_focus(this, i);
     size_t end = this->gap_start + gap_size();
     size_t endsize = this->alloc - end;
 
     size_t es = this->elemsize;
-    gap_buffer_t *gb = gap_buffer_create_from_str(this->data + end*es, endsize*es);
+    gap_buffer_t *gb = gap_buffer_create_from_str(this->data + end*es, endsize, es);
     this->size = this->gap_start;
     return gb;
 }

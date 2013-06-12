@@ -10,7 +10,7 @@ extern "C" {
 typedef struct gap_buffer gap_buffer_t;
 
 gap_buffer_t *gap_buffer_create(size_t elemsize);
-gap_buffer_t *gap_buffer_create_from_str(const u8 *str, size_t n);
+gap_buffer_t *gap_buffer_create_from_str(const u8 *str, size_t numelts, size_t elemsize);
 void gap_buffer_destroy(gap_buffer_t *this);
 
 void gap_buffer_set_focus(gap_buffer_t *this, uint i);
