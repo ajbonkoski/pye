@@ -231,4 +231,6 @@ void gap_buffer_join(gap_buffer_t *this, gap_buffer_t *other)
         ptr += es;
     }
 
+    // final cleanup
+    free(total_str);
 }
