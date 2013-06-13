@@ -5,6 +5,7 @@
 
 ## ignore binaries
 *.o
+*.pyc
 
 ## special files that shouldn't be commited
 debug.log
