@@ -49,9 +49,9 @@ endif
 ############################################################
 
 # common library
-LIB_COMMON     := $(LIB_PATH)/libcommon.a
-CFLAGS_COMMON  := -I$(SRC_PATH)
-LDFLAGS_COMMON := $(LIB_COMMON)
+LIB_COMMON       := $(LIB_PATH)/libcommon.a
+CFLAGS_COMMON    := -I$(SRC_PATH)
+LDFLAGS_COMMON   := $(LIB_COMMON)
 
 # display library
 LIB_DISPLAY      := $(LIB_PATH)/libdisplay.a
@@ -72,6 +72,11 @@ LDFLAGS_BUFFER   := $(LIB_BUFFER) $(LIB_COMMON)
 LIB_FILEIO       := $(LIB_PATH)/libfileio.a
 CFLAGS_FILEIO    := -I$(SRC_PATH)
 LDFLAGS_FILEIO   := $(LIB_FILEIO) $(LIB_COMMON) $(LDFLAGS_BUFFER)
+
+# execution library
+LIB_EXEC         := $(LIB_PATH)/libexecution.a
+CFLAGS_EXEC      := -I$(SRC_PATH) `pkg-config --cflags python`
+LDFLAGS_EXEC     := $(LIB_EXEC) $(LIB_COMMON) $(LDFLAGS_BUFFER) $(LDFLAGS_DISPLAY) `pkg-config --libs python`
 
 %.o: %.c %.h
 	@echo "    [$@]"

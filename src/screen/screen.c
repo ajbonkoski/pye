@@ -31,12 +31,17 @@ static void write_mb(screen_t *scrn, const char *str);
 static void destroy(screen_t *scrn);
 
 
+static void update_all(screen_internal_t *this);
+
 static uint add_buffer(screen_t *scrn, buffer_t *buffer)
 {
     screen_internal_t *this = cast_this(scrn);
     varray_add(this->buffers, buffer);
-    if(this->cb == NULL)
+    if(this->cb == NULL) {
         this->cb = buffer;
+        update_all(this);
+    }
+
     return varray_size(this->buffers) - 1;
 }
 
