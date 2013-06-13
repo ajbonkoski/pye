@@ -36,6 +36,7 @@ static buffer_t *get_active_buffer(screen_t *scrn);
 static void write_mb(screen_t *scrn, const char *str);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
+static void refresh(screen_t *scrn);
 
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
 {
@@ -160,6 +161,11 @@ static void update_all(screen_internal_t *this)
     update_cursor(this);
 }
 
+static void refresh(screen_t *scrn)
+{
+    update_all(cast_this(scrn));
+}
+
 static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
@@ -262,6 +268,7 @@ screen_t *screen_create(display_t *disp)
     s->get_active_buffer = get_active_buffer;
     s->write_mb = write_mb;
     s->destroy = destroy;
+    s->refresh = refresh;
 
     return s;
 }

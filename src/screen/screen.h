@@ -26,6 +26,10 @@ struct screen
     buffer_t *(*get_active_buffer)(screen_t *this);
     void (*write_mb)(screen_t *this, const char *str); // write to the message bar
     void (*destroy)(screen_t *this);
+
+
+    // refresh/redraw the screen (mostly useful for the scripting environment)
+    void (*refresh)(screen_t *this);
 };
 
 screen_t *screen_create(display_t *disp);

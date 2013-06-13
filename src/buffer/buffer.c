@@ -178,8 +178,9 @@ buffer_t *buffer_create(void)
     b->get_line_data = get_line_data;
     b->num_lines = num_lines;
     b->input_key = input_key;
-    b->get_data_buffer = get_data_buffer;
     b->destroy = destroy;
+
+    b->get_data_buffer = get_data_buffer;
 
     return b;
 }

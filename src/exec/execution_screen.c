@@ -1,4 +1,5 @@
 #include "execution_screen.h"
+#include "execution_buffer.h"
 #include "display/display.h"
 
 #undef ENABLE_DEBUG
@@ -71,11 +72,34 @@ static PyObject *Screen_register_kbrd_callback(pye_Screen *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *Screen_get_active_buffer(pye_Screen *self)
+{
+    buffer_t *b = self->screen->get_active_buffer(self->screen);
+    if(b == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    PyObject *pBuffer = execution_buffer_create(b);
+    return pBuffer;
+}
+
+static PyObject *Screen_refresh(pye_Screen *self)
+{
+    self->screen->refresh(self->screen);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef Screen_methods[] = {
     {"write_mb", (PyCFunction)Screen_write_mb, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
     {"onkey", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
      "Register a key event handler for the screen object."},
+    {"get_active_buffer", (PyCFunction)Screen_get_active_buffer, METH_NOARGS,
+     "Get the Screen's active Buffer."},
+    {"refresh", (PyCFunction)Screen_refresh, METH_NOARGS,
+     "Redraw the screen on the display."},
     {NULL}  /* Sentinel */
 };
 

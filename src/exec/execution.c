@@ -2,6 +2,7 @@
 #include "execution.h"
 #include "execution_display.h"
 #include "execution_screen.h"
+#include "execution_buffer.h"
 
 #define CONFIG_MODULE "config"
 
@@ -50,6 +51,7 @@ execution_t *execution_create(screen_t *scrn, display_t *disp)
     Py_Initialize();
     execution_display_init();
     execution_screen_init();
+    execution_buffer_init();
 
     PyObject *m = Py_InitModule("pye", PyeMethods);
     PyModule_AddObject(m, "display", execution_display_create(disp));

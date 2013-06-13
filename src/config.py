@@ -17,8 +17,17 @@ def init():
 
 def key_handler(key):
     debug("python received key event ({})".format(key))
+
     if key == 20:
         screen.write_mb("python message")
+        return True
+
+    if key == 25:
+        b = screen.get_active_buffer()
+        debug("Got the active buffer");
+        b.insert('A');
+        debug("Added character to active buffer");
+        screen.refresh();
         return True
 
     return False

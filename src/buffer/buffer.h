@@ -24,9 +24,15 @@ struct buffer
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
 
-    data_buffer_t *(*get_data_buffer)(buffer_t *this);
-
     void (*destroy)(buffer_t *this);
+
+
+    // this is for the benefit of the scripting engine
+    // any C-code unrelated to the scripting should be inside the
+    // buffer_t implementation... this exposure is nesisary, such that
+    // the scripts can behave as if they were injected directly into the
+    // buffer_t module.
+    data_buffer_t *(*get_data_buffer)(buffer_t *this);
 };
 
 buffer_t *buffer_create(void);
