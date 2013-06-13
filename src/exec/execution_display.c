@@ -20,26 +20,53 @@ static PyObject *Display_clear(pye_Display *self)
 
 static PyObject *Display_set_cursor(PyObject *self, PyObject *args)
 {
-    ASSERT_UNIMPL();
-    return NULL;
+    uint x, y;
+    if(!PyArg_ParseTuple(args, "ii", &x, &y))
+        return NULL;
+
+    pye_Display *d = (pye_Display *)self;
+    d->display->set_cursor(d->display, x, y);
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static PyObject *Display_get_cursor(PyObject *self)
 {
-    ASSERT_UNIMPL();
-    return NULL;
+    uint x, y;
+    pye_Display *d = (pye_Display *)self;
+    d->display->get_cursor(d->display, &x, &y);
+
+    PyObject *tuple = PyTuple_New(2);
+    PyTuple_SetItem(tuple, 0, PyInt_FromLong((long)x));
+    PyTuple_SetItem(tuple, 1, PyInt_FromLong((long)y));
+    return tuple;
 }
 
 static PyObject *Display_get_size(PyObject *self)
 {
-    ASSERT_UNIMPL();
-    return NULL;
+    uint w, h;
+    pye_Display *d = (pye_Display *)self;
+    d->display->get_size(d->display, &w, &h);
+
+    PyObject *tuple = PyTuple_New(2);
+    PyTuple_SetItem(tuple, 0, PyInt_FromLong((long)w));
+    PyTuple_SetItem(tuple, 1, PyInt_FromLong((long)h));
+    return tuple;
 }
 
 static PyObject *Display_write(PyObject *self, PyObject *args)
 {
-    ASSERT_UNIMPL();
-    return NULL;
+    const char *str;
+    size_t num;
+    if(!PyArg_ParseTuple(args, "z#", &str, &num))
+        return NULL;
+
+    pye_Display *d = (pye_Display *)self;
+    d->display->write(d->display, str, num);
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static PyMethodDef Display_methods[] = {

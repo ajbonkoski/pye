@@ -8,17 +8,21 @@ typedef struct {
     screen_t *screen;
 } pye_Screen;
 
-static PyObject *Screen_doit2(pye_Screen *self)
+static PyObject *Screen_write_mb(pye_Screen *self, PyObject *args)
 {
-    DEBUG("screen.doit2 called\n");
+    const char *str;
+    if(!PyArg_ParseTuple(args, "z", &str))
+        return NULL;
+
+    self->screen->write_mb(self->screen, str);
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 static PyMethodDef Screen_methods[] = {
-    {"doit2", (PyCFunction)Screen_doit2, METH_NOARGS,
-     "A testing function to make sure the plumbing is right."},
+    {"write_mb", (PyCFunction)Screen_write_mb, METH_VARARGS,
+     "Write a message to the screen's Message buffer."},
     {NULL}  /* Sentinel */
 };
 
