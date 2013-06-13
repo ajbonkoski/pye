@@ -18,7 +18,7 @@ bool check(gap_buffer_t *gp, const char *s)
 
 void ANNOUNCE(gap_buffer_t *gb)
 {
-    char *s = gap_buffer_to_str(gb);
+    char *s = gap_buffer_to_str(gb, NULL);
     printf("gap_buffer_t is '%s'\n", s);
     free(s);
 }

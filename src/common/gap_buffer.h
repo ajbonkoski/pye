@@ -17,8 +17,8 @@ void gap_buffer_set_focus(gap_buffer_t *this, uint i);
 size_t gap_buffer_size(gap_buffer_t *this);
 void *gap_buffer_get(gap_buffer_t *this, uint i);
 
-// allocates new malloc'd memory - user is responsible for freeing it
-void *gap_buffer_to_str(gap_buffer_t *this);
+// 'databuf' allow the user to pass memory in. This memory MUST be correctly sized. If NULL is passed, the method allocates new memory and the user is responsible for freeing it
+void *gap_buffer_to_str(gap_buffer_t *this, void *databuf);
 void gap_buffer_insert(gap_buffer_t *this, uint i, void *c);
 void gap_buffer_delr(gap_buffer_t *this, uint i);
 void gap_buffer_dell(gap_buffer_t *this, uint i);

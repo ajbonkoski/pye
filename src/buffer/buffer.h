@@ -2,16 +2,11 @@
 #define BUFFER_H
 
 #include "common/common.h"
+#include "data_buffer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// an interim interface for the buffer_t to comunicate changes
-// back to the screen_t so display_t can be properly updated
-enum edit_result {
-    ER_NONE, ER_CURSOR, ER_ALL
-};
 
 typedef struct buffer buffer_t;
 struct buffer

@@ -136,11 +136,11 @@ void *gap_buffer_get(gap_buffer_t *this, uint i)
         return this->data + (i + gap_size()) * es;
 }
 
-void *gap_buffer_to_str(gap_buffer_t *this)
+void *gap_buffer_to_str(gap_buffer_t *this, void *databuf)
 {
     size_t es = this->elemsize;
     size_t sz = gap_buffer_size(this);
-    void *str = malloc((sz+1)*es);
+    void *str = databuf == NULL ? malloc((sz+1)*es) : databuf;
     for(size_t i = 0; i < sz; i++) {
         void *val = gap_buffer_get(this, i);
         memcpy(str + i*es, val, es);
@@ -208,8 +208,8 @@ void gap_buffer_join(gap_buffer_t *this, gap_buffer_t *other)
     uint total_size = this_size + other_size;
 
     // get a string of the data
-    u8 *this_str = gap_buffer_to_str(this);
-    u8 *other_str = gap_buffer_to_str(other);
+    u8 *this_str = gap_buffer_to_str(this, NULL);
+    u8 *other_str = gap_buffer_to_str(other, NULL);
     u8 *total_str = malloc((total_size+1) * es);
     memcpy(total_str, this_str, this_size * es);
     memcpy(total_str + this_size * es, other_str, other_size * es);

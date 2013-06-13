@@ -185,7 +185,7 @@ static char *get_line_data(buffer_t *b, uint i)
 {
     buffer_internal_t *this = cast_this(b);
     gap_buffer_t *line = *(gap_buffer_t **)gap_buffer_get(this->data, i);
-    return (char *)gap_buffer_to_str(line);
+    return (char *)gap_buffer_to_str(line, NULL);
 }
 
 static uint num_lines(buffer_t *b)
