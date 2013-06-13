@@ -16,11 +16,16 @@ struct buffer
 
     void (*set_filename)(buffer_t *this, const char *filename);
     const char *(*get_filename)(buffer_t *this);
+
     void (*get_cursor)(buffer_t *this, uint *x, uint *y);
     void (*set_cursor)(buffer_t *this, uint x, uint y);
+
     char *(*get_line_data)(buffer_t *this, uint i);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
+
+    data_buffer_t *(*get_data_buffer)(buffer_t *this);
+
     void (*destroy)(buffer_t *this);
 };
 

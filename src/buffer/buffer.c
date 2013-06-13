@@ -143,6 +143,12 @@ static enum edit_result input_key(buffer_t *b, u32 c)
     return er;
 }
 
+static data_buffer_t *get_data_buffer(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    return this->databuf;
+}
+
 static void destroy(buffer_t *b)
 {
     buffer_internal_t *this = cast_this(b);
@@ -172,6 +178,7 @@ buffer_t *buffer_create(void)
     b->get_line_data = get_line_data;
     b->num_lines = num_lines;
     b->input_key = input_key;
+    b->get_data_buffer = get_data_buffer;
     b->destroy = destroy;
 
     return b;
