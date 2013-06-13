@@ -18,8 +18,6 @@ struct buffer
     const char *(*get_filename)(buffer_t *this);
     void (*get_cursor)(buffer_t *this, uint *x, uint *y);
     void (*set_cursor)(buffer_t *this, uint x, uint y);
-    void (*endline)(buffer_t *this);
-    void (*insert)(buffer_t *this, char c);
     char *(*get_line_data)(buffer_t *this, uint i);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);

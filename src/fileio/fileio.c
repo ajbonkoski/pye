@@ -17,10 +17,7 @@ buffer_t *fileio_load_buffer(const char *filename)
         if(c == EOF)
             break;
 
-        if(c == '\n')
-            b->endline(b);
-        else
-            b->insert(b, (char)c);
+        b->input_key(b, c);
     }
 
     fclose(f);
