@@ -1,4 +1,5 @@
 #include "execution_screen.h"
+#include "display/display.h"
 
 #undef ENABLE_DEBUG
 #define ENABLE_DEBUG 1
@@ -6,6 +7,7 @@
 typedef struct {
     PyObject_HEAD
     screen_t *screen;
+    PyObject *callback_func; // XXX: this is not cleaned up properly
 } pye_Screen;
 
 static PyObject *Screen_write_mb(pye_Screen *self, PyObject *args)
@@ -20,9 +22,60 @@ static PyObject *Screen_write_mb(pye_Screen *self, PyObject *args)
     return Py_None;
 }
 
+static bool screen_key_event_handler(void *usr, key_event_t *e)
+{
+    PyObject *func = (PyObject *)usr;
+    PyObject *args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, PyInt_FromLong(e->key_code));
+    PyObject *result = PyObject_CallObject(func, args);
+
+    bool ret = false;
+    if(!PyBool_Check(result)) {
+        ERROR("python key handler did not return a boolean\n");
+        ret = false;
+    } else if(result == Py_True) {
+        ret = true;
+    } else if(result == Py_False) {
+        ret = false;
+    } else {
+        ASSERT_FAIL("screen_key_event_handler: this should never happen...");
+    }
+
+    // some cleanup
+    Py_DECREF(result);
+    Py_DECREF(args);
+
+    return ret;
+}
+
+static PyObject *Screen_register_kbrd_callback(pye_Screen *self, PyObject *args)
+{
+    DEBUG("inside Screen_register_kbrd_callback\n");
+
+    PyObject *func = NULL;
+    if(!PyArg_ParseTuple(args, "O", &func))
+        return NULL;
+
+    if(!PyCallable_Check(func)) {
+        ERROR("error: Screen_register_kbrd_callback recieved uncallable parameter\n");
+        Py_XDECREF(func);
+        goto ret;
+    }
+
+    screen_t *s = self->screen;
+    s->register_kbrd_callback(s, screen_key_event_handler, (void *)func);
+    self->callback_func = func;
+
+ ret:
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef Screen_methods[] = {
     {"write_mb", (PyCFunction)Screen_write_mb, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
+    {"onkey", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
+     "Register a key event handler for the screen object."},
     {NULL}  /* Sentinel */
 };
 

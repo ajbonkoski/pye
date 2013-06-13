@@ -16,6 +16,10 @@ typedef struct
     varray_t *buffers;
     buffer_t *cb;  /* the current buffer */
 
+    // key handler data
+    key_event_func_t key_callback;
+    void *key_usr;
+
 } screen_internal_t;
 static screen_internal_t *cast_this(screen_t *s)
 {
@@ -24,14 +28,21 @@ static screen_internal_t *cast_this(screen_t *s)
 }
 
 // forward declarations
+static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr);
 static uint add_buffer(screen_t *scrn, buffer_t *buffer);
 static varray_t *list_buffers(screen_t *scrn);
-static void set_buffer(screen_t *scrn, uint id);
+static void set_active_buffer(screen_t *scrn, uint id);
+static buffer_t *get_active_buffer(screen_t *scrn);
 static void write_mb(screen_t *scrn, const char *str);
 static void destroy(screen_t *scrn);
-
-
 static void update_all(screen_internal_t *this);
+
+static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
+{
+    screen_internal_t *this = cast_this(scrn);
+    this->key_callback = f;
+    this->key_usr = usr;
+}
 
 static uint add_buffer(screen_t *scrn, buffer_t *buffer)
 {
@@ -51,11 +62,17 @@ static varray_t *list_buffers(screen_t *scrn)
     return this->buffers;
 }
 
-static void set_buffer(screen_t *scrn, uint id)
+static void set_active_buffer(screen_t *scrn, uint id)
 {
     screen_internal_t *this = cast_this(scrn);
     ASSERT(id >= 0 && id < varray_size(this->buffers), "Index out-of-bounds error");
     this->cb = varray_get(this->buffers, id);
+}
+
+static buffer_t *get_active_buffer(screen_t *scrn)
+{
+    screen_internal_t *this = cast_this(scrn);
+    return this->cb;
 }
 
 static void write_mb(screen_t *scrn, const char *str)
@@ -147,6 +164,13 @@ static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
 
+    // allow any registered handler to override functionality
+    if(this->key_callback) {
+        bool is_handled = this->key_callback(this->key_usr, e);
+        if(is_handled)
+            return true;
+    }
+
     u32 c = e->key_code;
     //char ch = (char)c;
     const int BUFSZ = 256;
@@ -178,7 +202,7 @@ static bool key_handler(void *usr, key_event_t *e)
             snprintf(buffer, BUFSZ, "failed to read: %s", FILENAME);
             write_mb(s, buffer);
         } else {
-            s->set_buffer(s, s->add_buffer(s, b));
+            s->set_active_buffer(s, s->add_buffer(s, b));
             update_all(this);
         }
     }
@@ -231,9 +255,11 @@ screen_t *screen_create(display_t *disp)
     s->impl = screen_create_internal(s, disp);
     s->impl_type = IMPL_TYPE;
 
+    s->register_kbrd_callback = register_kbrd_callback;
     s->add_buffer = add_buffer;
     s->list_buffers = list_buffers;
-    s->set_buffer = set_buffer;
+    s->set_active_buffer = set_active_buffer;
+    s->get_active_buffer = get_active_buffer;
     s->write_mb = write_mb;
     s->destroy = destroy;
 

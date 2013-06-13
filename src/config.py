@@ -1,11 +1,27 @@
 from pye import *
 
-debug("inside python config")
+def init():
+    debug("inside python config")
 
-x, y = display.get_cursor()
-w, h = display.get_size()
-debug("loc: ({}, {})".format(x, y))
-debug("size: ({}, {})".format(w, h))
-#display.write("Written from Python!")
-screen.write_mb("Wrote from Python!")
-debug("after")
+    x, y = display.get_cursor()
+    debug("loc: ({}, {})".format(x, y))
+
+    w, h = display.get_size()
+    debug("size: ({}, {})".format(w, h))
+
+    #display.write("Written from Python!")
+    screen.write_mb("Wrote from Python!")
+
+    ## register key handler
+    screen.onkey(key_handler)
+
+def key_handler(key):
+    debug("python received key event ({})".format(key))
+    if key == 20:
+        screen.write_mb("python message")
+        return True
+
+    return False
+
+
+init()
