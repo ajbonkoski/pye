@@ -3,7 +3,7 @@ include ../common.mk
 CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_EXEC)
 LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON) $(LDFLAGS_EXEC)
 
-EXEC_OBJS = execution.o execution_display.o execution_screen.o execution_buffer.o
+EXEC_OBJS = execution.o execution_display.o execution_keyboard.o execution_screen.o execution_buffer.o
 LIBEXEC=$(LIB_PATH)/libexecution.a
 
 ALL = $(LIBEXEC)
