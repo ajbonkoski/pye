@@ -1,4 +1,5 @@
 from pye import *
+from pye_ext import syntax_highlighter
 
 def init():
     debug("inside python config")
@@ -16,7 +17,6 @@ def init():
     screen.onkey(key_handler)
 
 def key_handler(key):
-    debug("python received key event ({})".format(key))
 
     if key == 20:
         screen.write_mb("python message")
