@@ -1,6 +1,5 @@
 #include "execution_screen.h"
 #include "execution_buffer.h"
-#include "display/display.h"
 
 #undef ENABLE_DEBUG
 #define ENABLE_DEBUG 1
