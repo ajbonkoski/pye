@@ -97,10 +97,26 @@ static void delete_char_left(data_buffer_internal_t *this)
 static void delete_char_right(data_buffer_internal_t *this)
 {
     gap_buffer_t *gb = get_line_gb(this, this->cursor_y);
-    if(this->cursor_x >= gap_buffer_size(gb))
+    uint gb_size = gap_buffer_size(gb);
+    if(this->cursor_x > gb_size)
         return;
 
-    gap_buffer_delr(gb, this->cursor_x);
+    if(this->cursor_x < gb_size) {
+        gap_buffer_delr(gb, this->cursor_x);
+    }
+
+    // this->cursor_x == gb_size
+    else if(this->cursor_y+1 != num_lines(this->super)) {
+        gap_buffer_t *cur = get_line_gb(this, this->cursor_y);
+        //uint cur_len = gap_buffer_size(cur);
+        gap_buffer_t *next = get_line_gb(this, this->cursor_y+1);
+
+        gap_buffer_delr(this->data, this->cursor_y+1);
+        gap_buffer_join(cur, next);
+
+        /* this->cursor_x = prev_len; */
+        /* this->cursor_y -= 1; */
+    }
 
     update_edit_result(this, ER_ALL);
     return;

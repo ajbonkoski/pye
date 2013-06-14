@@ -12,21 +12,104 @@ typedef struct {
 } pye_Buffer;
 
 
-static PyObject *Buffer_insert(pye_Buffer *self, PyObject *args)
+static PyObject *Buffer_get_cursor(pye_Buffer *self)
 {
-    char c;
-    if(!PyArg_ParseTuple(args, "c", &c))
+    uint x, y;
+    self->dbuffer->get_cursor(self->dbuffer, &x, &y);
+
+    PyObject *tuple = PyTuple_New(2);
+    PyTuple_SetItem(tuple, 0, PyInt_FromLong((long)x));
+    PyTuple_SetItem(tuple, 1, PyInt_FromLong((long)y));
+    return tuple;
+}
+
+static PyObject *Buffer_set_cursor(pye_Buffer *self, PyObject *args)
+{
+    uint x, y;
+    if(!PyArg_ParseTuple(args, "ii", &x, &y))
         return NULL;
 
-    self->dbuffer->insert(self->dbuffer, (int)c);
+    self->dbuffer->set_cursor(self->dbuffer, x, y);
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
+static PyObject *Buffer_insert(pye_Buffer *self, PyObject *args)
+{
+    int c;
+    if(!PyArg_ParseTuple(args, "i", &c))
+        return NULL;
+
+    self->dbuffer->insert(self->dbuffer, c);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
+{
+    const uint BUFSZ = 200;
+    char buffer[BUFSZ];
+    char *alloc = NULL;
+
+    uint i;
+    if(!PyArg_ParseTuple(args, "i", &i))
+        return NULL;
+
+    uint ll = self->dbuffer->line_len(self->dbuffer, i);
+
+    // setup the data pointer
+    char *ptr = buffer;
+    if(ll+1 > BUFSZ) {
+        alloc = malloc((ll+1) * sizeof(char));
+        ptr = alloc;
+    }
+
+    data_buffer_t *db = self->dbuffer;
+    char *str = db->get_line_data(db, i, ptr);
+
+    return PyString_FromString(str);
+}
+
+static PyObject *Buffer_line_len(pye_Buffer *self, PyObject *args)
+{
+    uint i;
+    if(!PyArg_ParseTuple(args, "i", &i))
+        return NULL;
+
+    uint ll = self->dbuffer->line_len(self->dbuffer, i);
+    return PyInt_FromLong(ll);
+}
+
+static PyObject *Buffer_get_char_at(pye_Buffer *self, PyObject *args)
+{
+    /* char (*get_char_at)(data_buffer_t *this, uint x, uint y); */
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Buffer_num_lines(pye_Buffer *self)
+{
+    uint nlines = self->dbuffer->num_lines(self->dbuffer);
+    return PyInt_FromLong(nlines);
+}
+
 static PyMethodDef Buffer_methods[] = {
+    {"get_cursor", (PyCFunction)Buffer_get_cursor, METH_NOARGS,
+     "Get the cursor location in the buffer. This can differ from the screen cursor."},
+    {"set_cursor", (PyCFunction)Buffer_set_cursor, METH_VARARGS,
+     "Set the cursor location in the buffer. This can differ from the screen cursor."},
     {"insert", (PyCFunction)Buffer_insert, METH_VARARGS,
      "Insert a character into the buffer at the current cursor location. Note: does not automatically redraw screen."},
+    {"get_line_data", (PyCFunction)Buffer_get_line_data, METH_VARARGS,
+     "Get a string of the data on the requested line."},
+    {"line_len", (PyCFunction)Buffer_line_len, METH_VARARGS,
+     "Get a length of the data on the requested line."},
+    {"get_char_at", (PyCFunction)Buffer_get_char_at, METH_VARARGS,
+     "Get the character at the requested x, y location."},
+    {"num_lines", (PyCFunction)Buffer_num_lines, METH_NOARGS,
+     "Get the number of lines contained in the buffer."},
     {NULL}  /* Sentinel */
 };
 
