@@ -15,7 +15,7 @@ typedef struct
 
 } key_event_t;
 
-#define KBRD_CTRL(ch)   (ch-'a'+1)
+#define KBRD_CTRL(ch)   ((ch)-'a'+1)
 #define KBRD_ARROW_LEFT     ((1)<<8)
 #define KBRD_ARROW_RIGHT    ((2)<<8)
 #define KBRD_ARROW_UP       ((3)<<8)

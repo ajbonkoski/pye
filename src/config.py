@@ -4,6 +4,7 @@ from pye_ext import syntax_highlighter
 def init():
     debug("inside python config")
     debug("keyboard.ARROW_LEFT={}".format(keyboard.ARROW_LEFT))
+    debug("Ctrl-u = {}".format(keyboard.CTRL('u')))
 
     x, y = display.get_cursor()
     debug("loc: ({}, {})".format(x, y))
@@ -19,19 +20,19 @@ def init():
 
 def key_handler(key):
 
-    if key == 20:
+    if key == keyboard.CTRL('t'):
         screen.write_mb("python message")
         return True
 
-    if key == 25:
+    if key == keyboard.CTRL('y'):
         b = screen.get_active_buffer()
         debug("Got the active buffer");
-        b.insert('A');
+        b.insert(ord('A'));
         debug("Added character to active buffer");
         screen.refresh();
         return True
 
-    if key == 11:
+    if key == keyboard.CTRL('k'):
         handle_kill()
         screen.refresh();
         return True
@@ -42,7 +43,6 @@ def handle_kill():
     b = screen.get_active_buffer()
     x, y = b.get_cursor()
     ll = b.line_len(y)
-    DEL_KEY = 19<<8
 
     num_to_del = ll-x
     if num_to_del == 0:
@@ -50,7 +50,7 @@ def handle_kill():
 
     for i in range(num_to_del):
         debug("inserting key i={}".format(i))
-        b.insert(DEL_KEY) # insert a DEL key
+        b.insert(keyboard.DEL) # insert a DEL key
 
     debug("handle_kill done")
 

@@ -60,7 +60,19 @@ static PyMemberDef Keyboard_members[] = {
     {NULL}  /* Sentinel */
 };
 
+static PyObject *Keyboard_CTRL(pye_Keyboard *self, PyObject *args)
+{
+    char c;
+    if(!PyArg_ParseTuple(args, "c", &c))
+        return NULL;
+
+    int keycode = KBRD_CTRL(c);
+    return PyInt_FromLong(keycode);
+}
+
 static PyMethodDef Keyboard_methods[] = {
+    {"CTRL", (PyCFunction)Keyboard_CTRL, METH_VARARGS,
+     "Get they keycode for some key when ctrl is held down."},
     {NULL}  /* Sentinel */
 };
 
