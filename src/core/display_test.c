@@ -23,7 +23,7 @@ bool key_pressed(void *usr, key_event_t *e)
         uint w, h;
         disp->get_size(disp, &w, &h);
         DEBUG("|w=%d h=%d|\n", w, h);
-        //disp->write(disp, buffer, strlen(buffer));
+        //disp->write(disp, buffer, strlen(buffer), -1);
     }
 
     else if(c == 'c') {
@@ -34,11 +34,11 @@ bool key_pressed(void *usr, key_event_t *e)
         uint x, y;
         disp->get_cursor(disp, &x, &y);
         DEBUG("|x=%d y=%d|", x, y);
-        //disp->write(disp, buffer, strlen(buffer));
+        //disp->write(disp, buffer, strlen(buffer), -1);
     }
 
     else {
-        disp->write(disp, &c, 1);
+        disp->write(disp, &c, 1, -1);
     }
 
     return true;

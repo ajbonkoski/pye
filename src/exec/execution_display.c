@@ -63,7 +63,7 @@ static PyObject *Display_write(PyObject *self, PyObject *args)
         return NULL;
 
     pye_Display *d = (pye_Display *)self;
-    d->display->write(d->display, str, num);
+    d->display->write(d->display, str, num, -1);
 
     Py_INCREF(Py_None);
     return Py_None;

@@ -27,6 +27,9 @@ typedef struct
     kbrd_curses_t *kbrd;
     varray_t *key_delegates;  // a dynamic array of key_event_delegate_t structs
 
+    // styles
+    varray_t *styles;
+
 } display_curses_t;
 static display_curses_t *cast_this(display_t *d)
 {
@@ -51,7 +54,9 @@ static void trigger_key_callbacks(display_curses_t *this, key_event_t *e);
 static void flush(display_t *disp);
 static void main_loop(display_t *disp);
 static void main_quit(display_t *disp);
-static void _write(display_t *disp, const char *s, size_t num);
+static void set_styles(display_t *this, varray_t *styles);
+static void remove_styles(display_t *this);
+static void _write(display_t *disp, const char *s, size_t num, int style);
 static void destroy(display_t *disp);
 static display_curses_t *display_curses_create_internal(display_t *disp);
 
@@ -128,14 +133,28 @@ static void main_quit(display_t *disp)
     this->running = false;
 }
 
-static void _write(display_t *disp, const char *s, size_t num)
+static void set_styles(display_t *disp, varray_t *styles)
+{
+    display_curses_t *this = cast_this(disp);
+    this->styles = styles;
+}
+
+static void remove_styles(display_t *disp)
+{
+    display_curses_t *this = cast_this(disp);
+    this->styles = NULL;  // don't free the mem (we aren't the owner)
+}
+
+static void _write(display_t *disp, const char *s, size_t num, int style)
 {
     //display_terminal_t *this = cast_this(disp);
     for(size_t i = 0; i < num; i++) {
+        int c;
         if(s != NULL)
-            addch((int)s[i]);
+            c = (int)s[i];
         else
-            addch((int)' ');
+            c = (int)' ';
+        addch(c);
     }
 }
 
@@ -164,13 +183,18 @@ static display_curses_t *display_curses_create_internal(display_t *disp)
 static void internal_initialize(display_t *disp)
 {
     display_curses_t *this = cast_this(disp);
+
     this->wind = initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
+    start_color();
     getmaxyx(this->wind, this->height, this->width);
     clear();
     refresh();
+
+    const char *term = getenv("TERM");
+    DEBUG("Initialed ncurses with TERM='%s' and %d colors", term, COLORS);
 
     set_crash_func((crash_func_t)endwin, NULL);
 }
@@ -186,6 +210,8 @@ display_t *display_curses_create(void)
     d->flush = flush;
     d->main_loop = main_loop;
     d->main_quit = main_quit;
+    d->set_styles = set_styles;
+    d->remove_styles = remove_styles;
     d->write = _write;
     d->destroy = destroy;
 

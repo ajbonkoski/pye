@@ -70,7 +70,7 @@ bool key_pressed(void *usr, key_event_t *e)
     }
 
     else {
-        this->disp->write(this->disp, &ch, 1);
+        this->disp->write(this->disp, &ch, 1, -1);
     }
 
     //DEBUG("%d:%d:%d:%d\n", c, KEY_CTRL('s'), KEY_CTRL('l'), KEY_CTRL('g'));

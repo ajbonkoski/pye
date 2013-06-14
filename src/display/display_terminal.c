@@ -1,6 +1,7 @@
 #include "display_terminal.h"
 
 #include <sys/ioctl.h>
+#include <signal.h>
 #include <term.h>
 
 #include "common/timeutil.h"
@@ -48,6 +49,28 @@ static display_terminal_t *cast_this(display_t *d)
     return (display_terminal_t *)d->impl;
 }
 
+
+#define KEY_CTRL_C 3
+#define KEY_CTRL_Z 26
+#define KEY_CTRL_SLASH 28
+
+//the standard event handler, to implement basic Unix interupt key commands
+static bool key_handler(void *usr, key_event_t *e)
+{
+    display_t *this = (display_t *)usr;
+
+    switch(e->key_code) {
+        case KEY_CTRL_C:
+            this->main_quit(this);
+            return true;
+        case KEY_CTRL_Z:
+            raise(SIGSTOP);
+            return true;
+    }
+
+    return false;
+}
+
 typedef struct
 {
     key_event_func_t key_callback;
@@ -66,7 +89,7 @@ static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e);
 static void flush(display_t *disp);
 static void main_loop(display_t *disp);
 static void main_quit(display_t *disp);
-static void _write(display_t *disp, const char *s, size_t num);
+static void _write(display_t *disp, const char *s, size_t num, int style);
 static void destroy(display_t *disp);
 static display_terminal_t *display_terminal_create_internal(display_t *s);
 
@@ -125,7 +148,7 @@ static void clear(display_t *disp)
     uint w, h;
     get_size(disp, &w, &h);
     set_cursor(disp, 0, 0);
-    _write(disp, NULL, w*h);
+    _write(disp, NULL, w*h, -1);
     set_cursor(disp, 0, 0);
 }
 
@@ -143,6 +166,7 @@ static void set_cursor(display_t *disp, uint x, uint y)
 {
     display_terminal_t *this = cast_this(disp);
     ASSERT(this != NULL, "this should never happen");
+    DEBUG("moving cursor\n");
     tputs(tgoto(this->CM, x, y), 1, ttputc);
     this->x = x;
     this->y = y;
@@ -214,7 +238,7 @@ static void inc_cursor(display_terminal_t *this, size_t count)
     }
 }
 
-static void _write(display_t *disp, const char *s, size_t num)
+static void _write(display_t *disp, const char *s, size_t num, int style)
 {
     //display_terminal_t *this = cast_this(disp);
     for(size_t i = 0; i < num; i++) {
@@ -222,7 +246,7 @@ static void _write(display_t *disp, const char *s, size_t num)
             ttputc((int)s[i]);
         else
             ttputc((int)' ');
-        inc_cursor(cast_this(disp), 1);
+        if(0) inc_cursor(cast_this(disp), 1);
     }
 
     ttflush();
@@ -269,6 +293,7 @@ void internal_initialize(display_t *disp)
     if(this->open == true) {
         get_size(disp, &this->width, &this->height);
         clear(disp);
+        register_kbrd_callback(disp, key_handler, disp);
     }
 }
 

@@ -2,11 +2,21 @@
 #define DISPLAY_H
 
 #include "common/common.h"
+#include "common/varray.h"
 #include "keyboard.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct
+{
+    uint bg_rgb;
+    uint fg_rgb;
+    bool bold;
+    bool underline;
+
+} styles_t;
 
 typedef struct display display_t;
 struct display
@@ -19,7 +29,9 @@ struct display
     void (*get_cursor)(display_t *this, uint *x, uint *y);
     void (*get_size)(display_t *this, uint *w, uint *h);
     void (*register_kbrd_callback)(display_t *this, key_event_func_t f, void *usr);
-    void (*write)(display_t *this, const char *s, size_t num);
+    void (*set_styles)(display_t *this, varray_t *styles);
+    void (*remove_styles)(display_t *this);
+    void (*write)(display_t *this, const char *s, size_t num, int style); // style == -1 means "no style"
     void (*flush)(display_t *this);
     void (*main_loop)(display_t *this);
     void (*main_quit)(display_t *this);

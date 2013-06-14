@@ -99,7 +99,7 @@ static void write_mb(screen_t *scrn, const char *str)
             buf[i] = BLANK;
         }
     }
-    this->display->write(this->display, buf, this->disp_width);
+    this->display->write(this->display, buf, this->disp_width, -1);
     free(buf);
 
     // step 4: restore cursor position
@@ -123,13 +123,13 @@ static void destroy(screen_t *scrn)
 static void display_write_line(screen_internal_t *this, const char *line, int lineno)
 {
     this->display->set_cursor(this->display, 0, lineno);
-    this->display->write(this->display, line, strlen(line));
+    this->display->write(this->display, line, strlen(line), -1);
 
     // write some blanks (to the end of the line)
     uint x, y, w, h;
     this->display->get_size(this->display, &w, &h);
     this->display->get_cursor(this->display, &x, &y);
-    this->display->write(this->display, NULL, w-(x+1));
+    this->display->write(this->display, NULL, w-(x+1), -1);
 }
 
 static void update_cursor(screen_internal_t *this)
@@ -155,7 +155,7 @@ static void update_all(screen_internal_t *this)
 
     // clear the remainer of the screen
     for(; i < h-1; i++) {
-        this->display->write(this->display, NULL, w);
+        this->display->write(this->display, NULL, w, -1);
     }
 
     update_cursor(this);
