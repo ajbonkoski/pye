@@ -3,6 +3,7 @@ from pye_ext import syntax_highlighter
 
 def init():
     debug("inside python config")
+    debug("keyboard.ARROW_LEFT={}".format(keyboard.ARROW_LEFT))
 
     x, y = display.get_cursor()
     debug("loc: ({}, {})".format(x, y))

@@ -2,6 +2,8 @@
 #define EXECUTION_KEYBOARD_H
 
 #include <Python.h>
+#include "structmember.h"
+
 #include "common/common.h"
 #include "display/keyboard.h"
 

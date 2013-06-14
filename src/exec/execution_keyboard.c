@@ -1,11 +1,64 @@
 #include "execution_keyboard.h"
+#include "display/keyboard.h"
 
 #undef ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
 typedef struct {
     PyObject_HEAD
+
+    /* constants from "display/keyboard.h" */
+    uint ARROW_LEFT;
+    uint ARROW_RIGHT;
+    uint ARROW_UP;
+    uint ARROW_DOWN;
+    uint HOME;
+    uint BACKSPACE;
+    uint F1;
+    uint F2;
+    uint F3;
+    uint F4;
+    uint F5;
+    uint F6;
+    uint F7;
+    uint F8;
+    uint F9;
+    uint F10;
+    uint F11;
+    uint F12;
+    uint DEL;
+    uint INS;
+    uint ENTER;
+
 } pye_Keyboard;
+
+#define KEY_FIELD(key) \
+    {#key, T_INT, offsetof(pye_Keyboard, key), 0}
+
+static PyMemberDef Keyboard_members[] = {
+    KEY_FIELD(ARROW_LEFT),
+    KEY_FIELD(ARROW_RIGHT),
+    KEY_FIELD(ARROW_UP),
+    KEY_FIELD(ARROW_DOWN),
+    KEY_FIELD(HOME),
+    KEY_FIELD(BACKSPACE),
+    KEY_FIELD(F1),
+    KEY_FIELD(F2),
+    KEY_FIELD(F3),
+    KEY_FIELD(F4),
+    KEY_FIELD(F5),
+    KEY_FIELD(F6),
+    KEY_FIELD(F7),
+    KEY_FIELD(F8),
+    KEY_FIELD(F9),
+    KEY_FIELD(F10),
+    KEY_FIELD(F11),
+    KEY_FIELD(F12),
+    KEY_FIELD(DEL),
+    KEY_FIELD(INS),
+    KEY_FIELD(ENTER),
+    {NULL}  /* Sentinel */
+};
 
 static PyMethodDef Keyboard_methods[] = {
     {NULL}  /* Sentinel */
@@ -41,6 +94,7 @@ static PyTypeObject pye_KeyboardType = {
     0,                         /* tp_iter */
     0,                         /* tp_iternext */
     Keyboard_methods,          /* tp_methods */
+    Keyboard_members,          /* tp_members */
 };
 
 
@@ -53,6 +107,9 @@ void execution_keyboard_init(void)
     Py_INCREF(&pye_KeyboardType);
 }
 
+
+#define KEY_ASSIGN(key) self->key = KBRD_ ## key
+
 PyObject *execution_keyboard_create(void)
 {
     PyTypeObject *t = &pye_KeyboardType;
@@ -61,6 +118,30 @@ PyObject *execution_keyboard_create(void)
         DEBUG("Failed to make a pye_Keyboard object\n");
         return NULL;
     }
+
+    // do static init - this is probably the wrong place,
+    // but Keyboard should be a Singleton anyways
+    KEY_ASSIGN(ARROW_LEFT);
+    KEY_ASSIGN(ARROW_RIGHT);
+    KEY_ASSIGN(ARROW_UP);
+    KEY_ASSIGN(ARROW_DOWN);
+    KEY_ASSIGN(HOME);
+    KEY_ASSIGN(BACKSPACE);
+    KEY_ASSIGN(F1);
+    KEY_ASSIGN(F2);
+    KEY_ASSIGN(F3);
+    KEY_ASSIGN(F4);
+    KEY_ASSIGN(F5);
+    KEY_ASSIGN(F6);
+    KEY_ASSIGN(F7);
+    KEY_ASSIGN(F8);
+    KEY_ASSIGN(F9);
+    KEY_ASSIGN(F10);
+    KEY_ASSIGN(F11);
+    KEY_ASSIGN(F12);
+    KEY_ASSIGN(DEL);
+    KEY_ASSIGN(INS);
+    KEY_ASSIGN(ENTER);
 
     return (PyObject *)self;
 }
