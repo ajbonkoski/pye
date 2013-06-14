@@ -8,6 +8,7 @@ typedef struct {
     PyObject_HEAD
     buffer_t *buffer;
     data_buffer_t *dbuffer;
+    PyObject *callback_func; // XXX: this is not cleaned up properly
 } pye_Buffer;
 
 
@@ -71,6 +72,50 @@ static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
     return PyString_FromString(str);
 }
 
+static char *buffer_formatter_handler(void *usr, char *data)
+{
+    PyObject *func = (PyObject *)usr;
+    PyObject *args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, PyString_FromString(data));
+    PyObject *result = PyObject_CallObject(func, args);
+
+    char *ret = NULL;
+    if(!PyString_Check(result)) {
+        ERROR("python key handler did not return a boolean\n");
+    } else {
+        ret = strdup(PyString_AsString(result));
+    }
+
+    // some cleanup
+    Py_DECREF(result);
+    Py_DECREF(args);
+
+    return ret;
+}
+
+static PyObject *Buffer_register_formatter(pye_Buffer *self, PyObject *args)
+{
+    PyObject *func = NULL;
+    if(!PyArg_ParseTuple(args, "O", &func))
+        return NULL;
+
+    if(!PyCallable_Check(func)) {
+        ERROR("error: Buffer_register_formatter recieved uncallable parameter\n");
+        Py_XDECREF(func);
+        goto ret;
+    }
+
+    DEBUG("Buffer_register_formatter: registering...\n");
+
+    buffer_t *b = self->buffer;
+    b->register_formatter(b, buffer_formatter_handler, (void *)func);
+    self->callback_func = func;
+
+ ret:
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject *Buffer_line_len(pye_Buffer *self, PyObject *args)
 {
     uint i;
@@ -103,6 +148,8 @@ static PyMethodDef Buffer_methods[] = {
      "Insert a character into the buffer at the current cursor location. Note: does not automatically redraw screen."},
     {"get_line_data", (PyCFunction)Buffer_get_line_data, METH_VARARGS,
      "Get a string of the data on the requested line."},
+    {"register_formatter", (PyCFunction)Buffer_register_formatter, METH_VARARGS,
+     " Register a function to be called when the application asks for a formatted line. The registered function gets a string with the contents of the line, and should return a new formatted string."},
     {"line_len", (PyCFunction)Buffer_line_len, METH_VARARGS,
      "Get a length of the data on the requested line."},
     {"get_char_at", (PyCFunction)Buffer_get_char_at, METH_VARARGS,

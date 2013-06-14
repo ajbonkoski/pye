@@ -14,6 +14,10 @@ typedef struct
     char *filename;
     data_buffer_t *databuf;
 
+    // formatter callback
+    char *(*formatter_callback)(void *usr, char *data);
+    void *formatter_usr;
+
 } buffer_internal_t;
 
 // inline functions
@@ -113,6 +117,37 @@ static char *get_line_data(buffer_t *b, uint i)
     return d->get_line_data(d, i, NULL);
 }
 
+static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
+{
+    buffer_internal_t *this = cast_this(b);
+    data_buffer_t *d = this->databuf;
+
+    char *raw = d->get_line_data(d, i, NULL);
+    char *data = raw;
+
+    if(this->formatter_callback != NULL) {
+        data = this->formatter_callback(this->formatter_usr, raw);
+
+        // raw is no longer needed, we are responsible for freeing if
+        free(raw);
+    }
+
+    buffer_line_t *bl = calloc(1, sizeof(buffer_line_t));
+    bl->is_formated = false;
+    bl->data = data;
+    bl->num_visible = strlen(bl->data);
+    return bl;
+}
+
+static void register_formatter(buffer_t *b,
+                               char *(*func)(void *usr, char *data),
+                               void *usr)
+{
+    buffer_internal_t *this = cast_this(b);
+    this->formatter_callback = func;
+    this->formatter_usr = usr;
+}
+
 static uint num_lines(buffer_t *b)
 {
     buffer_internal_t *this = cast_this(b);
@@ -163,6 +198,8 @@ buffer_internal_t *buffer_create_internal(buffer_t *b)
     buffer_internal_t *this = calloc(1, sizeof(buffer_internal_t));
     this->super = b;
     this->databuf = data_buffer_create();
+    this->formatter_callback = NULL;
+    this->formatter_usr = NULL;
     return this;
 }
 
@@ -176,6 +213,8 @@ buffer_t *buffer_create(void)
     b->get_cursor = get_cursor;
     b->set_cursor = set_cursor;
     b->get_line_data = get_line_data;
+    b->get_line_data_fmt = get_line_data_fmt;
+    b->register_formatter = register_formatter;
     b->num_lines = num_lines;
     b->input_key = input_key;
     b->destroy = destroy;

@@ -148,9 +148,9 @@ static void update_all(screen_internal_t *this)
     uint numlines = this->cb->num_lines(this->cb);
     int i;
     for(i = 0; i < numlines && i < h-1; i++) {
-        char *line = this->cb->get_line_data(this->cb, i);
-        display_write_line(this, line, i);
-        free(line);
+        buffer_line_t *line = this->cb->get_line_data_fmt(this->cb, i);
+        display_write_line(this, line->data, i);
+        buffer_line_destroy(line);
     }
 
     // clear the remainer of the screen

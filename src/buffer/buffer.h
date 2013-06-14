@@ -8,6 +8,23 @@
 extern "C" {
 #endif
 
+typedef struct
+{
+    bool is_formated;
+    char *data;
+
+    /* 'data' may have more characters due to formatting characters
+       this variable provides the number of visible characters */
+    uint num_visible;
+
+} buffer_line_t;
+
+static inline void buffer_line_destroy(buffer_line_t *bl)
+{
+    if(bl->data != NULL) free(bl->data);
+    free(bl);
+}
+
 typedef struct buffer buffer_t;
 struct buffer
 {
@@ -21,6 +38,8 @@ struct buffer
     void (*set_cursor)(buffer_t *this, uint x, uint y);
 
     char *(*get_line_data)(buffer_t *this, uint i);
+    buffer_line_t *(*get_line_data_fmt)(buffer_t *this, uint i);
+    void (*register_formatter)(buffer_t *this, char *(*func)(void *usr, char *data), void *usr);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
 

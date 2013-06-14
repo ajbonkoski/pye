@@ -3,6 +3,13 @@ from pye_ext import syntax_highlighter
 
 def init():
     debug("inside python config")
+
+    ## this is a hack, the formatter should really be added
+    ## on buffer creation (triggered by a screen event)
+    b = screen.get_active_buffer()
+    b.register_formatter(syntax_highlighter.fmt_handler)
+    debug("formatter registered")
+
     debug("keyboard.ARROW_LEFT={}".format(keyboard.ARROW_LEFT))
     debug("Ctrl-u = {}".format(keyboard.CTRL('u')))
 
@@ -19,7 +26,6 @@ def init():
     screen.onkey(key_handler)
 
 def key_handler(key):
-
     if key == keyboard.CTRL('t'):
         screen.write_mb("python message")
         return True
@@ -49,9 +55,6 @@ def handle_kill():
         num_to_del = 1 # if blank line, delete newline char
 
     for i in range(num_to_del):
-        debug("inserting key i={}".format(i))
         b.insert(keyboard.DEL) # insert a DEL key
-
-    debug("handle_kill done")
 
 init()

@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
     app_t this;
     this.disp = display_create_by_name(DISPLAY_TYPE);
     this.scrn = screen_create(this.disp);
-    this.exec = execution_create(this.scrn, this.disp);
 
     // create the buffer
     if(filename != NULL) {
@@ -38,11 +37,14 @@ int main(int argc, char *argv[])
     }
     this.scrn->add_buffer(this.scrn, this.buf);
 
+    // make the scripting execution context
+    this.exec = execution_create(this.scrn, this.disp);
+
     // main loop
     this.disp->main_loop(this.disp);
 
-    this.buf->destroy(this.buf);
     execution_destroy(this.exec);
+    this.buf->destroy(this.buf);
     this.scrn->destroy(this.scrn);
     this.disp->destroy(this.disp);
     return 0;
