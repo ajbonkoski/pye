@@ -6,8 +6,8 @@
 
 #define IMPL_TYPE 0xb3627c50
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3
@@ -290,25 +290,6 @@ static display_curses_t *display_curses_create_internal(display_t *disp)
     return this;
 }
 
-void list_colors(void)
-{
-    {
-        short r, g, b;
-        for(short i = 0; i < COLORS; i++) {
-            color_content(i, &r, &g, &b);
-            DEBUG("color %d: (%d, %d, %d)\n", i, r, g, b);
-        }
-    }
-
-    {
-        short f, b;
-        for(short i = 0; i < 100; i++) {
-            pair_content(i, &f, &b);
-            DEBUG("pair %d: (%d, %d)\n", i, f, b);
-        }
-    }
-}
-
 /* setup curses */
 static void internal_initialize(display_t *disp)
 {
@@ -328,8 +309,6 @@ static void internal_initialize(display_t *disp)
 
     const char *term = getenv("TERM");
     DEBUG("Initialed ncurses with TERM='%s' and %d colors and %d pairs", term, COLORS, COLOR_PAIRS);
-
-    list_colors();
 
     if(!can_change_color()) {
         ERROR("WRN: curses cannot change colors!\n");
@@ -360,4 +339,3 @@ display_t *display_curses_create(void)
 
     return d;
 }
-

@@ -1,8 +1,8 @@
 #include "execution_buffer.h"
 #include "buffer/data_buffer.h"
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 typedef struct {
     PyObject_HEAD
