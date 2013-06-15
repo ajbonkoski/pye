@@ -21,10 +21,12 @@ extern "C" {
 typedef struct
 {
     uint bg_color;
+    bool bg_bright;
     uint fg_color;
+    bool fg_bright;
     bool bold;
     bool underline;
-    bool bright;
+    bool highlight;
 
 } display_style_t;
 

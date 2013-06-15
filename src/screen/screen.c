@@ -108,10 +108,12 @@ static void write_mb(screen_t *scrn, const char *str)
     display_style_t s;
     memset(&s, 0, sizeof(display_style_t));
     s.bg_color = DISPLAY_COLOR_BLACK;
-    s.fg_color = DISPLAY_COLOR_YELLOW;
+    s.bg_bright = false;
+    s.fg_color = DISPLAY_COLOR_CYAN;
+    s.fg_bright = false;
     s.bold = false;
     s.underline = false;
-    s.bright = true;
+    s.highlight = false;
 
     varray_add(styles, &s);
     this->display->set_styles(this->display, styles);

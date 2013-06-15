@@ -37,12 +37,7 @@ typedef struct
     // we just iterate around the available colors and pairs!
     int color_index;
     int pair_index;
-
-    int current_color_pair;
-    int current_color_fg;
-    short old_r;
-    short old_g;
-    short old_b;
+    int cur_attr;
 
 } display_curses_t;
 
@@ -200,54 +195,50 @@ static inline int irgb_to_blue(uint rgb)
     return (int)((double)blue / 256.0 * 1000.0);
 }
 
-static inline int decode_color_to_curses(uint color)
+static inline int decode_color_to_curses(uint color, bool bright)
 {
+    #define GET_COLOR(c) (COLOR_ ## c + (bright ? 8 : 0))
+
     switch(color) {
-        case DISPLAY_COLOR_BLACK:   return COLOR_BLACK;
-        case DISPLAY_COLOR_RED:     return COLOR_RED;
-        case DISPLAY_COLOR_GREEN:   return COLOR_GREEN;
-        case DISPLAY_COLOR_YELLOW:  return COLOR_YELLOW;
-        case DISPLAY_COLOR_BLUE:    return COLOR_BLUE;
-        case DISPLAY_COLOR_MAGENTA: return COLOR_MAGENTA;
-        case DISPLAY_COLOR_CYAN:    return COLOR_CYAN;
-        case DISPLAY_COLOR_WHITE:   return COLOR_WHITE;
+        case DISPLAY_COLOR_BLACK:   return GET_COLOR(BLACK);
+        case DISPLAY_COLOR_RED:     return GET_COLOR(RED);
+        case DISPLAY_COLOR_GREEN:   return GET_COLOR(GREEN);
+        case DISPLAY_COLOR_YELLOW:  return GET_COLOR(YELLOW);
+        case DISPLAY_COLOR_BLUE:    return GET_COLOR(BLUE);
+        case DISPLAY_COLOR_MAGENTA: return GET_COLOR(MAGENTA);
+        case DISPLAY_COLOR_CYAN:    return GET_COLOR(CYAN);
+        case DISPLAY_COLOR_WHITE:   return GET_COLOR(WHITE);
         default:
             ASSERT_FAIL("unrecognized color code in decode_color_to_curses()");
             return -1;
     }
+
+    #undef GET_COLOR
 }
 
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
-    int bg_curses_color = decode_color_to_curses(style->bg_color);
-    int fg_curses_color = decode_color_to_curses(style->fg_color);
+    int bg_curses_color = decode_color_to_curses(style->bg_color,
+                                                 style->bg_bright);
+    int fg_curses_color = decode_color_to_curses(style->fg_color,
+                                                 style->fg_bright);
 
     int pi = get_new_pair_index(this);
     init_pair(pi, fg_curses_color, bg_curses_color);
-    this->current_color_pair = pi;
+    int attr = COLOR_PAIR(pi);
 
-    attron(COLOR_PAIR(this->current_color_pair));
+    if(style->bold)      attr |= A_BOLD;
+    if(style->highlight) attr |= A_STANDOUT;
+    if(style->underline) attr |= A_UNDERLINE;
 
-    /* int ci = get_new_color_index(this); */
-    /* int pi = get_new_pair_index(this); */
-    /* color_content(ci, &this->old_r, &this->old_g, &this->old_b); */
-
-    /* if(init_color(ci, 0, 0, 1000) == ERR) { */
-    /*     ERROR("call to curses init_color() failed\n"); */
-    /* } */
-    /* this->current_color_fg = ci; */
-
-    /* init_pair(pi, ci, COLOR_BLACK); */
-    /* this->current_color_pair = pi; */
-
-    /* attron(COLOR_PAIR(this->current_color_pair)); */
+    this->cur_attr = attr;
+    attron(this->cur_attr);
 }
 
 static inline void clear_style(display_curses_t *this)
 {
-    attroff(COLOR_PAIR(this->current_color_pair));
-    /* init_color(this->current_color_fg, this->old_r, this->old_g, this->old_b); */
-    this->current_color_pair = -1;
+    attroff(this->cur_attr);
+    this->cur_attr = 0;
 }
 
 static void _write(display_t *disp, const char *s, size_t num, int style)
