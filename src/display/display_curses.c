@@ -165,17 +165,20 @@ static inline int irgb_to_blue(uint rgb)
 
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
+    if(init_color(COLOR_RED, 0, 0, 1000) == ERR) {
+        ERROR("call to curses init_color() failed\n");
+    }
+               /* irgb_to_red(style->fg_rgb), */
+               /* irgb_to_green(style->fg_rgb), */
+               /* irgb_to_blue(style->fg_rgb)); */
     init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_color(COLOR_RED,
-               irgb_to_red(style->fg_rgb),
-               irgb_to_green(style->fg_rgb),
-               irgb_to_blue(style->fg_rgb));
     attron(COLOR_PAIR(1));
 }
 
 static inline void clear_style(display_curses_t *this)
 {
     attroff(COLOR_PAIR(1));
+    init_color(COLOR_RED, 1000, 0, 0);
 }
 
 static void _write(display_t *disp, const char *s, size_t num, int style)
@@ -197,6 +200,8 @@ static void _write(display_t *disp, const char *s, size_t num, int style)
             c = (int)' ';
         addch(c);
     }
+
+    doupdate();
 
     if(style != DISPLAY_STYLE_NONE)
         clear_style(this);
@@ -228,6 +233,9 @@ static void internal_initialize(display_t *disp)
 {
     display_curses_t *this = cast_this(disp);
 
+    // curses doesn't seem to like changing colors for xterm... thus this very bad hack
+    setenv("TERM", "xterm-256color", 1);
+
     this->wind = initscr();
     cbreak();
     noecho();
@@ -239,6 +247,10 @@ static void internal_initialize(display_t *disp)
 
     const char *term = getenv("TERM");
     DEBUG("Initialed ncurses with TERM='%s' and %d colors", term, COLORS);
+
+    if(!can_change_color()) {
+        ERROR("WRN: curses cannot change colors!\n");
+    }
 
     set_crash_func((crash_func_t)endwin, NULL);
 }

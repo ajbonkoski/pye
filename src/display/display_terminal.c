@@ -85,6 +85,8 @@ static void get_size(display_t *disp, uint *w, uint *h);
 static void set_cursor(display_t *disp, uint x, uint y);
 static void get_cursor(display_t *disp, uint *x, uint *y);
 static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *usr);
+static void set_styles(display_t *this, varray_t *styles);
+static void remove_styles(display_t *this);
 static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e);
 static void flush(display_t *disp);
 static void main_loop(display_t *disp);
@@ -188,6 +190,15 @@ static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *us
     varray_add(this->key_delegates, k);
 }
 
+static void set_styles(display_t *this, varray_t *styles)
+{
+    DEBUG("WRN: set_styles(0 is unimplemented...\n");
+}
+
+static void remove_styles(display_t *this)
+{
+    DEBUG("WRN: set_styles(0 is unimplemented...\n");
+}
 
 static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e)
 {
@@ -305,6 +316,8 @@ display_t *display_terminal_create(void)
     d->get_cursor = get_cursor;
     d->get_size = get_size;
     d->register_kbrd_callback = register_kbrd_callback;
+    d->set_styles = set_styles;
+    d->remove_styles = remove_styles;
     d->flush = flush;
     d->main_loop = main_loop;
     d->main_quit = main_quit;

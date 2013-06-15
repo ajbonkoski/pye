@@ -1,9 +1,12 @@
-#include "screen.h"
+>#include "screen.h"
 #include "fileio/fileio.h"
 
 #define IMPL_TYPE 0x7c870c4b
 #define BLANK ' '
 #define FILENAME "testfile.txt"
+
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -104,7 +107,7 @@ static void write_mb(screen_t *scrn, const char *str)
     varray_t *styles = varray_create();
     display_style_t s;
     memset(&s, 0, sizeof(display_style_t));
-    s.fg_rgb = 0xff0000;
+    s.fg_rgb = 0x0000ff;
     varray_add(styles, &s);
     this->display->set_styles(this->display, styles);
     this->display->write(this->display, buf, this->disp_width, 0);
@@ -152,6 +155,8 @@ static void update_cursor(screen_internal_t *this)
 
 static void update_all(screen_internal_t *this)
 {
+    DEBUG("inside screen->update_all(): entering\n");
+
     uint w, h;
     this->display->get_size(this->display, &w, &h);
 
@@ -169,7 +174,10 @@ static void update_all(screen_internal_t *this)
         this->display->write(this->display, NULL, w, -1);
     }
 
+    DEBUG("inside screen->update_all: updating cursor()\n");
     update_cursor(this);
+
+    DEBUG("inside screen->update_all: leaving\n");
 }
 
 static void refresh(screen_t *scrn)
