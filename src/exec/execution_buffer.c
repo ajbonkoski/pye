@@ -72,6 +72,31 @@ static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
     return PyString_FromString(str);
 }
 
+static varray_t *fmt_extract_styles(PyObject *pStyles)
+{
+    varray_t *vstyles = varray_create();
+    size_t sz = PyList_Size(pStyles);
+
+    for(size_t i = 0; i < sz; i++) {
+        //PyObject *elem = PyList_GetItem(pStyles, i);
+    }
+
+    return vstyles;
+}
+
+static varray_t *fmt_extract_regions(PyObject *pRegions)
+{
+    varray_t *vregions = varray_create();
+    size_t sz = PyList_Size(pRegions);
+
+    for(size_t i = 0; i < sz; i++) {
+        //PyObject *elem = PyList_GetItem(pRegions, i);
+
+    }
+
+    return vregions;
+}
+
 static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
 {
     PyObject *func = (PyObject *)usr;
@@ -116,11 +141,28 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     }
 
     // make sure the styles have the right type
-    if(!PyDict_Check(pStyles)) {
-        ERROR("python fmt handler: expected pStyles to be a dictionary type!\n");
+    if(!PyList_Check(pStyles)) {
+        ERROR("python fmt handler: expected pStyles to be a list type!\n");
         goto done;
     }
 
+    // extract the styles
+    bl->styles = fmt_extract_styles(pStyles);
+
+    // check for regions
+    if(pRegions == NULL) {
+        DEBUG("Note: Formatter regions not set in buffer_formatter_handler()\n");
+        goto done;
+    }
+
+    // make sure the regions have the right type
+    if(!PyList_Check(pRegions)) {
+        ERROR("python fmt handler: expected pRegions to be a list type!\n");
+        goto done;
+    }
+
+    // extract the regions
+    bl->regions = fmt_extract_regions(pRegions);
 
     // some cleanup
  done:

@@ -10,14 +10,14 @@ def init():
     formatter = TerminalFormatter()
 
 def fmt_handler(data):
-    debug("syntax_highlighter: inside formatter")
     # res = highlight(data, lexer, formatter).rstrip()
     # res_ascii = res.encode('ascii', 'replace')
     # debug("res='{}' type='{}'".format(res_ascii, type(res_ascii)))
     # return res_ascii
 
-    return { 'data':   data.upper(),
-             'styles': None }
+    return { 'data':    data.upper(),
+             'styles':  [],
+             'regions': []}
 
 
 # from pygments.formatter import Formatter
