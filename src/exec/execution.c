@@ -7,8 +7,8 @@
 
 #define CONFIG_MODULE "config"
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 struct execution
 {
@@ -40,7 +40,7 @@ static PyObject *load_module(const char *s)
     PyObject *module = PyImport_Import(name);
     Py_DECREF(name);
     if(module == NULL) {
-        DEBUG("Failed to load config module: %s\n", s);
+        ERROR("Failed to load config module: %s\n", s);
     }
     return module;
 }

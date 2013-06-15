@@ -5,8 +5,8 @@
 #define BLANK ' '
 #define FILENAME "testfile.txt"
 
-#undef  ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef  ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 typedef struct
 {

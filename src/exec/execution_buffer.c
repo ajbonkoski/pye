@@ -95,9 +95,8 @@ static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
             } } } while(0)
 
 
-static varray_t *fmt_extract_styles(PyObject *pStyles)
+static void fmt_extract_styles(PyObject *pStyles, varray_t *vstyles)
 {
-    varray_t *vstyles = varray_create();
     size_t sz = PyList_Size(pStyles);
 
     for(size_t i = 0; i < sz; i++) {
@@ -128,12 +127,11 @@ static varray_t *fmt_extract_styles(PyObject *pStyles)
     DEBUG("style extraction complete\n");
 
  done:
-    return vstyles;
+    return;
 }
 
-static varray_t *fmt_extract_regions(PyObject *pRegions)
+static void fmt_extract_regions(PyObject *pRegions, varray_t *vregions)
 {
-    varray_t *vregions = varray_create();
     size_t sz = PyList_Size(pRegions);
 
     for(size_t i = 0; i < sz; i++) {
@@ -168,7 +166,7 @@ static varray_t *fmt_extract_regions(PyObject *pRegions)
     DEBUG("region extraction complete\n");
 
  done:
-    return vregions;
+    return;
 }
 
 // cleanup the macro namespace
@@ -187,11 +185,11 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     PyObject *pRegions = NULL;
 
     buffer_line_t *bl = calloc(1, sizeof(buffer_line_t));
-    bl->styles = NULL;
-    bl->regions = NULL;
+    bl->styles = varray_create();
+    bl->regions = varray_create();
     bl->data = data;
 
-    if(!PyDict_Check(result)) {
+    if(result == NULL || !PyDict_Check(result)) {
         ERROR("python key handler did not return a dictionary\n");
         goto done;
     }
@@ -225,7 +223,7 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     }
 
     // extract the styles
-    bl->styles = fmt_extract_styles(pStyles);
+    fmt_extract_styles(pStyles, bl->styles);
 
     // check for regions
     if(pRegions == NULL) {
@@ -240,11 +238,11 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     }
 
     // extract the regions
-    bl->regions = fmt_extract_regions(pRegions);
+    fmt_extract_regions(pRegions, bl->regions);
 
     // some cleanup
  done:
-    Py_DECREF(result);
+    Py_XDECREF(result);
     Py_DECREF(args);
 
     return bl;
