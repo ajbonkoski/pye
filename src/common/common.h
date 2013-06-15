@@ -35,9 +35,11 @@ typedef uint64_t  u64;
 FILE *common_get_debug_file(void);
 #define DEBUG(...) do { if(ENABLE_DEBUG) { \
     FILE *debug_file = common_get_debug_file(); \
+    fprintf(debug_file, "DEBUG: "); \
     fprintf(debug_file, __VA_ARGS__); } } while(0)
-#define ERROR(...) do { \
+#define ERROR(...) do {                     \
     FILE *debug_file = common_get_debug_file(); \
+    fprintf(debug_file, "ERROR: "); \
     fprintf(debug_file, __VA_ARGS__); } while(0)
 
 // better assert()

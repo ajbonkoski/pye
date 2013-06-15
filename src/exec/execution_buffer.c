@@ -117,7 +117,7 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
 
     // make sure the styles have the right type
     if(!PyDict_Check(pStyles)) {
-        ERROR("python fmt handler: expected pStyles to be a dictionary type!");
+        ERROR("python fmt handler: expected pStyles to be a dictionary type!\n");
         goto done;
     }
 
