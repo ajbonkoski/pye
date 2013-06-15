@@ -145,9 +145,50 @@ static void remove_styles(display_t *disp)
     this->styles = NULL;  // don't free the mem (we aren't the owner)
 }
 
+static inline int irgb_to_red(uint rgb)
+{
+    uint red = (rgb>>16)&0xff;
+    return (int)((double)red / 256.0 * 1000.0);
+}
+
+static inline int irgb_to_green(uint rgb)
+{
+    uint green = (rgb>>8)&0xff;
+    return (int)((double)green / 256.0 * 1000.0);
+}
+
+static inline int irgb_to_blue(uint rgb)
+{
+    uint blue = (rgb>>0)&0xff;
+    return (int)((double)blue / 256.0 * 1000.0);
+}
+
+static inline void set_style(display_curses_t *this, display_style_t *style)
+{
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_color(COLOR_RED,
+               irgb_to_red(style->fg_rgb),
+               irgb_to_green(style->fg_rgb),
+               irgb_to_blue(style->fg_rgb));
+    attron(COLOR_PAIR(1));
+}
+
+static inline void clear_style(display_curses_t *this)
+{
+    attroff(COLOR_PAIR(1));
+}
+
 static void _write(display_t *disp, const char *s, size_t num, int style)
 {
-    //display_terminal_t *this = cast_this(disp);
+    display_curses_t *this = cast_this(disp);
+
+    if(style != DISPLAY_STYLE_NONE) {
+        ASSERT(this->styles != NULL, "tried to use a style before calling display->set_styles()");
+        ASSERT(0 <= style && style < varray_size(this->styles), "varray out-of bounds in display->write()");
+        display_style_t *st = varray_get(this->styles, style);
+        set_style(this, st);
+    }
+
     for(size_t i = 0; i < num; i++) {
         int c;
         if(s != NULL)
@@ -156,6 +197,9 @@ static void _write(display_t *disp, const char *s, size_t num, int style)
             c = (int)' ';
         addch(c);
     }
+
+    if(style != DISPLAY_STYLE_NONE)
+        clear_style(this);
 }
 
 static void destroy(display_t *disp)

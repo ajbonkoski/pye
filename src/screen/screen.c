@@ -99,7 +99,18 @@ static void write_mb(screen_t *scrn, const char *str)
             buf[i] = BLANK;
         }
     }
-    this->display->write(this->display, buf, this->disp_width, -1);
+
+
+    varray_t *styles = varray_create();
+    display_style_t s;
+    memset(&s, 0, sizeof(display_style_t));
+    s.fg_rgb = 0xff0000;
+    varray_add(styles, &s);
+    this->display->set_styles(this->display, styles);
+    this->display->write(this->display, buf, this->disp_width, 0);
+    this->display->remove_styles(this->display);
+    varray_destroy(styles);
+
     free(buf);
 
     // step 4: restore cursor position

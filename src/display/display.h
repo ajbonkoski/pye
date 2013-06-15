@@ -16,7 +16,10 @@ typedef struct
     bool bold;
     bool underline;
 
-} styles_t;
+} display_style_t;
+
+#define DISPLAY_STYLE_NONE -1
+
 
 typedef struct display display_t;
 struct display

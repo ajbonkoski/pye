@@ -1,5 +1,5 @@
 from pye import *
-from pye_ext import syntax_highlighter
+#from pye_ext import syntax_highlighter
 
 def init():
     debug("inside python config")
@@ -7,7 +7,7 @@ def init():
     ## this is a hack, the formatter should really be added
     ## on buffer creation (triggered by a screen event)
     b = screen.get_active_buffer()
-    b.register_formatter(syntax_highlighter.fmt_handler)
+    #b.register_formatter(syntax_highlighter.fmt_handler)
     debug("formatter registered")
 
     debug("keyboard.ARROW_LEFT={}".format(keyboard.ARROW_LEFT))
