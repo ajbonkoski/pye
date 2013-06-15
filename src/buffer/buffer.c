@@ -15,7 +15,7 @@ typedef struct
     data_buffer_t *databuf;
 
     // formatter callback
-    char *(*formatter_callback)(void *usr, char *data);
+    format_func_t formatter_callback;
     void *formatter_usr;
 
 } buffer_internal_t;
@@ -123,25 +123,27 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
     data_buffer_t *d = this->databuf;
 
     char *raw = d->get_line_data(d, i, NULL);
-    char *data = raw;
+    buffer_line_t *bl = NULL;
 
     if(this->formatter_callback != NULL) {
-        data = this->formatter_callback(this->formatter_usr, raw);
+        bl = this->formatter_callback(this->formatter_usr, raw);
 
-        // raw is no longer needed, we are responsible for freeing if
-        free(raw);
+        // if raw is no longer needed, we are responsible for freeing if
+        if(bl->data != raw)
+            free(raw);
     }
 
-    buffer_line_t *bl = calloc(1, sizeof(buffer_line_t));
-    bl->is_formated = false;
-    bl->data = data;
-    bl->num_visible = strlen(bl->data);
+    else {
+        bl = calloc(1, sizeof(buffer_line_t));
+        bl->styles = NULL;
+        bl->regions = NULL;
+        bl->data = raw;
+    }
+
     return bl;
 }
 
-static void register_formatter(buffer_t *b,
-                               char *(*func)(void *usr, char *data),
-                               void *usr)
+static void register_formatter(buffer_t *b, format_func_t func, void *usr)
 {
     buffer_internal_t *this = cast_this(b);
     this->formatter_callback = func;

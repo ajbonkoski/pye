@@ -72,25 +72,62 @@ static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
     return PyString_FromString(str);
 }
 
-static char *buffer_formatter_handler(void *usr, char *data)
+static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
 {
     PyObject *func = (PyObject *)usr;
     PyObject *args = PyTuple_New(1);
     PyTuple_SetItem(args, 0, PyString_FromString(data));
     PyObject *result = PyObject_CallObject(func, args);
 
-    char *ret = NULL;
-    if(!PyString_Check(result)) {
-        ERROR("python key handler did not return a boolean\n");
-    } else {
-        ret = strdup(PyString_AsString(result));
+    PyObject *pData = NULL;
+    PyObject *pStyles = NULL;
+    PyObject *pRegions = NULL;
+
+    buffer_line_t *bl = calloc(1, sizeof(buffer_line_t));
+    bl->styles = NULL;
+    bl->regions = NULL;
+    bl->data = data;
+
+    if(!PyDict_Check(result)) {
+        ERROR("python key handler did not return a dictionary\n");
+        goto done;
     }
 
+    // these are "borrowed" references
+    pData    = PyDict_GetItemString(result, "data");
+    pStyles  = PyDict_GetItemString(result, "styles");
+    pRegions = PyDict_GetItemString(result, "regions");
+
+    // to shut up the compiler
+    if(0) {pStyles = pRegions; pRegions = pStyles;}
+
+    if(!pData || !PyString_Check(pData)) {
+        ERROR("python key handler: returned dictionary has no 'data' key of type string\n");
+        goto done;
+    }
+
+    // extract and set the returned data
+    bl->data = strdup(PyString_AsString(pData));
+
+    // check for styles
+    if(pStyles == NULL) {
+        DEBUG("Note: Formatter styles not set in buffer_formatter_handler()\n");
+        goto done;
+    }
+
+    // make sure the styles have the right type
+    if(!PyDict_Check(pStyles)) {
+        ERROR("python fmt handler: expected pStyles to be a dictionary type!");
+        goto done;
+    }
+
+
     // some cleanup
+ done:
     Py_DECREF(result);
     Py_DECREF(args);
 
-    return ret;
+    return bl;
 }
 
 static PyObject *Buffer_register_formatter(pye_Buffer *self, PyObject *args)

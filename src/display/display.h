@@ -18,6 +18,8 @@ extern "C" {
 #define DISPLAY_COLOR_CYAN     6
 #define DISPLAY_COLOR_WHITE    7
 
+#define DISPLAY_STYLE_NONE -1
+
 typedef struct
 {
     uint bg_color;
@@ -30,8 +32,11 @@ typedef struct
 
 } display_style_t;
 
-#define DISPLAY_STYLE_NONE -1
-
+static inline void display_style_destroy(display_style_t *ds)
+{
+    // just a free() for now...
+    free(ds);
+}
 
 typedef struct display display_t;
 struct display
