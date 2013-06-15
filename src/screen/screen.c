@@ -5,8 +5,8 @@
 #define BLANK ' '
 #define FILENAME "testfile.txt"
 
-//#undef  ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -141,10 +141,71 @@ static void destroy(screen_t *scrn)
     free(scrn);
 }
 
-static void display_write_line(screen_internal_t *this, const char *line, int lineno)
+static void display_write_line(screen_internal_t *this, buffer_line_t *line, int lineno)
 {
     this->display->set_cursor(this->display, 0, lineno);
-    this->display->write(this->display, line, strlen(line), -1);
+
+    this->display->set_styles(this->display, line->styles);
+
+    uint index = 0;
+    uint line_len = strlen(line->data);
+    uint num_styles = varray_size(line->styles);
+    buffer_line_region_t *r;
+
+    varray_iter(r, line->regions) {
+
+        // do validation first
+        if(r->start_index < index) {
+            ERROR("expected a region start_index >= %d, but got %d. "
+                  "Skipping region\n", index, r->start_index);
+            continue;
+        }
+
+        if(r->start_index >= line_len) {
+            ERROR("expected a region start_index < line length of %d, but got %d. "
+                  "Skipping region\n", line_len, r->start_index);
+            continue;
+        }
+
+        if(r->start_index + r->length > line_len) {
+            ERROR("expected a region end index <= line length of %d, but got %d. "
+                  "Skipping region\n", line_len, r->start_index + r->length);
+            continue;
+        }
+
+        if(r->style_id >= num_styles) {
+            ERROR("expected a region style_id < %d, but got %d. "
+                  "Skipping region\n", num_styles, r->style_id);
+            continue;
+        }
+
+        // display the "un-stylized"
+        uint unstyled_size = r->start_index - index;
+        if(unstyled_size > 0) {
+            this->display->write(this->display,
+                                 line->data + index,
+                                 unstyled_size, -1);
+        }
+
+        // display this region
+        this->display->write(this->display,
+                                 line->data + r->start_index,
+                                 r->length, r->style_id);
+
+        // update the index
+        index = r->start_index = r->length;
+    }
+
+    // we might have some residual line data after the regions
+    uint left = line_len - index - 1;
+    if(index < line_len && left > 0) {
+        this->display->write(this->display,
+                             line->data + index,
+                             left, -1);
+    }
+
+    this->display->remove_styles(this->display);
+
 
     // write some blanks (to the end of the line)
     uint x, y, w, h;
@@ -172,7 +233,7 @@ static void update_all(screen_internal_t *this)
     int i;
     for(i = 0; i < numlines && i < h-1; i++) {
         buffer_line_t *line = this->cb->get_line_data_fmt(this->cb, i);
-        display_write_line(this, line->data, i);
+        display_write_line(this, line, i);
         buffer_line_destroy(line);
     }
 

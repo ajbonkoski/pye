@@ -16,8 +16,12 @@ def fmt_handler(data):
     # return res_ascii
 
     return { 'data':    data.upper(),
-             'styles':  [{'bg_color': 1}],
-             'regions': [{'start_index': 0}] }
+             'styles':  [{'fg_color': 1}],
+             'regions': [{'start_index': 0,
+                          'length': len(data),
+                          'style_id': 0 }
+                         ]
+           }
 
 
 # from pygments.formatter import Formatter

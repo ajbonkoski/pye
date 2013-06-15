@@ -135,8 +135,8 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
 
     else {
         bl = calloc(1, sizeof(buffer_line_t));
-        bl->styles = NULL;
-        bl->regions = NULL;
+        bl->styles = varray_create();
+        bl->regions = varray_create();
         bl->data = raw;
     }
 
