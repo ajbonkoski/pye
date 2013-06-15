@@ -23,6 +23,23 @@ static inline void buffer_line_region_destroy(buffer_line_region_t *blr)
     free(blr);
 }
 
+static inline buffer_line_region_t *buffer_line_region_create_default(void)
+{
+    buffer_line_region_t *blr = calloc(1, sizeof(buffer_line_region_t));
+    blr->start_index = UINT_MAX;
+    blr->length = UINT_MAX;
+    blr->style_id = UINT_MAX;
+
+    return blr;
+}
+
+static inline bool buffer_line_region_valid(buffer_line_region_t *blr)
+{
+    return blr->start_index != UINT_MAX &&
+           blr->length      != UINT_MAX &&
+           blr->style_id    != UINT_MAX;
+}
+
 typedef struct
 {
     varray_t *styles;  // a list of "display_style_t" structs

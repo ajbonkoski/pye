@@ -32,6 +32,20 @@ typedef struct
 
 } display_style_t;
 
+static inline display_style_t *display_style_create_default(void)
+{
+    display_style_t *ds = calloc(1, sizeof(display_style_t));
+    ds->bg_color = DISPLAY_COLOR_BLACK;
+    ds->bg_bright = false;
+    ds->fg_color = DISPLAY_COLOR_WHITE;
+    ds->fg_bright = true;
+    ds->bold = false;
+    ds->underline = false;
+    ds->highlight = false;
+
+    return ds;
+}
+
 static inline void display_style_destroy(display_style_t *ds)
 {
     // just a free() for now...

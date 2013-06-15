@@ -72,15 +72,62 @@ static PyObject *Buffer_get_line_data(pye_Buffer *self, PyObject *args)
     return PyString_FromString(str);
 }
 
+
+// define some very useful macros for both fmt_extract_styles and
+// fmt_extract_regions
+
+#define EXTRACT_UINT(field) do {                                         \
+        PyObject *pObj = PyDict_GetItemString(elem, #field);            \
+        if(pObj != NULL) {                                              \
+            if(PyInt_Check(pObj)) {                                     \
+                extract_struct->field = (uint)PyInt_AsLong(pObj);       \
+            } else {                                                    \
+                ERROR("expected an interger in field %s in fmt_extract_*()\n", #field); \
+            } } } while(0)
+
+#define EXTRACT_BOOL(field) do {                                        \
+        PyObject *pObj = PyDict_GetItemString(elem, #field);            \
+        if(pObj != NULL) {                                              \
+            if(PyBool_Check(pObj)) {                                    \
+                extract_struct->field = (pObj == Py_True);              \
+            } else {                                                    \
+                ERROR("expected an boolean in field %s in fmt_extract_*()\n", #field); \
+            } } } while(0)
+
+
 static varray_t *fmt_extract_styles(PyObject *pStyles)
 {
     varray_t *vstyles = varray_create();
     size_t sz = PyList_Size(pStyles);
 
     for(size_t i = 0; i < sz; i++) {
-        //PyObject *elem = PyList_GetItem(pStyles, i);
+        PyObject *elem = PyList_GetItem(pStyles, i);
+
+        // verify the type
+        if(!PyDict_Check(elem)) {
+            ERROR("expected python dict btype in fmt_extract_styles(): i=%zd\n", i);
+            goto done;
+        }
+
+        // build a display_style_t struct (initialize with defaults)
+        display_style_t *extract_struct = display_style_create_default();
+
+        // extract the data
+        EXTRACT_UINT(bg_color);
+        EXTRACT_BOOL(bg_bright);
+        EXTRACT_UINT(fg_color);
+        EXTRACT_BOOL(fg_bright);
+        EXTRACT_BOOL(bold);
+        EXTRACT_BOOL(underline);
+        EXTRACT_BOOL(highlight);
+
+        // add it to the style array
+        varray_add(vstyles, extract_struct);
     }
 
+    DEBUG("style extraction complete\n");
+
+ done:
     return vstyles;
 }
 
@@ -90,12 +137,43 @@ static varray_t *fmt_extract_regions(PyObject *pRegions)
     size_t sz = PyList_Size(pRegions);
 
     for(size_t i = 0; i < sz; i++) {
-        //PyObject *elem = PyList_GetItem(pRegions, i);
+        PyObject *elem = PyList_GetItem(pRegions, i);
 
+        // verify the type
+        if(!PyDict_Check(elem)) {
+            ERROR("expected python dict btype in fmt_extract_regions(): i=%zd\n", i);
+            goto done;
+        }
+
+        // build a display_style_t struct (initialize with defaults)
+        buffer_line_region_t *extract_struct = buffer_line_region_create_default();
+
+        // extract the data
+        EXTRACT_UINT(start_index);
+        EXTRACT_UINT(length);
+        EXTRACT_UINT(style_id);
+
+        if(!buffer_line_region_valid(extract_struct)) {
+            ERROR("failed to extract valid region in fmt_extract_regions(): i=%zd\n", i);
+            // we fall through instead of "goto done": here.
+            // this is done for memory management concerns...
+            // we want to add the region to the varray, so it'll get cleaned
+            // up eventually
+        }
+
+        // add it to the style array
+        varray_add(vregions, extract_struct);
     }
 
+    DEBUG("region extraction complete\n");
+
+ done:
     return vregions;
 }
+
+// cleanup the macro namespace
+#undef EXTRACT_BOOL
+#undef EXTRACT_INT
 
 static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
 {
