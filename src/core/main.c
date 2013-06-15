@@ -7,7 +7,8 @@
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
-#define DISPLAY_TYPE "terminal" //"curses"
+//#define DISPLAY_TYPE "terminal"
+#define DISPLAY_TYPE "curses"
 
 typedef struct
 {

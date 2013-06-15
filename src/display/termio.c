@@ -21,6 +21,10 @@ static struct termios ostate, nstate;
  */
 bool ttopen()
 {
+    // raw input mode stops working after ouputting colors.
+    // this setting seems to fix it, but is a bad bad hack...
+    setenv("TERM", "xterm-256color", 1);
+
     /* save terminal flags */
     if ((tcgetattr(0, &ostate) < 0) || (tcgetattr(0, &nstate) < 0)) {
         ERROR("Can't read terminal capabilites\n");

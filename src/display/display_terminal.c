@@ -192,12 +192,12 @@ static void register_kbrd_callback(display_t *disp, key_event_func_t f, void *us
 
 static void set_styles(display_t *this, varray_t *styles)
 {
-    DEBUG("WRN: set_styles(0 is unimplemented...\n");
+    DEBUG("WRN: set_styles() is unimplemented...\n");
 }
 
 static void remove_styles(display_t *this)
 {
-    DEBUG("WRN: set_styles(0 is unimplemented...\n");
+    DEBUG("WRN: remove_styles() is unimplemented...\n");
 }
 
 static void trigger_key_callbacks(display_terminal_t *this, key_event_t *e)

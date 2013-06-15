@@ -12,6 +12,9 @@
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3
 
+#define START_COLOR  9
+#define START_PAIR  9
+
 typedef struct
 {
     display_t *super;
@@ -30,12 +33,46 @@ typedef struct
     // styles
     varray_t *styles;
 
+    // this is quite the hack
+    // we just iterate around the available colors and pairs!
+    int color_index;
+    int pair_index;
+
+    int current_color_pair;
+    int current_color_fg;
+    short old_r;
+    short old_g;
+    short old_b;
+
 } display_curses_t;
-static display_curses_t *cast_this(display_t *d)
+
+// inline functions
+static inline display_curses_t *cast_this(display_t *d)
 {
     ASSERT(d->impl_type == IMPL_TYPE, "expected a display_curses object");
     return (display_curses_t *)d->impl;
 }
+
+static inline int get_new_color_index(display_curses_t *this)
+{
+    int ci = this->color_index;
+
+    if(++this->color_index >= COLORS)
+        this->color_index = START_COLOR;
+
+    return ci;
+}
+
+static inline int get_new_pair_index(display_curses_t *this)
+{
+    int cp = this->pair_index;
+
+    if(++this->pair_index >= COLOR_PAIRS)
+        this->pair_index = START_PAIR;
+
+    return cp;
+}
+
 
 typedef struct
 {
@@ -163,22 +200,54 @@ static inline int irgb_to_blue(uint rgb)
     return (int)((double)blue / 256.0 * 1000.0);
 }
 
+static inline int decode_color_to_curses(uint color)
+{
+    switch(color) {
+        case DISPLAY_COLOR_BLACK:   return COLOR_BLACK;
+        case DISPLAY_COLOR_RED:     return COLOR_RED;
+        case DISPLAY_COLOR_GREEN:   return COLOR_GREEN;
+        case DISPLAY_COLOR_YELLOW:  return COLOR_YELLOW;
+        case DISPLAY_COLOR_BLUE:    return COLOR_BLUE;
+        case DISPLAY_COLOR_MAGENTA: return COLOR_MAGENTA;
+        case DISPLAY_COLOR_CYAN:    return COLOR_CYAN;
+        case DISPLAY_COLOR_WHITE:   return COLOR_WHITE;
+        default:
+            ASSERT_FAIL("unrecognized color code in decode_color_to_curses()");
+            return -1;
+    }
+}
+
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
-    if(init_color(COLOR_RED, 0, 0, 1000) == ERR) {
-        ERROR("call to curses init_color() failed\n");
-    }
-               /* irgb_to_red(style->fg_rgb), */
-               /* irgb_to_green(style->fg_rgb), */
-               /* irgb_to_blue(style->fg_rgb)); */
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    attron(COLOR_PAIR(1));
+    int bg_curses_color = decode_color_to_curses(style->bg_color);
+    int fg_curses_color = decode_color_to_curses(style->fg_color);
+
+    int pi = get_new_pair_index(this);
+    init_pair(pi, fg_curses_color, bg_curses_color);
+    this->current_color_pair = pi;
+
+    attron(COLOR_PAIR(this->current_color_pair));
+
+    /* int ci = get_new_color_index(this); */
+    /* int pi = get_new_pair_index(this); */
+    /* color_content(ci, &this->old_r, &this->old_g, &this->old_b); */
+
+    /* if(init_color(ci, 0, 0, 1000) == ERR) { */
+    /*     ERROR("call to curses init_color() failed\n"); */
+    /* } */
+    /* this->current_color_fg = ci; */
+
+    /* init_pair(pi, ci, COLOR_BLACK); */
+    /* this->current_color_pair = pi; */
+
+    /* attron(COLOR_PAIR(this->current_color_pair)); */
 }
 
 static inline void clear_style(display_curses_t *this)
 {
-    attroff(COLOR_PAIR(1));
-    init_color(COLOR_RED, 1000, 0, 0);
+    attroff(COLOR_PAIR(this->current_color_pair));
+    /* init_color(this->current_color_fg, this->old_r, this->old_g, this->old_b); */
+    this->current_color_pair = -1;
 }
 
 static void _write(display_t *disp, const char *s, size_t num, int style)
@@ -224,8 +293,29 @@ static display_curses_t *display_curses_create_internal(display_t *disp)
     this->good = true;
     this->running = false;
     this->key_delegates = varray_create();
+    this->color_index = START_COLOR;
+    this->pair_index = START_PAIR;
 
     return this;
+}
+
+void list_colors(void)
+{
+    {
+        short r, g, b;
+        for(short i = 0; i < COLORS; i++) {
+            color_content(i, &r, &g, &b);
+            DEBUG("color %d: (%d, %d, %d)\n", i, r, g, b);
+        }
+    }
+
+    {
+        short f, b;
+        for(short i = 0; i < 100; i++) {
+            pair_content(i, &f, &b);
+            DEBUG("pair %d: (%d, %d)\n", i, f, b);
+        }
+    }
 }
 
 /* setup curses */
@@ -246,7 +336,9 @@ static void internal_initialize(display_t *disp)
     refresh();
 
     const char *term = getenv("TERM");
-    DEBUG("Initialed ncurses with TERM='%s' and %d colors", term, COLORS);
+    DEBUG("Initialed ncurses with TERM='%s' and %d colors and %d pairs", term, COLORS, COLOR_PAIRS);
+
+    list_colors();
 
     if(!can_change_color()) {
         ERROR("WRN: curses cannot change colors!\n");

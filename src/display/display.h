@@ -9,12 +9,22 @@
 extern "C" {
 #endif
 
+#define DISPLAY_COLOR_BLACK    0
+#define DISPLAY_COLOR_RED      1
+#define DISPLAY_COLOR_GREEN    2
+#define DISPLAY_COLOR_YELLOW   3
+#define DISPLAY_COLOR_BLUE     4
+#define DISPLAY_COLOR_MAGENTA  5
+#define DISPLAY_COLOR_CYAN     6
+#define DISPLAY_COLOR_WHITE    7
+
 typedef struct
 {
-    uint bg_rgb;
-    uint fg_rgb;
+    uint bg_color;
+    uint fg_color;
     bool bold;
     bool underline;
+    bool bright;
 
 } display_style_t;
 

@@ -1,4 +1,4 @@
->#include "screen.h"
+#include "screen.h"
 #include "fileio/fileio.h"
 
 #define IMPL_TYPE 0x7c870c4b
@@ -107,7 +107,12 @@ static void write_mb(screen_t *scrn, const char *str)
     varray_t *styles = varray_create();
     display_style_t s;
     memset(&s, 0, sizeof(display_style_t));
-    s.fg_rgb = 0x0000ff;
+    s.bg_color = DISPLAY_COLOR_BLACK;
+    s.fg_color = DISPLAY_COLOR_YELLOW;
+    s.bold = false;
+    s.underline = false;
+    s.bright = true;
+
     varray_add(styles, &s);
     this->display->set_styles(this->display, styles);
     this->display->write(this->display, buf, this->disp_width, 0);
@@ -188,18 +193,24 @@ static void refresh(screen_t *scrn)
 static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
+    bool ret = false;
+
+    const int BUFSZ = 256;
+    char buffer[BUFSZ];
+
+    DEBUG("inside key_handler(): entering\n");
 
     // allow any registered handler to override functionality
     if(this->key_callback) {
         bool is_handled = this->key_callback(this->key_usr, e);
-        if(is_handled)
-            return true;
+        if(is_handled) {
+            ret = true;
+            goto done;
+        }
     }
 
     u32 c = e->key_code;
     //char ch = (char)c;
-    const int BUFSZ = 256;
-    char buffer[BUFSZ];
 
     uint w, h, x, y;
     this->display->get_size(this->display, &w, &h);
@@ -257,7 +268,9 @@ static bool key_handler(void *usr, key_event_t *e)
         }
     }
 
-    return true;
+ done:
+    DEBUG("inside key_handler(): leaving\n");
+    return ret;
 }
 
 static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
