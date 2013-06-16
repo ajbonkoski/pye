@@ -35,10 +35,10 @@ def fmt_handler(data):
 class PyePythonStyle(Style):
     styles = {
         Comment:        "#000001",
-        Keyword:        "#000002",
-        Name.Function:  "#000004",
-        Name.Class:     "#000005",
-        String:         "#000006"
+        Keyword:        "#000006 bold",
+        Name.Function:  "#000004 bold",
+        Name.Class:     "#000002 bold",
+        String:         "#000002"
         }
 
 class ExtractColorException(Exception): pass

@@ -6,8 +6,8 @@
 
 #define IMPL_TYPE 0xb3627c50
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3
@@ -62,7 +62,7 @@ static inline int get_new_pair_index(display_curses_t *this)
 {
     int cp = this->pair_index;
 
-    if(++this->pair_index >= COLOR_PAIRS)
+    if(++this->pair_index >= 200) //COLOR_PAIRS)
         this->pair_index = START_PAIR;
 
     return cp;
@@ -218,21 +218,28 @@ static inline int decode_color_to_curses(uint color, bool bright)
 
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
+    //DEBUG("inside set_style()\n");
+
     int bg_curses_color = decode_color_to_curses(style->bg_color,
                                                  style->bg_bright);
     int fg_curses_color = decode_color_to_curses(style->fg_color,
                                                  style->fg_bright);
+
+    /* DEBUG("fg_color: %d, bg_color: %d\n", fg_curses_color, bg_curses_color); */
+    /* DEBUG("bold: %d, highlight: %d, under: %d\n", */
+    /*       style->bold, style->highlight, style->underline); */
 
     int pi = get_new_pair_index(this);
     init_pair(pi, fg_curses_color, bg_curses_color);
     int attr = COLOR_PAIR(pi);
 
     if(style->bold)      attr |= A_BOLD;
-    if(style->highlight) attr |= A_STANDOUT;
+    if(style->highlight) { attr |= A_STANDOUT; DEBUG("HON!\n"); }
     if(style->underline) attr |= A_UNDERLINE;
 
     this->cur_attr = attr;
     attron(this->cur_attr);
+
 }
 
 static inline void clear_style(display_curses_t *this)
@@ -261,10 +268,10 @@ static void _write(display_t *disp, const char *s, size_t num, int style)
         addch(c);
     }
 
-    doupdate();
-
     if(style != DISPLAY_STYLE_NONE)
         clear_style(this);
+
+    //doupdate();
 }
 
 static void destroy(display_t *disp)
