@@ -1,94 +1,129 @@
 from pye import *
+#def printf(s): print s
+#debug = printf
+
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
 from pygments.formatters import TerminalFormatter
+from pygments.style import Style
+from pygments.token import *
 
 def init():
     global lexer, formatter
     lexer = PythonLexer()
     #formatter = TerminalFormatter()
-    formatter = PyeFormatter()
+    formatter = PyeFormatter(style=PyePythonStyle)
+
+
+def test():
+    ret = fmt_handler('from pygments import highlight\n def data(): pass')
+    debug("Results of fmt_handler:\n{}".format(ret))
 
 def fmt_handler(data):
     try:
-        res = highlight(data, lexer, formatter).rstrip()
-    except Exception: return None
+        highlight(data, lexer, formatter)
+        ret = formatter.get_formatted(data)
+    except Exception as e:
+        debug("exception in syntax_highlighter: {}".format(e))
+        return None
 
-    # res_ascii = res.encode('ascii', 'replace')
-    #debug("res='{}' type='{}'".format(res_ascii, type(res_ascii)))
-    # return res_ascii
+    debug("Results of fmt_handler:\n{}".format(ret))
+    return ret
 
-    return { 'data':    data,
-             'styles':  [{'fg_color': 1}],
-             'regions': [{'start_index': 0,
-                          'length': len(data),
-                          'style_id': 0 }
-                         ]
-             }
+class PyePythonStyle(Style):
+    styles = {
+        Comment:        "#000001",
+        Keyword:        "#000002",
+        Name.Function:  "#000004",
+        Name.Class:     "#000005",
+        String:         "#000006"
+        }
 
+class ExtractColorException(Exception): pass
+def extract_color(c):
+    if len(c) != 6: raise ExtractColorException('color length is too short')
+    try:
+        i = int(c)
+    except NumberFormatException as e: raise ExtractColorException(e.value)
+    if i < 0 or i > 7: raise ExtractColorException('integer out of range')
+    return i
 
 class PyeFormatter(Formatter):
 
     def __init__(self, **options):
         Formatter.__init__(self, **options)
-        self.styles = {}
+        self.token_map = {}
+        self.styles = []
 
-        i = 1
         for token, style in self.style:
-            debug("=== i={}, token={}, style={} ===".format(i, token, style))
 
-            start = end = ''
+            try:
+                s = {}
+                if style['color']:
+                    c = extract_color(style['color'])
+                    s['fg_color'] = c
+                if style['bold']:
+                    s['bold'] = bool(style['bold'])
+                if style['underline']:
+                    s['underline'] = bool(style['underline'])
+                if style['bgcolor']:
+                    s['bgcolor'] = bool(style['bgcolor'])
 
-            if style['color']:
-                debug("color={}".format(style['color']))
-            if style['bold']:
-                debug("bold={}".format(style['bold']))
-            if style['underline']:
-                debug("underline={}".format(style['underline']))
-            if style['bgcolor']:
-                debug("bgcolor={}".format(style['bgcolor']))
+                i = self.add_style(s) if len(s) != 0 else -1
+                self.token_map[token] = i
 
-            i+=1
-            self.styles[token] = (start, end)
+            except Exception as ex:
+                ## use default formatting
+                debug("error: style formatted wrong for {}: {}. Skipping...".format(token, ex))
+                self.token_map[token] = -1
+
+    def add_style(self, s):
+
+        if s not in self.styles:
+            i = len(self.styles)
+            self.styles.append(s)
+            return i
+
+        else:
+            return self.styles.index(s)
+
+    def __str__(self):
+        s = ''
+        for k,v in self.token_map.items():
+            s += "{}: {}\n".format(k, self.styles[v] if v != -1 else '{}')
+
+        s += "Number of distinct styles: {}".format(len(self.styles))
+        return s
 
     # def format(self, tokensource, outfile):
     #     for ttype, value in tokensource:
     #         outfile.write(value)
 
     def format(self, tokensource, outfile):
-        debug("INSIDE format()")
 
+        index = 0
+        self.regions = []
         for ttype, value in tokensource:
-            debug("ttype={}, value={}".format(ttype, value))
+            s = self.token_map[ttype]
+            #debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
+            if s != -1:
+                self.regions.append({'start_index': index,
+                                     'length': len(value),
+                                     'style_id': s,
+                                     })#'value': value})
 
-            # if the token type doesn't exist in the stylemap
-            # we try it with the parent of the token type
-            # eg: parent of Token.Literal.String.Double is
-            # Token.Literal.String
-            while ttype not in self.styles:
-                ttype = ttype.parent
-            if ttype == lasttype:
-                # the current token type is the same of the last
-                # iteration. cache it
-                lastval += value
-            else:
-                # not the same token as last iteration, but we
-                # have some data in the buffer. wrap it with the
-                # defined style and write it to the output file
-                if lastval:
-                    stylebegin, styleend = self.styles[lasttype]
-                    outfile.write(stylebegin + lastval + styleend)
-                # set lastval/lasttype to current values
-                lastval = value
-                lasttype = ttype
+            index += len(value)
 
-        # if something is left in the buffer, write it to the
-        # output file, then close the opened <pre> tag
-        if lastval:
-            stylebegin, styleend = self.styles[lasttype]
-            outfile.write(stylebegin + lastval + styleend)
-        outfile.write('</pre>\n')
+        return None
+
+    def get_formatted(self, data):
+        return { 'styles':  self.styles,
+                 'regions': self.regions,
+                 'data':    data }
 
 init()
+
+
+if __name__ == '__main__': test()
