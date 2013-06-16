@@ -33,6 +33,7 @@ typedef uint64_t  u64;
 
 // define debugging and error macros
 #define ENABLE_DEBUG 0
+void common_redirect_stderr(void);
 FILE *common_get_debug_file(void);
 #define DEBUG(...) do { if(ENABLE_DEBUG) { \
     FILE *debug_file = common_get_debug_file(); \

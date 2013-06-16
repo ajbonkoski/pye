@@ -7,7 +7,8 @@
 typedef struct {
     PyObject_HEAD
     screen_t *screen;
-    PyObject *callback_func; // XXX: this is not cleaned up properly
+    PyObject *key_func; // XXX: this is not cleaned up properly
+    PyObject *buf_func; // XXX: this is not cleaned up properly
 } pye_Screen;
 
 static PyObject *Screen_write_mb(pye_Screen *self, PyObject *args)
@@ -48,6 +49,18 @@ static bool screen_key_event_handler(void *usr, key_event_t *e)
     return ret;
 }
 
+static void screen_buf_event_handler(void *usr, uint index)
+{
+    PyObject *func = (PyObject *)usr;
+    PyObject *args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, PyInt_FromLong(index));
+    PyObject *result = PyObject_CallObject(func, args);
+
+    // cleanup
+    Py_XDECREF(result);
+    Py_DECREF(args);
+}
+
 static PyObject *Screen_register_kbrd_callback(pye_Screen *self, PyObject *args)
 {
     DEBUG("inside Screen_register_kbrd_callback\n");
@@ -64,11 +77,45 @@ static PyObject *Screen_register_kbrd_callback(pye_Screen *self, PyObject *args)
 
     screen_t *s = self->screen;
     s->register_kbrd_callback(s, screen_key_event_handler, (void *)func);
-    self->callback_func = func;
+    self->key_func = func;
 
  ret:
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+static PyObject *Screen_register_buf_callback(pye_Screen *self, PyObject *args)
+{
+    DEBUG("inside Screen_register_buf_callback\n");
+
+    PyObject *func = NULL;
+    if(!PyArg_ParseTuple(args, "O", &func))
+        return NULL;
+
+    if(!PyCallable_Check(func)) {
+        ERROR("error: Screen_register_buf_callback recieved uncallable parameter\n");
+        Py_XDECREF(func);
+        goto ret;
+    }
+
+    screen_t *s = self->screen;
+    s->register_buf_added_callback(s, screen_buf_event_handler, (void *)func);
+    self->buf_func = func;
+
+ ret:
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Screen_get_buffer(pye_Screen *self, PyObject *args)
+{
+    uint i;
+    if(!PyArg_ParseTuple(args, "i", &i))
+        return NULL;
+
+    buffer_t *b = self->screen->get_buffer(self->screen, i);
+    PyObject *pBuffer = execution_buffer_create(b);
+    return pBuffer;
 }
 
 static PyObject *Screen_get_active_buffer(pye_Screen *self)
@@ -93,8 +140,12 @@ static PyObject *Screen_refresh(pye_Screen *self)
 static PyMethodDef Screen_methods[] = {
     {"write_mb", (PyCFunction)Screen_write_mb, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
-    {"onkey", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
+    {"on_key", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
      "Register a key event handler for the screen object."},
+    {"on_buffer_added", (PyCFunction)Screen_register_buf_callback, METH_VARARGS,
+     "Register a buffer added event handler for the screen object."},
+    {"get_buffer", (PyCFunction)Screen_get_buffer, METH_VARARGS,
+     "Get a buffer by its integer id number."},
     {"get_active_buffer", (PyCFunction)Screen_get_active_buffer, METH_NOARGS,
      "Get the Screen's active Buffer."},
     {"refresh", (PyCFunction)Screen_refresh, METH_NOARGS,

@@ -41,6 +41,9 @@ static PyObject *load_module(const char *s)
     Py_DECREF(name);
     if(module == NULL) {
         ERROR("Failed to load config module: %s\n", s);
+        if(PyErr_Occurred() != NULL) {
+            PyErr_Print();
+        }
     }
     return module;
 }

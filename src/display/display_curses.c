@@ -6,8 +6,8 @@
 
 #define IMPL_TYPE 0xb3627c50
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3

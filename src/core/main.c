@@ -21,6 +21,8 @@ typedef struct
 
 int main(int argc, char *argv[])
 {
+    common_redirect_stderr();
+
     // parse args
     const char *filename = NULL;
     if(argc >= 2)
@@ -30,6 +32,9 @@ int main(int argc, char *argv[])
     this.disp = display_create_by_name(DISPLAY_TYPE);
     this.scrn = screen_create(this.disp);
 
+    // make the scripting execution context
+    this.exec = execution_create(this.scrn, this.disp);
+
     // create the buffer
     if(filename != NULL) {
         this.buf = fileio_load_buffer(filename);
@@ -38,14 +43,13 @@ int main(int argc, char *argv[])
     }
     this.scrn->add_buffer(this.scrn, this.buf);
 
-    // make the scripting execution context
-    this.exec = execution_create(this.scrn, this.disp);
 
     // main loop
     this.disp->main_loop(this.disp);
 
-    execution_destroy(this.exec);
     this.buf->destroy(this.buf);
+
+    execution_destroy(this.exec);
     this.scrn->destroy(this.scrn);
     this.disp->destroy(this.disp);
     return 0;

@@ -5,8 +5,8 @@
 #define BLANK ' '
 #define FILENAME "testfile.txt"
 
-#undef  ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef  ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -23,6 +23,10 @@ typedef struct
     key_event_func_t key_callback;
     void *key_usr;
 
+    // buf added handler data
+    buf_event_func_t buf_callback;
+    void *buf_usr;
+
 } screen_internal_t;
 static screen_internal_t *cast_this(screen_t *s)
 {
@@ -32,8 +36,11 @@ static screen_internal_t *cast_this(screen_t *s)
 
 // forward declarations
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr);
+static void register_buf_added_callback(screen_t *scrn, buf_event_func_t f, void *usr);
+
 static uint add_buffer(screen_t *scrn, buffer_t *buffer);
 static varray_t *list_buffers(screen_t *scrn);
+static buffer_t *get_buffer(screen_t *scrn, uint id);
 static void set_active_buffer(screen_t *scrn, uint id);
 static buffer_t *get_active_buffer(screen_t *scrn);
 static void write_mb(screen_t *scrn, const char *str);
@@ -48,22 +55,56 @@ static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr
     this->key_usr = usr;
 }
 
+static void register_buf_added_callback(screen_t *scrn, buf_event_func_t f, void *usr)
+{
+   screen_internal_t *this = cast_this(scrn);
+   this->buf_callback = f;
+   this->buf_usr = usr;
+}
+
 static uint add_buffer(screen_t *scrn, buffer_t *buffer)
 {
     screen_internal_t *this = cast_this(scrn);
+
+    // this static var is used to detect cyclic calls
+    // that could arise due to the use of the
+    // "buffer added" event handler
+    static bool running = false;
+    ASSERT(!running, "Detected cyclic calls to add_buffer");
+    running = true;
+
     varray_add(this->buffers, buffer);
+    uint id = varray_size(this->buffers) - 1;
+    bool needs_update = false;
+
     if(this->cb == NULL) {
         this->cb = buffer;
-        update_all(this);
+        needs_update = true;
     }
 
-    return varray_size(this->buffers) - 1;
+    // call the handler if needed
+    if(this->buf_callback != NULL) {
+        this->buf_callback(this->buf_usr, id);
+    }
+
+    if(needs_update)
+        update_all(this);
+
+    running = false;
+    return id;
 }
 
 static varray_t *list_buffers(screen_t *scrn)
 {
     screen_internal_t *this = cast_this(scrn);
     return this->buffers;
+}
+
+static buffer_t *get_buffer(screen_t *scrn, uint id)
+{
+    screen_internal_t *this = cast_this(scrn);
+    ASSERT(id >= 0 && id < varray_size(this->buffers), "Index out-of-bounds error");
+    return varray_get(this->buffers, id);
 }
 
 static void set_active_buffer(screen_t *scrn, uint id)
@@ -103,24 +144,7 @@ static void write_mb(screen_t *scrn, const char *str)
         }
     }
 
-
-    varray_t *styles = varray_create();
-    display_style_t s;
-    memset(&s, 0, sizeof(display_style_t));
-    s.bg_color = DISPLAY_COLOR_BLACK;
-    s.bg_bright = false;
-    s.fg_color = DISPLAY_COLOR_CYAN;
-    s.fg_bright = false;
-    s.bold = false;
-    s.underline = false;
-    s.highlight = false;
-
-    varray_add(styles, &s);
-    this->display->set_styles(this->display, styles);
-    this->display->write(this->display, buf, this->disp_width, 0);
-    this->display->remove_styles(this->display);
-    varray_destroy(styles);
-
+    this->display->write(this->display, buf, this->disp_width, -1);
     free(buf);
 
     // step 4: restore cursor position
@@ -348,6 +372,10 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
     this->mb_y = h-1;
     this->disp_width = w;
     this->buffers = varray_create();
+
+    this->buf_callback = NULL;
+    this->buf_usr = NULL;
+
     return this;
 }
 
@@ -358,8 +386,10 @@ screen_t *screen_create(display_t *disp)
     s->impl_type = IMPL_TYPE;
 
     s->register_kbrd_callback = register_kbrd_callback;
+    s->register_buf_added_callback = register_buf_added_callback;
     s->add_buffer = add_buffer;
     s->list_buffers = list_buffers;
+    s->get_buffer = get_buffer;
     s->set_active_buffer = set_active_buffer;
     s->get_active_buffer = get_active_buffer;
     s->write_mb = write_mb;

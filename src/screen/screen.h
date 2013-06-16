@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+typedef void (*buf_event_func_t)(void *usr, uint index);
+
 typedef struct screen screen_t;
 struct screen
 {
@@ -18,10 +20,12 @@ struct screen
 
     // this will override the default handler
     void (*register_kbrd_callback)(screen_t *this, key_event_func_t f, void *usr);
+    void (*register_buf_added_callback)(screen_t *this, buf_event_func_t f, void *usr);
     // returns the buffer's id
     uint (*add_buffer)(screen_t *this, buffer_t *buffer);
     // the varray returned should be considered constant (user should neither modify nor delete it)
     varray_t *(*list_buffers)(screen_t *this);
+    buffer_t *(*get_buffer)(screen_t *this, uint id);
     void (*set_active_buffer)(screen_t *this, uint id);
     buffer_t *(*get_active_buffer)(screen_t *this);
     void (*write_mb)(screen_t *this, const char *str); // write to the message bar

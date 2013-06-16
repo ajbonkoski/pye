@@ -48,3 +48,8 @@ FILE *common_get_debug_file(void)
     return debug_file;
 }
 
+void common_redirect_stderr(void)
+{
+    FILE *debug_file = common_get_debug_file();
+    stderr = debug_file;
+}

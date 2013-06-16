@@ -13,7 +13,6 @@ from pygments.token import *
 def init():
     global lexer, formatter
     lexer = PythonLexer()
-    #formatter = TerminalFormatter()
     formatter = PyeFormatter(style=PyePythonStyle)
 
 
