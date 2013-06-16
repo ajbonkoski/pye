@@ -34,7 +34,7 @@ def fmt_handler(data):
 
 class PyePythonStyle(Style):
     styles = {
-        Comment:        "#000001",
+        Comment:        "#000009",
         Keyword:        "#000006 bold",
         Name.Function:  "#000004 bold",
         Name.Class:     "#000002 bold",
@@ -47,8 +47,10 @@ def extract_color(c):
     try:
         i = int(c)
     except NumberFormatException as e: raise ExtractColorException(e.value)
-    if i < 0 or i > 7: raise ExtractColorException('integer out of range')
-    return i
+    if i < 0 or i > 15: raise ExtractColorException('integer out of range')
+
+    i_adj = (i+1);
+    return (i_adj%8)-1, i_adj/8 == 0
 
 class PyeFormatter(Formatter):
 
@@ -62,8 +64,9 @@ class PyeFormatter(Formatter):
             try:
                 s = {}
                 if style['color']:
-                    c = extract_color(style['color'])
+                    c, b = extract_color(style['color'])
                     s['fg_color'] = c
+                    s['bright'] = b
                 if style['bold']:
                     s['bold'] = bool(style['bold'])
                 if style['underline']:
