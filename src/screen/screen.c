@@ -5,8 +5,8 @@
 #define BLANK ' '
 #define FILENAME "testfile.txt"
 
-//#undef  ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -17,7 +17,8 @@ typedef struct
     uint disp_width;
 
     varray_t *buffers;
-    buffer_t *cb;  /* the current buffer */
+    buffer_t *cb;        /* the current buffer */
+    uint cb_viewport_y;  /* the top line of the current buffer's viewport */
 
     // key handler data
     key_event_func_t key_callback;
@@ -79,6 +80,7 @@ static uint add_buffer(screen_t *scrn, buffer_t *buffer)
 
     if(this->cb == NULL) {
         this->cb = buffer;
+        this->cb_viewport_y = 0;
         needs_update = true;
     }
 
@@ -112,6 +114,7 @@ static void set_active_buffer(screen_t *scrn, uint id)
     screen_internal_t *this = cast_this(scrn);
     ASSERT(id >= 0 && id < varray_size(this->buffers), "Index out-of-bounds error");
     this->cb = varray_get(this->buffers, id);
+    this->cb_viewport_y = 0;
 }
 
 static buffer_t *get_active_buffer(screen_t *scrn)
@@ -241,9 +244,54 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
 
 static void update_cursor(screen_internal_t *this)
 {
+    DEBUG("inside screen->update_cursor(): entering\n");
+
     uint x, y;
     this->cb->get_cursor(this->cb, &x, &y);
-    this->display->set_cursor(this->display, x, y);
+    DEBUG("x=%d, y=%d\n", x, y);
+
+    uint w, h;
+    this->display->get_size(this->display, &w, &h);
+
+    // first: check the viewport
+    uint *vpy = &this->cb_viewport_y;
+    DEBUG("*vpy=%d\n", *vpy);
+    bool adjust_viewport = false;
+    bool adjust_go_up = false;
+
+    if(y < *vpy) {
+        adjust_viewport = true;
+        adjust_go_up = true;
+    }
+
+    else {
+        uint vpy_end = *vpy + h - 1;
+        if(y >= vpy_end) {
+           adjust_viewport = true;
+           adjust_go_up = false;
+        }
+    }
+
+    DEBUG("adjust_viewport=%d, adjust_go_up=%d\n",
+          adjust_viewport, adjust_go_up);
+
+    // second: adjust viewport if needed (and force a full redraw)
+    if(adjust_viewport) {
+        if(adjust_go_up)
+            *vpy = (h/2 <= *vpy) ? (*vpy - h/2) : 0;
+        else
+            *vpy += h/2;
+
+        DEBUG("new *vpy=%d\n", *vpy);
+        DEBUG("new this->cb_viewport_y=%d\n", this->cb_viewport_y);
+        update_all(this);
+    }
+
+    else {
+        this->display->set_cursor(this->display, x, y - *vpy);
+    }
+
+    DEBUG("inside screen->update_cursor(): leaving\n");
 }
 
 static void update_all(screen_internal_t *this)
@@ -252,12 +300,13 @@ static void update_all(screen_internal_t *this)
 
     uint w, h;
     this->display->get_size(this->display, &w, &h);
+    uint *vpy = &this->cb_viewport_y;
 
     // write the lines in the buffer_t
     uint numlines = this->cb->num_lines(this->cb);
     int i;
-    for(i = 0; i < numlines && i < h-1; i++) {
-        buffer_line_t *line = this->cb->get_line_data_fmt(this->cb, i);
+    for(i = 0; i + *vpy < numlines && i < h-1; i++) {
+        buffer_line_t *line = this->cb->get_line_data_fmt(this->cb, i + *vpy);
         display_write_line(this, line, i);
         buffer_line_destroy(line);
     }
