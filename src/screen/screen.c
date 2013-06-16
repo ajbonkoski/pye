@@ -5,8 +5,8 @@
 #define BLANK ' '
 #define FILENAME "testfile.txt"
 
-//#undef  ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -193,12 +193,13 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
                                  r->length, r->style_id);
 
         // update the index
-        index = r->start_index = r->length;
+        index = r->start_index + r->length;
     }
 
     // we might have some residual line data after the regions
-    uint left = line_len - index - 1;
+    uint left = line_len - index;
     if(index < line_len && left > 0) {
+        DEBUG("Handling the residuals: data='%s'\n", line->data + index);
         this->display->write(this->display,
                              line->data + index,
                              left, -1);
