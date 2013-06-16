@@ -234,8 +234,10 @@ static inline void set_style(display_curses_t *this, display_style_t *style)
     int attr = COLOR_PAIR(pi);
 
     if(style->bold)      attr |= A_BOLD;
-    if(style->highlight) { attr |= A_STANDOUT; DEBUG("HON!\n"); }
+    if(style->highlight) attr |= A_STANDOUT;
     if(style->underline) attr |= A_UNDERLINE;
+
+    attr |= A_DIM;
 
     this->cur_attr = attr;
     attron(this->cur_attr);
@@ -304,6 +306,7 @@ static void internal_initialize(display_t *disp)
 
     // curses doesn't seem to like changing colors for xterm... thus this very bad hack
     setenv("TERM", "xterm-256color", 1);
+    //setenv("TERM", "linux", 1);
 
     this->wind = initscr();
     cbreak();

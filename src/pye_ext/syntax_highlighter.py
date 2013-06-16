@@ -37,7 +37,7 @@ class PyePythonStyle(Style):
         Keyword:        "#000006 bold",
         Name.Function:  "#000004 bold",
         Name.Class:     "#000002 bold",
-        String:         "#000002"
+        String:         "#000010"
         }
 
 class ExtractColorException(Exception): pass

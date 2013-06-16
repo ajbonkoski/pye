@@ -8,6 +8,10 @@
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
+#define FOOTER_SIZE 2
+#define DISPLAY_SIZE(w, h) \
+    uint w, h; this->display->get_size(this->display, &w, &h)
+
 typedef struct
 {
     screen_t *super;
@@ -45,6 +49,7 @@ static buffer_t *get_buffer(screen_t *scrn, uint id);
 static void set_active_buffer(screen_t *scrn, uint id);
 static buffer_t *get_active_buffer(screen_t *scrn);
 static void write_mb(screen_t *scrn, const char *str);
+static void update_sb(screen_internal_t *this);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
 static void refresh(screen_t *scrn);
@@ -154,6 +159,34 @@ static void write_mb(screen_t *scrn, const char *str)
     this->display->set_cursor(this->display, x, y);
 }
 
+static void update_sb(screen_internal_t *this)
+{
+    DISPLAY_SIZE(w, h);
+    uint sb_y = h-2;
+
+    uint x, y;
+    this->display->get_cursor(this->display, &x, &y);
+    this->display->set_cursor(this->display, 0, sb_y);
+
+    varray_t *s = varray_create();
+    display_style_t *ds = display_style_create_default();
+    ds->bg_color = DISPLAY_COLOR_WHITE;
+    ds->bg_bright = false;
+    ds->fg_color = DISPLAY_COLOR_BLACK;
+    ds->fg_bright = true;
+    ds->highlight = false;
+    varray_add(s, ds);
+    this->display->set_styles(this->display, s);
+
+    this->display->write(this->display, NULL, w-1, 0);
+
+    this->display->remove_styles(this->display);
+    display_style_destroy(ds);
+    varray_destroy(s);
+
+    this->display->set_cursor(this->display, x, y);
+}
+
 static void destroy(screen_t *scrn)
 {
     screen_internal_t *this = cast_this(scrn);
@@ -170,8 +203,10 @@ static void destroy(screen_t *scrn)
 
 static void display_write_line(screen_internal_t *this, buffer_line_t *line, int lineno)
 {
-    this->display->set_cursor(this->display, 0, lineno);
+    DISPLAY_SIZE(w, h);
+    ASSERT(lineno + FOOTER_SIZE < h, "tried to write to an invalid line");
 
+    this->display->set_cursor(this->display, 0, lineno);
     this->display->set_styles(this->display, line->styles);
 
     uint index = 0;
@@ -236,8 +271,7 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
 
 
     // write some blanks (to the end of the line)
-    uint x, y, w, h;
-    this->display->get_size(this->display, &w, &h);
+    uint x, y;
     this->display->get_cursor(this->display, &x, &y);
     this->display->write(this->display, NULL, w-(x+1), -1);
 }
@@ -265,7 +299,7 @@ static void update_cursor(screen_internal_t *this)
     }
 
     else {
-        uint vpy_end = *vpy + h - 1;
+        uint vpy_end = *vpy + h - FOOTER_SIZE;
         if(y >= vpy_end) {
            adjust_viewport = true;
            adjust_go_up = false;
@@ -288,6 +322,7 @@ static void update_cursor(screen_internal_t *this)
     }
 
     else {
+        update_sb(this); // always update the status bar
         this->display->set_cursor(this->display, x, y - *vpy);
     }
 
@@ -300,21 +335,25 @@ static void update_all(screen_internal_t *this)
 
     uint w, h;
     this->display->get_size(this->display, &w, &h);
+    h -= FOOTER_SIZE;
+
     uint *vpy = &this->cb_viewport_y;
 
     // write the lines in the buffer_t
     uint numlines = this->cb->num_lines(this->cb);
     int i;
-    for(i = 0; i + *vpy < numlines && i < h-1; i++) {
+    for(i = 0; i + *vpy < numlines && i < h; i++) {
         buffer_line_t *line = this->cb->get_line_data_fmt(this->cb, i + *vpy);
         display_write_line(this, line, i);
         buffer_line_destroy(line);
     }
 
     // clear the remainer of the screen
-    for(; i < h-1; i++) {
+    for(; i < h; i++) {
         this->display->write(this->display, NULL, w, -1);
     }
+
+    update_sb(this); // always update the status bar
 
     DEBUG("inside screen->update_all: updating cursor()\n");
     update_cursor(this);
