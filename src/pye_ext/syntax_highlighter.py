@@ -36,7 +36,7 @@ class PyePythonStyle(Style):
         Comment:        "#000009",
         Keyword:        "#000006 bold",
         Name.Function:  "#000004 bold",
-        Name.Class:     "#000002 bold",
+        Name.Class:     "#000010",
         String:         "#000010"
         }
 
@@ -65,13 +65,15 @@ class PyeFormatter(Formatter):
                 if style['color']:
                     c, b = extract_color(style['color'])
                     s['fg_color'] = c
-                    s['bright'] = b
+                    s['fg_bright'] = b
                 if style['bold']:
                     s['bold'] = bool(style['bold'])
                 if style['underline']:
                     s['underline'] = bool(style['underline'])
                 if style['bgcolor']:
-                    s['bgcolor'] = bool(style['bgcolor'])
+                    c, b = bool(style['bgcolor'])
+                    s['bg_color'] = c
+                    s['bg_bright'] = b
 
                 i = self.add_style(s) if len(s) != 0 else -1
                 self.token_map[token] = i
