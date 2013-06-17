@@ -45,34 +45,36 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
 
     int newx = (int)x + (int)dx;
     int newy = (int)y + (int)dy;
+    uint nlines = d->num_lines(d);
+    if(newy < 0 || newy >= nlines)
+        return;
+
     uint linelen = d->line_len(d, newy);
 
-    uint nlines = d->num_lines(d);
-    if(newy < 0 || newy >= nlines) {
-        return;
-
-    } else {
-
-        if(newx < 0) {
-            if(newy <= 0) {
-                newx = 0;
-                newy = 0;
-            } else {
-                newy -= 1;
+    if(newx < 0) {
+        if(newy <= 0) {
+            newx = 0;
+            newy = 0;
+        } else {
+            newy -= 1;
                 linelen = d->line_len(d, newy);
                 newx = linelen;
-            }
         }
+    }
 
-        if(newx > linelen) {
+    if(newx > linelen) {
+        if(newy + 1 < nlines) {
             newx = 0;
             newy += 1;
+        } else {
+            newx = linelen;
+            newy = nlines-1;
         }
-
-        d->set_cursor(d, newx, newy);
-
-        return;
     }
+
+    d->set_cursor(d, newx, newy);
+
+    return;
 }
 
 static void goto_line_start(buffer_internal_t *this)
