@@ -43,8 +43,9 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
     data_buffer_t *d = this->databuf;
     d->get_cursor(d, &x, &y);
 
-    uint newx = x + dx;
-    uint newy = y + dy;
+    int newx = (int)x + (int)dx;
+    int newy = (int)y + (int)dy;
+    uint linelen = d->line_len(d, newy);
 
     uint nlines = d->num_lines(d);
     if(newy < 0 || newy >= nlines) {
@@ -52,12 +53,21 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
 
     } else {
 
-        if(newx < 0)
-            newx = 0;
+        if(newx < 0) {
+            if(newy <= 0) {
+                newx = 0;
+                newy = 0;
+            } else {
+                newy -= 1;
+                linelen = d->line_len(d, newy);
+                newx = linelen;
+            }
+        }
 
-        uint linelen = d->line_len(d, newy);
-        if(newx > linelen)
-            newx = linelen;
+        if(newx > linelen) {
+            newx = 0;
+            newy += 1;
+        }
 
         d->set_cursor(d, newx, newy);
 
