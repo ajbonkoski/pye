@@ -2,6 +2,7 @@
 #include "execution.h"
 #include "execution_display.h"
 #include "execution_keyboard.h"
+#include "execution_color.h"
 #include "execution_screen.h"
 #include "execution_buffer.h"
 
@@ -55,12 +56,14 @@ execution_t *execution_create(screen_t *scrn, display_t *disp)
     Py_Initialize();
     execution_display_init();
     execution_keyboard_init();
+    execution_color_init();
     execution_screen_init();
     execution_buffer_init();
 
     PyObject *m = Py_InitModule("pye", PyeMethods);
     PyModule_AddObject(m, "display", execution_display_create(disp));
     PyModule_AddObject(m, "keyboard", execution_keyboard_create());
+    PyModule_AddObject(m, "color", execution_color_create());
     PyModule_AddObject(m, "screen",  execution_screen_create(scrn));
 
     this->config_module = load_module(CONFIG_MODULE);
