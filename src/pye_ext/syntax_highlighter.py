@@ -31,18 +31,38 @@ def fmt_handler(data):
         debug("exception in syntax_highlighter: {}".format(e))
         return None
 
-    debug("Results of fmt_handler:\n{}".format(ret))
+    #debug("Results of fmt_handler:\n{}".format(ret))
     return ret
+
+def PyeConvertColors(s):
+    if s.startswith("fg:"):
+        t = s[3:]
+        d = t.split('-')
+        is_bright = False
+        if len(d) == 2:
+            is_bright = (d[0] == 'bright')
+            t = d[1]
+        i = color.from_string(t)
+        if is_bright:
+            i += 8
+        return '#' + ('0'*6 + str(i))[-6:]
+    elif s.startswith("bg:"):
+        return 'bg:#' + ('0'*6 + str(color.from_string(s[3:])))[-6:]
+    else:
+        return s
+
+def PyeStyle(s):
+    return ' '.join(map(PyeConvertColors, s.split(' ')))
 
 class PyePythonStyle(Style):
     styles = {
-        Comment:             "#000009",
-        Keyword:             "#000006 bold",
-        Name.Function:       "#000004 bold",
-        Name.Class:          "#000010",
-        Name.Builtin:        "#000004 bold",
-        Name.Builtin.Pseudo: "#000006 bold",
-        String:              "#000010"
+        Comment:              PyeStyle("fg:red"),
+        Keyword:              PyeStyle("fg:cyan bold"),
+        Name.Function:        PyeStyle("fg:blue bold"),
+        Name.Class:           PyeStyle("fg:green"),
+        Name.Builtin:         PyeStyle("fg:blue bold"),
+        Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
+        String:               PyeStyle("fg:green")
         }
 
 class PyeCStyle(Style):
@@ -62,7 +82,7 @@ def extract_color(c):
     if i < 0 or i > 15: raise ExtractColorException('integer out of range')
 
     i_adj = (i+1);
-    return (i_adj%8)-1, i_adj/8 == 0
+    return (i_adj%8)-1, i_adj/8 == 1
 
 class PyeFormatter(Formatter):
 
@@ -124,7 +144,7 @@ class PyeFormatter(Formatter):
         self.regions = []
         for ttype, value in tokensource:
             s = self.token_map[ttype]
-            debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
+            #debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
             if s != -1:
                 self.regions.append({'start_index': index,
                                      'length': len(value),
