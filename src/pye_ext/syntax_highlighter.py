@@ -4,6 +4,7 @@ from pye import *
 
 from pygments import highlight
 from pygments.lexers import PythonLexer
+from pygments.lexers import CLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
 from pygments.formatters import TerminalFormatter
@@ -13,7 +14,9 @@ from pygments.token import *
 def init():
     global lexer, formatter
     lexer = PythonLexer()
+    #lexer = CLexer()
     formatter = PyeFormatter(style=PyePythonStyle)
+    #formatter = PyeFormatter(style=PyeCStyle)
 
 
 def test():
@@ -38,6 +41,14 @@ class PyePythonStyle(Style):
         Name.Function:  "#000004 bold",
         Name.Class:     "#000010",
         String:         "#000010"
+        }
+
+class PyeCStyle(Style):
+    styles = {
+        #Comment.Preproc: "#000004 bold",
+        Keyword:         "#000006 bold",
+        #Name:            "#000004 bold",
+        String:          "#000010"
         }
 
 class ExtractColorException(Exception): pass
@@ -111,7 +122,7 @@ class PyeFormatter(Formatter):
         self.regions = []
         for ttype, value in tokensource:
             s = self.token_map[ttype]
-            #debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
+            debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
             if s != -1:
                 self.regions.append({'start_index': index,
                                      'length': len(value),

@@ -243,6 +243,7 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
     buffer_line_region_t *r;
 
     varray_iter(r, line->regions) {
+        ASSERT(r != NULL, "line->regions contains NULL pointers");
 
         // do validation first
         if(r->start_index < index) {
