@@ -3,14 +3,16 @@
 
 #define IMPL_TYPE 0x7c870c4b
 #define BLANK ' '
-#define FILENAME "testfile.txt"
 
 #undef  ENABLE_DEBUG
 #define ENABLE_DEBUG 1
 
 #define FOOTER_SIZE 2
+#define MB_RESPONSE_SIZE 200
 #define DISPLAY_SIZE(w, h) \
     uint w, h; this->display->get_size(this->display, &w, &h)
+
+static inline bool is_visible(u32 c){ return c >= 0x20 && c <= 0x7e; }
 
 typedef struct
 {
@@ -32,6 +34,14 @@ typedef struct
     buf_event_func_t buf_callback;
     void *buf_usr;
 
+    // message box state
+    bool mb_mode;
+    mb_response_func_t mb_response_func;
+    void *mb_response_usr;
+    char *mb_question;
+    char mb_response[MB_RESPONSE_SIZE];
+    uint mb_response_index;
+
 } screen_internal_t;
 static screen_internal_t *cast_this(screen_t *s)
 {
@@ -49,6 +59,8 @@ static buffer_t *get_buffer(screen_t *scrn, uint id);
 static void set_active_buffer(screen_t *scrn, uint id);
 static buffer_t *get_active_buffer(screen_t *scrn);
 static void mb_write(screen_t *scrn, const char *str);
+static void mb_ask(screen_t *scrn, const char *str, mb_response_func_t func, void *usr);
+static void mb_ask_rewrite(screen_internal_t *this);
 static void update_sb(screen_internal_t *this);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
@@ -157,6 +169,22 @@ static void mb_write(screen_t *scrn, const char *str)
 
     // step 4: restore cursor position
     this->display->set_cursor(this->display, x, y);
+}
+
+static void mb_ask(screen_t *scrn, const char *str, mb_response_func_t func, void *usr)
+{
+    screen_internal_t *this = cast_this(scrn);
+    ASSERT(!this->mb_mode, "cannot call mb_ask while already pending!");
+
+    this->mb_question = strdup(str);
+    this->mb_mode = true;
+    this->mb_response_index = 0;
+    this->mb_response_func = func;
+    this->mb_response_usr = usr;
+
+    mb_ask_rewrite(this);
+
+    return;
 }
 
 static void update_sb(screen_internal_t *this)
@@ -366,15 +394,121 @@ static void refresh(screen_t *scrn)
     update_all(cast_this(scrn));
 }
 
+static void finish_mb_ask(screen_internal_t *this, bool complete)
+{
+    // add a NULL to the end of mb_response
+    this->mb_response[this->mb_response_index] = '\0';
+
+    // fix the screen...
+    mb_write(this->super, NULL);
+    update_cursor(this);
+
+    // send the data off to the original requester
+    this->mb_mode = false;
+    this->mb_response_index = 0;
+    if(this->mb_question != NULL) {
+        free(this->mb_question);
+        this->mb_question = NULL;
+    }
+
+    char *data = complete ? this->mb_response : NULL;
+    if(this->mb_response_func != NULL)
+        this->mb_response_func(this->mb_response_usr, data);
+
+    this->mb_response[0] = '\0';
+    this->mb_response_func = NULL;
+    this->mb_response_usr = NULL;
+}
+
+static void mb_ask_rewrite(screen_internal_t *this)
+{
+    DISPLAY_SIZE(w, h);
+
+    const int BUFSZ = 256;
+    char buffer[BUFSZ+1];
+    uint n = snprintf(buffer, BUFSZ,
+                      "%s: %s", this->mb_question, this->mb_response);
+    mb_write(this->super, buffer);
+    this->display->set_cursor(this->display, n, h-1);
+}
+
+static bool mb_key_handler(screen_internal_t *this, key_event_t *e)
+{
+    ASSERT(this->mb_mode, "mb_key_handler() called, but not in mb_mode");
+
+    u32 c = e->key_code;
+    char ch = (char)c;
+
+    // echo any visible keys
+    if(is_visible(c)) {
+        if(this->mb_response_index >= MB_RESPONSE_SIZE) {
+            ERROR("Overflow on mb_response... Ignoring...\n");
+        } else {
+            this->display->write(this->display, &ch, 1, -1);
+            this->mb_response[this->mb_response_index++] = ch;
+        }
+    } else {
+        // check for Enter key
+        switch(c) {
+
+            case KBRD_CTRL('g'):
+                finish_mb_ask(this, false);
+                break;
+
+            case '\n':
+            case KBRD_ENTER:
+                finish_mb_ask(this, true);
+
+            case KBRD_BACKSPACE:
+                if(this->mb_response_index > 0) {
+                    this->mb_response[--this->mb_response_index] = '\0';
+                    mb_ask_rewrite(this);
+                }
+
+            default:
+                ERROR("Invisible key on mb_response... Ignoring...\n");
+        }
+    }
+
+    return true;
+}
+
+static void open_file(screen_internal_t *this, const char *filename)
+{
+    if(filename == NULL) {
+        DEBUG("open_file() received filename=NULL, ignoring...\n");
+        return;
+    }
+
+    const int BUFSZ = 256;
+    char buffer[BUFSZ+1];
+
+    screen_t *s = this->super;
+    buffer_t *b = fileio_load_buffer(filename);
+    if(b == NULL) {
+        snprintf(buffer, BUFSZ, "failed to read: %s", filename);
+        mb_write(s, buffer);
+    } else {
+        s->set_active_buffer(s, s->add_buffer(s, b));
+        update_all(this);
+    }
+
+}
+
 static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
     bool ret = false;
 
     const int BUFSZ = 256;
-    char buffer[BUFSZ];
+    char buffer[BUFSZ+1];
 
     DEBUG("inside key_handler(): entering\n");
+
+    if(this->mb_mode) {
+        DEBUG("key will be handled by message box mode\n");
+        return mb_key_handler(this, e);
+    }
 
     // allow any registered handler to override functionality
     if(this->key_callback) {
@@ -408,15 +542,7 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        screen_t *s = this->super;
-        buffer_t *b = fileio_load_buffer(FILENAME);
-        if(b == NULL) {
-            snprintf(buffer, BUFSZ, "failed to read: %s", FILENAME);
-            mb_write(s, buffer);
-        } else {
-            s->set_active_buffer(s, s->add_buffer(s, b));
-            update_all(this);
-        }
+        mb_ask(this->super, "File:", (mb_response_func_t)open_file, this);
     }
 
     else if(c == KBRD_CTRL('w')) {
@@ -464,6 +590,11 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
     this->buf_callback = NULL;
     this->buf_usr = NULL;
 
+    this->mb_mode = false;
+    this->mb_response_func = NULL;
+    this->mb_response_usr = NULL;
+    this->mb_question = NULL;
+
     return this;
 }
 
@@ -481,6 +612,7 @@ screen_t *screen_create(display_t *disp)
     s->set_active_buffer = set_active_buffer;
     s->get_active_buffer = get_active_buffer;
     s->mb_write = mb_write;
+    s->mb_ask = mb_ask;
     s->destroy = destroy;
     s->refresh = refresh;
 
