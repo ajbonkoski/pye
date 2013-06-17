@@ -36,11 +36,13 @@ def fmt_handler(data):
 
 class PyePythonStyle(Style):
     styles = {
-        Comment:        "#000009",
-        Keyword:        "#000006 bold",
-        Name.Function:  "#000004 bold",
-        Name.Class:     "#000010",
-        String:         "#000010"
+        Comment:             "#000009",
+        Keyword:             "#000006 bold",
+        Name.Function:       "#000004 bold",
+        Name.Class:          "#000010",
+        Name.Builtin:        "#000004 bold",
+        Name.Builtin.Pseudo: "#000006 bold",
+        String:              "#000010"
         }
 
 class PyeCStyle(Style):
