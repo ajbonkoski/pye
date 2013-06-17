@@ -2,6 +2,9 @@
 
 #define MIN_ALLOC 16
 
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
 struct varray
 {
     uint alloc;     // size of data[] in terms of allocated space
@@ -20,10 +23,13 @@ varray_t *varray_create()
 
 void varray_add(varray_t *this, void *obj)
 {
+    DEBUG("varray_add(): Adding obj=0x%lx at i=%d\n", (ulong)obj, this->size);
+
     if(this->size == this->alloc) {
+        DEBUG("varray_add(): reallocating...\n");
         this->alloc *= 2;
-        this->data = realloc(this->data, this->alloc);
-    }
+        this->data = realloc(this->data, this->alloc * sizeof(void *));
+   }
 
     this->data[this->size++] = obj;
 }
@@ -31,6 +37,7 @@ void varray_add(varray_t *this, void *obj)
 void *varray_get(varray_t *this, uint i)
 {
     ASSERT(0 <= i && i < this->size, "Error: Out of Bounds in varray_get()");
+    DEBUG("varray_add(): getting now data[%d] == 0x%lx\n", i, (ulong)this->data[i]);
     return this->data[i];
 }
 
