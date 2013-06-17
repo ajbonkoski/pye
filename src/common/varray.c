@@ -2,8 +2,8 @@
 
 #define MIN_ALLOC 16
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 struct varray
 {

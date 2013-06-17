@@ -4,8 +4,8 @@
 
 #define IMPL_TYPE 0x689a9794
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 typedef struct
 {

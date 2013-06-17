@@ -4,8 +4,8 @@
 #define IMPL_TYPE 0x7c870c4b
 #define BLANK ' '
 
-#undef  ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef  ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 #define FOOTER_SIZE 2
 #define MB_RESPONSE_SIZE 200
