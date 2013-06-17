@@ -206,7 +206,7 @@ static void update_sb(screen_internal_t *this)
     varray_add(s, ds);
     this->display->set_styles(this->display, s);
 
-    this->display->write(this->display, NULL, w-1, 0);
+    this->display->write(this->display, NULL, w, 0);
 
     this->display->remove_styles(this->display);
     display_style_destroy(ds);
@@ -542,7 +542,7 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        mb_ask(this->super, "File:", (mb_response_func_t)open_file, this);
+        mb_ask(this->super, "File", (mb_response_func_t)open_file, this);
     }
 
     else if(c == KBRD_CTRL('w')) {
