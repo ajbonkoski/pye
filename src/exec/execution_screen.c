@@ -11,13 +11,13 @@ typedef struct {
     PyObject *buf_func; // XXX: this is not cleaned up properly
 } pye_Screen;
 
-static PyObject *Screen_write_mb(pye_Screen *self, PyObject *args)
+static PyObject *Screen_mb_write(pye_Screen *self, PyObject *args)
 {
     const char *str;
     if(!PyArg_ParseTuple(args, "z", &str))
         return NULL;
 
-    self->screen->write_mb(self->screen, str);
+    self->screen->mb_write(self->screen, str);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -138,7 +138,7 @@ static PyObject *Screen_refresh(pye_Screen *self)
 }
 
 static PyMethodDef Screen_methods[] = {
-    {"write_mb", (PyCFunction)Screen_write_mb, METH_VARARGS,
+    {"mb_write", (PyCFunction)Screen_mb_write, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
     {"on_key", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
      "Register a key event handler for the screen object."},

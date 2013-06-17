@@ -33,17 +33,17 @@ bool key_pressed(void *usr, key_event_t *e)
     if(c == KEY_CTRL('r')) {
         sprintf(buffer, "|w=%d h=%d|", w, h);
         DEBUG("%s\n", buffer);
-        this->scrn->write_mb(this->scrn, buffer);
+        this->scrn->mb_write(this->scrn, buffer);
     }
 
     else if(c == KEY_CTRL('l')) {
         sprintf(buffer, "|x=%d y=%d|", x, y);
         DEBUG("%s\n", buffer);
-        this->scrn->write_mb(this->scrn, buffer);
+        this->scrn->mb_write(this->scrn, buffer);
     }
 
     else if(c == KEY_CTRL('g')) {
-        this->scrn->write_mb(this->scrn, NULL);
+        this->scrn->mb_write(this->scrn, NULL);
     }
 
     else if(c == KBRD_ARROW_LEFT) {

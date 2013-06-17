@@ -48,7 +48,7 @@ static varray_t *list_buffers(screen_t *scrn);
 static buffer_t *get_buffer(screen_t *scrn, uint id);
 static void set_active_buffer(screen_t *scrn, uint id);
 static buffer_t *get_active_buffer(screen_t *scrn);
-static void write_mb(screen_t *scrn, const char *str);
+static void mb_write(screen_t *scrn, const char *str);
 static void update_sb(screen_internal_t *this);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
@@ -128,7 +128,7 @@ static buffer_t *get_active_buffer(screen_t *scrn)
     return this->cb;
 }
 
-static void write_mb(screen_t *scrn, const char *str)
+static void mb_write(screen_t *scrn, const char *str)
 {
     screen_internal_t *this = cast_this(scrn);
 
@@ -395,16 +395,16 @@ static bool key_handler(void *usr, key_event_t *e)
     // message buffer keystrokes
     if(c == KBRD_CTRL('r')) {
         sprintf(buffer, "|w=%d h=%d|", w, h);
-        write_mb(this->super, buffer);
+        mb_write(this->super, buffer);
     }
 
     else if(c == KBRD_CTRL('l')) {
         sprintf(buffer, "|x=%d y=%d|", x, y);
-        write_mb(this->super, buffer);
+        mb_write(this->super, buffer);
     }
 
     else if(c == KBRD_CTRL('g')) {
-        write_mb(this->super, NULL);
+        mb_write(this->super, NULL);
     }
 
     else if(c == KBRD_CTRL('f')) {
@@ -412,7 +412,7 @@ static bool key_handler(void *usr, key_event_t *e)
         buffer_t *b = fileio_load_buffer(FILENAME);
         if(b == NULL) {
             snprintf(buffer, BUFSZ, "failed to read: %s", FILENAME);
-            write_mb(s, buffer);
+            mb_write(s, buffer);
         } else {
             s->set_active_buffer(s, s->add_buffer(s, b));
             update_all(this);
@@ -427,7 +427,7 @@ static bool key_handler(void *usr, key_event_t *e)
         } else {
             snprintf(buffer, BUFSZ, "successfully saved: %s", filename);
         }
-        write_mb(this->super, buffer);
+        mb_write(this->super, buffer);
     }
 
     // "normal" keystrokes - reroute these to the buffer
@@ -480,7 +480,7 @@ screen_t *screen_create(display_t *disp)
     s->get_buffer = get_buffer;
     s->set_active_buffer = set_active_buffer;
     s->get_active_buffer = get_active_buffer;
-    s->write_mb = write_mb;
+    s->mb_write = mb_write;
     s->destroy = destroy;
     s->refresh = refresh;
 

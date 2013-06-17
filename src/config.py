@@ -10,7 +10,7 @@ def init():
 
 def key_handler(key):
     if key == keyboard.CTRL('t'):
-        screen.write_mb("python message")
+        screen.mb_write("python message")
         return True
 
     if key == keyboard.CTRL('y'):

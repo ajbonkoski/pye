@@ -28,7 +28,7 @@ struct screen
     buffer_t *(*get_buffer)(screen_t *this, uint id);
     void (*set_active_buffer)(screen_t *this, uint id);
     buffer_t *(*get_active_buffer)(screen_t *this);
-    void (*write_mb)(screen_t *this, const char *str); // write to the message bar
+    void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     void (*destroy)(screen_t *this);
 
 
