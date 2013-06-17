@@ -35,19 +35,19 @@ static PyMemberDef Color_members[] = {
     {NULL}  /* Sentinel */
 };
 
-/* static PyObject *Keyboard_from_string(pye_Keyboard *self, PyObject *args) */
-/* { */
-/*     char c; */
-/*     if(!PyArg_ParseTuple(args, "c", &c)) */
-/*         return NULL; */
+static PyObject *Color_from_string(pye_Color *self, PyObject *args)
+{
+    const char *str;
+    if(!PyArg_ParseTuple(args, "s", &str))
+        return NULL;
 
-/*     int keycode = KBRD_CTRL(c); */
-/*     return PyInt_FromLong(keycode); */
-/* } */
+    uint code = display_color_from_string(str);
+    return PyInt_FromLong(code);
+}
 
 static PyMethodDef Color_methods[] = {
-    /* {"CTRL", (PyCFunction)Keyboard_CTRL, METH_VARARGS, */
-    /*  "Get they keycode for some key when ctrl is held down."}, */
+    {"from_string", (PyCFunction)Color_from_string, METH_VARARGS,
+     "Convert a color name into an integer color code"},
     {NULL}  /* Sentinel */
 };
 

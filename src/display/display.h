@@ -18,6 +18,25 @@ extern "C" {
 #define DISPLAY_COLOR_CYAN     6
 #define DISPLAY_COLOR_WHITE    7
 
+#define CHECK_COLOR(s, c) do { if(strcmp(str, s) == 0) return DISPLAY_COLOR_ ## c; } while(0)
+
+static inline uint display_color_from_string(const char *str)
+{
+    CHECK_COLOR("black",   BLACK);
+    CHECK_COLOR("red",     RED);
+    CHECK_COLOR("green",   GREEN);
+    CHECK_COLOR("yellow",  YELLOW);
+    CHECK_COLOR("blue",    BLUE);
+    CHECK_COLOR("magenta", MAGENTA);
+    CHECK_COLOR("cyan",    CYAN);
+    CHECK_COLOR("white",   WHITE);
+
+    ERROR("unrecognized color '%s' in display_color_from_string()", str);
+    return DISPLAY_COLOR_BLACK;
+}
+
+#undef CHECK_COLOR
+
 #define DISPLAY_STYLE_NONE -1
 
 typedef struct
