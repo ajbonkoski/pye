@@ -12,6 +12,29 @@ typedef struct {
 } pye_Buffer;
 
 
+static PyObject *Buffer_get_filename(pye_Buffer *self)
+{
+    const char *fn = self->buffer->get_filename(self->buffer);
+    if(fn == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    } else {
+        return PyString_FromString(fn);
+    }
+}
+
+static PyObject *Buffer_set_filename(pye_Buffer *self, PyObject *args)
+{
+    const char *s;
+    if(!PyArg_ParseTuple(args, "s", &s))
+        return NULL;
+
+    self->buffer->set_filename(self->buffer, s);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject *Buffer_get_cursor(pye_Buffer *self)
 {
     uint x, y;
@@ -301,6 +324,10 @@ static PyObject *Buffer_num_lines(pye_Buffer *self)
 }
 
 static PyMethodDef Buffer_methods[] = {
+    {"get_filename", (PyCFunction)Buffer_get_filename, METH_NOARGS,
+     "Get the filename the buffer was loaded from."},
+    {"set_filename", (PyCFunction)Buffer_set_filename, METH_VARARGS,
+     "Set the filename the buffer should use."},
     {"get_cursor", (PyCFunction)Buffer_get_cursor, METH_NOARGS,
      "Get the cursor location in the buffer. This can differ from the screen cursor."},
     {"set_cursor", (PyCFunction)Buffer_set_cursor, METH_VARARGS,

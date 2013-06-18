@@ -11,21 +11,34 @@ from pygments.formatters import TerminalFormatter
 from pygments.style import Style
 from pygments.token import *
 
-def init():
+#def init():
     # global lexer, formatter
     # lexer = PythonLexer()
     # #lexer = CLexer()
     # formatter = PyeFormatter(style=PyePythonStyle)
     #formatter = PyeFormatter(style=PyeCStyle)
-    pass
+    #pass
 
 # def test():
 #     ret = fmt_handler('from pygments import highlight\n def data(): pass')
 #     debug("Results of fmt_handler:\n{}".format(ret))
 
-def create_fmt_handler(type):
-    lexer = PythonLexer()
-    formatter = PyeFormatter(style=PyePythonStyle)
+class UndefinedSyntaxType(Exception):
+    def __init__(self, v): self.value = v
+
+def create(type):
+
+    if type == 'py':
+        lexer = PythonLexer()
+        formatter = PyeFormatter(style=PyePythonStyle)
+
+    elif type == 'c':
+        lexer = CLexer()
+        formatter = PyeFormatter(style=PyeCStyle)
+
+    else:
+        raise UndefinedSyntaxType("Cannot create a syntax highligher for '{}'".format(type))
+
 
     def fmt_handler(data):
         try:
@@ -166,7 +179,7 @@ class PyeFormatter(Formatter):
                  'regions': self.regions,
                  'data':    data }
 
-init()
+#init()
 
 
 if __name__ == '__main__': test()
