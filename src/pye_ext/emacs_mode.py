@@ -22,6 +22,12 @@ def key_handler(key):
         screen.refresh()
         return True
 
+    if key == keyboard.CTRL('d'):
+        b = screen.get_active_buffer()
+        b.insert(keyboard.DEL)
+        screen.refresh()
+        return True
+
     return False
 
 
