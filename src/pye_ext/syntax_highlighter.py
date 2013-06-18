@@ -12,27 +12,33 @@ from pygments.style import Style
 from pygments.token import *
 
 def init():
-    global lexer, formatter
-    lexer = PythonLexer()
-    #lexer = CLexer()
-    formatter = PyeFormatter(style=PyePythonStyle)
+    # global lexer, formatter
+    # lexer = PythonLexer()
+    # #lexer = CLexer()
+    # formatter = PyeFormatter(style=PyePythonStyle)
     #formatter = PyeFormatter(style=PyeCStyle)
+    pass
 
+# def test():
+#     ret = fmt_handler('from pygments import highlight\n def data(): pass')
+#     debug("Results of fmt_handler:\n{}".format(ret))
 
-def test():
-    ret = fmt_handler('from pygments import highlight\n def data(): pass')
-    debug("Results of fmt_handler:\n{}".format(ret))
+def create_fmt_handler(type):
+    lexer = PythonLexer()
+    formatter = PyeFormatter(style=PyePythonStyle)
 
-def fmt_handler(data):
-    try:
-        highlight(data, lexer, formatter)
-        ret = formatter.get_formatted(data)
-    except Exception as e:
-        debug("exception in syntax_highlighter: {}".format(e))
-        return None
+    def fmt_handler(data):
+        try:
+            highlight(data, lexer, formatter)
+            ret = formatter.get_formatted(data)
+        except Exception as e:
+            debug("exception in syntax_highlighter: {}".format(e))
+            return None
 
-    #debug("Results of fmt_handler:\n{}".format(ret))
-    return ret
+        #debug("Results of fmt_handler:\n{}".format(ret))
+        return ret
+
+    return fmt_handler
 
 def PyeConvertColors(s):
     if s.startswith("fg:"):

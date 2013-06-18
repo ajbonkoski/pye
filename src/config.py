@@ -32,7 +32,7 @@ def key_handler(key):
 def buf_handler(index):
     debug("Buffer #{} added".format(index))
     b = screen.get_buffer(index)
-    b.register_formatter(syntax_highlighter.fmt_handler)
+    b.register_formatter(syntax_highlighter.create_fmt_handler("py"))
     debug("Formatter registered on buffer #{}".format(index))
 
 def handle_kill():

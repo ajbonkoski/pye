@@ -254,6 +254,12 @@ static PyObject *Buffer_register_formatter(pye_Buffer *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "O", &func))
         return NULL;
 
+    // This INCREF shouldn't be needed (right?), but
+    // if a closure or bound method is being registered, python can free
+    // the memory on us! (We are not certain exactly why this occurs)
+    Py_XINCREF(func);
+
+
     if(!PyCallable_Check(func)) {
         ERROR("error: Buffer_register_formatter recieved uncallable parameter\n");
         Py_XDECREF(func);
