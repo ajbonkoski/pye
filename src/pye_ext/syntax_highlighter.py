@@ -11,17 +11,6 @@ from pygments.formatters import TerminalFormatter
 from pygments.style import Style
 from pygments.token import *
 
-#def init():
-    # global lexer, formatter
-    # lexer = PythonLexer()
-    # #lexer = CLexer()
-    # formatter = PyeFormatter(style=PyePythonStyle)
-    #formatter = PyeFormatter(style=PyeCStyle)
-    #pass
-
-# def test():
-#     ret = fmt_handler('from pygments import highlight\n def data(): pass')
-#     debug("Results of fmt_handler:\n{}".format(ret))
 
 class UndefinedSyntaxType(Exception):
     def __init__(self, v): self.value = v
@@ -32,7 +21,7 @@ def create(type):
         lexer = PythonLexer()
         formatter = PyeFormatter(style=PyePythonStyle)
 
-    elif type == 'c':
+    elif type == 'c' or type == 'h':
         lexer = CLexer()
         formatter = PyeFormatter(style=PyeCStyle)
 
@@ -48,7 +37,6 @@ def create(type):
             debug("exception in syntax_highlighter: {}".format(e))
             return None
 
-        #debug("Results of fmt_handler:\n{}".format(ret))
         return ret
 
     return fmt_handler
@@ -153,9 +141,6 @@ class PyeFormatter(Formatter):
         s += "Number of distinct styles: {}".format(len(self.styles))
         return s
 
-    # def format(self, tokensource, outfile):
-    #     for ttype, value in tokensource:
-    #         outfile.write(value)
 
     def format(self, tokensource, outfile):
 
@@ -168,7 +153,7 @@ class PyeFormatter(Formatter):
                 self.regions.append({'start_index': index,
                                      'length': len(value),
                                      'style_id': s,
-                                     })#'value': value})
+                                     })
 
             index += len(value)
 
@@ -178,8 +163,6 @@ class PyeFormatter(Formatter):
         return { 'styles':  self.styles,
                  'regions': self.regions,
                  'data':    data }
-
-#init()
 
 
 if __name__ == '__main__': test()

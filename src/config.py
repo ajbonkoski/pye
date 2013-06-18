@@ -3,7 +3,6 @@ from pye_ext import syntax_highlighter
 
 def init():
     debug("inside python config")
-    screen.mb_write(str(color.from_string("red")))
 
     ## register handlers
     screen.on_key(key_handler)
