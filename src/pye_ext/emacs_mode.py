@@ -5,34 +5,35 @@ def init():
 
 def key_handler(key):
 
-    if key == keyboard.CTRL('k'):
-        handle_kill()
+    b = screen.get_active_buffer()
+    if handle_buffer_key(b, key):
         screen.refresh();
         return True
 
+    return False
+
+def handle_buffer_key(b, key):
+
+    if key == keyboard.CTRL('k'):
+        handle_kill()
+        return True
+
     if key == keyboard.CTRL('a'):
-        b = screen.get_active_buffer()
         b.goto_line_start()
-        screen.refresh()
         return True
 
     if key == keyboard.CTRL('e'):
-        b = screen.get_active_buffer()
         b.goto_line_end()
-        screen.refresh()
         return True
 
     if key == keyboard.CTRL('d'):
-        b = screen.get_active_buffer()
         b.insert(keyboard.DEL)
-        screen.refresh()
         return True
 
     return False
 
 
 def handle_kill():
-    b = screen.get_active_buffer()
     x, y = b.get_cursor()
     ll = b.line_len(y)
 
