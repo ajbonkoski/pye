@@ -5,6 +5,7 @@ from pye import *
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.lexers import CLexer
+from pygments.lexers import CppLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
 from pygments.formatters import TerminalFormatter
@@ -22,7 +23,8 @@ def create(type):
         formatter = PyeFormatter(style=PyePythonStyle)
 
     elif type == 'c' or type == 'h':
-        lexer = CLexer()
+        #lexer = CLexer()
+        lexer = CppLexer()
         formatter = PyeFormatter(style=PyeCStyle)
 
     else:
@@ -74,10 +76,10 @@ class PyePythonStyle(Style):
 
 class PyeCStyle(Style):
     styles = {
-        #Comment.Preproc: "#000004 bold",
-        Keyword:         "#000006 bold",
+        Comment:         "#000004 bold",
+        Keyword:         PyeStyle("fg:cyan bold"),
         #Name:            "#000004 bold",
-        String:          "#000010"
+        String:          PyeStyle("fg:green")
         }
 
 class ExtractColorException(Exception): pass

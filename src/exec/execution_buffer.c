@@ -58,6 +58,20 @@ static PyObject *Buffer_set_cursor(pye_Buffer *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *Buffer_goto_line_start(pye_Buffer *self)
+{
+    self->buffer->goto_line_start(self->buffer);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Buffer_goto_line_end(pye_Buffer *self)
+{
+    self->buffer->goto_line_end(self->buffer);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject *Buffer_insert(pye_Buffer *self, PyObject *args)
 {
     int c;
@@ -332,6 +346,10 @@ static PyMethodDef Buffer_methods[] = {
      "Get the cursor location in the buffer. This can differ from the screen cursor."},
     {"set_cursor", (PyCFunction)Buffer_set_cursor, METH_VARARGS,
      "Set the cursor location in the buffer. This can differ from the screen cursor."},
+    {"goto_line_start", (PyCFunction)Buffer_goto_line_start, METH_NOARGS,
+     "Set the cursor location in the buffer to the start of the current line"},
+    {"goto_line_end", (PyCFunction)Buffer_goto_line_end, METH_NOARGS,
+     "Set the cursor location in the buffer to the end of the current line."},
     {"insert", (PyCFunction)Buffer_insert, METH_VARARGS,
      "Insert a character into the buffer at the current cursor location. Note: does not automatically redraw screen."},
     {"get_line_data", (PyCFunction)Buffer_get_line_data, METH_VARARGS,

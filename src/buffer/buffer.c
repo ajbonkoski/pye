@@ -30,6 +30,8 @@ static inline buffer_internal_t *cast_this(buffer_t *s)
 static inline bool is_visible(u32 c){ return c >= 0x20 && c <= 0x7e; }
 
 // forward declarations
+static void goto_line_start(buffer_t *this);
+static void goto_line_end(buffer_t *this);
 static void get_cursor(buffer_t *this, uint *x, uint *y);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
@@ -77,16 +79,20 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
     return;
 }
 
-static void goto_line_start(buffer_internal_t *this)
+static void goto_line_start(buffer_t *b)
 {
+    buffer_internal_t *this = cast_this(b);
+
     uint x, y;
     data_buffer_t *d = this->databuf;
     d->get_cursor(d, &x, &y);
     d->set_cursor(d, 0, y);
 }
 
-static void goto_line_end(buffer_internal_t *this)
+static void goto_line_end(buffer_t *b)
 {
+    buffer_internal_t *this = cast_this(b);
+
     uint x, y;
     data_buffer_t *d = this->databuf;
     d->get_cursor(d, &x, &y);
@@ -180,9 +186,6 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         case KBRD_ARROW_RIGHT: move_cursor_delta(this,  1,  0); break;
         case KBRD_ARROW_UP:    move_cursor_delta(this,  0, -1); break;
         case KBRD_ARROW_DOWN:  move_cursor_delta(this,  0,  1); break;
-        case KBRD_CTRL('a'):   goto_line_start(this);           break;
-        case KBRD_CTRL('e'):   goto_line_end(this);             break;
-
         default:  // hande "normal" keys
             d->insert(d, c);
     }
@@ -226,6 +229,8 @@ buffer_t *buffer_create(void)
     b->get_filename = get_filename;
     b->get_cursor = get_cursor;
     b->set_cursor = set_cursor;
+    b->goto_line_start = goto_line_start;
+    b->goto_line_end = goto_line_end;
     b->get_line_data = get_line_data;
     b->get_line_data_fmt = get_line_data_fmt;
     b->register_formatter = register_formatter;

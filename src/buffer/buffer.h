@@ -81,6 +81,8 @@ struct buffer
     void (*get_cursor)(buffer_t *this, uint *x, uint *y);
     void (*set_cursor)(buffer_t *this, uint x, uint y);
 
+    void (*goto_line_start)(buffer_t *this);
+    void (*goto_line_end)(buffer_t *this);
     char *(*get_line_data)(buffer_t *this, uint i);
     buffer_line_t *(*get_line_data_fmt)(buffer_t *this, uint i);
     void (*register_formatter)(buffer_t *this, format_func_t func, void *usr);
