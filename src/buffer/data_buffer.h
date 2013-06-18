@@ -2,6 +2,7 @@
 #define DATA_BUFFER_H
 
 #include "common/common.h"
+#include "common/strsafe.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +36,9 @@ struct data_buffer
     // use databuf if != NULL, otherwise allocate memory
     // (if allocate, user is responsib;le for cleanup)
     char *(*get_line_data)(data_buffer_t *this, uint i, char *databuf);
+
+    // this function allocates - user is responsible for deallocation
+    strsafe_t *(*get_region_data)(data_buffer_t *this, uint sx, uint sy, uint ex, uint ey);
     uint (*line_len)(data_buffer_t *this, uint i);
     char (*get_char_at)(data_buffer_t *this, uint x, uint y);
     uint (*num_lines)(data_buffer_t *this);

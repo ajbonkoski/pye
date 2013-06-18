@@ -41,6 +41,7 @@ static void delete_char_right(data_buffer_internal_t *this);
 static void split_line(data_buffer_internal_t *this);
 static void insert(data_buffer_t *db, int c);
 static char *get_line_data(data_buffer_t *db, uint i, char *databuf);
+static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey);
 static uint line_len(data_buffer_t *db, uint i);
 static char get_char_at(data_buffer_t *db, uint x, uint y);
 static uint num_lines(data_buffer_t *db);
@@ -171,6 +172,39 @@ static char *get_line_data(data_buffer_t *db, uint i, char *databuf)
     return (char *)gap_buffer_to_str(line, databuf);
 }
 
+static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey)
+{
+    //data_buffer_internal_t *this = cast_this(db);
+
+    // start with some validation
+    ASSERT(sy >= 0 && sy < num_lines(db), "sy doesn't point to a valid line");
+    ASSERT(ey >= 0 && ey < num_lines(db), "ey doesn't point to a valid line");
+    ASSERT(sy <= ey, "(sx, sy) should come before (ex, ey)");
+    if(sy == ey) { ASSERT(sx <= ex, "(sx, sy) should come before (ex, ey)"); }
+
+    // prepare some storage
+    const uint GUESS_PER_LINE = 100;
+    const uint MAX_LINES = (ey-sy+1);
+    strsafe_t line_mem;
+    strsafe_t *line = strsafe_init(&line_mem, GUESS_PER_LINE);
+    strsafe_t *s = strsafe_create(GUESS_PER_LINE * MAX_LINES);
+
+    // extract the data
+    for(uint i = sy; i <= ey; i++) {
+        uint len = line_len(db, i);
+        strsafe_require(line, len);
+        get_line_data(db, i, line->data);
+        strsafe_cat(s, line);
+        strsafe_cat_char(s, '\n');
+    }
+
+    /*** cleanup ***/
+    // need to cleanup line
+    strsafe_cleanup(&line_mem);
+
+    return s;
+}
+
 static uint line_len(data_buffer_t *db, uint i)
 {
     data_buffer_internal_t *this = cast_this(db);
@@ -260,6 +294,7 @@ data_buffer_t *data_buffer_create(void)
     db->set_cursor = set_cursor;
     db->insert = insert;
     db->get_line_data = get_line_data;
+    db->get_region_data = get_region_data;
     db->line_len = line_len;
     db->get_char_at = get_char_at;
     db->num_lines = num_lines;
