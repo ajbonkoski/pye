@@ -30,6 +30,11 @@ def handle_buffer_key(b, key):
         b.insert(keyboard.DEL)
         return True
 
+    if key == keyboard.CTRL('r'):
+        s = b.get_region_data(2, 2, 3, 5)
+        debug("region='{}', len={}".format(s, len(s)))
+        return True
+
     return False
 
 

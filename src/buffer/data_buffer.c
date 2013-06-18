@@ -4,8 +4,8 @@
 
 #define IMPL_TYPE 0x7f08f1ff
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 typedef struct
 {
@@ -182,6 +182,12 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
     ASSERT(sy <= ey, "(sx, sy) should come before (ex, ey)");
     if(sy == ey) { ASSERT(sx <= ex, "(sx, sy) should come before (ex, ey)"); }
 
+    uint sy_linelen = line_len(db, sy);
+    uint ey_linelen = line_len(db, ey);
+    ASSERT(sx >= 0 && sx <= sy_linelen, "sx is out-of-range");
+    ASSERT(ex >= 0 && ex <= ey_linelen, "ex is out-of-range");
+
+
     // prepare some storage
     const uint GUESS_PER_LINE = 100;
     const uint MAX_LINES = (ey-sy+1);
@@ -191,11 +197,26 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
 
     // extract the data
     for(uint i = sy; i <= ey; i++) {
+
         uint len = line_len(db, i);
         strsafe_require(line, len);
         get_line_data(db, i, line->data);
-        strsafe_cat(s, line);
-        strsafe_cat_char(s, '\n');
+        DEBUG("Got line: '%s'\n", line->data);
+        line->len = len;
+
+        uint cp_len = len;
+        uint cp_start = 0;
+        if(i == ey) {
+            cp_len = ex;
+        }
+        if(i == sy) {
+            cp_len -= sx;
+            cp_start = sx;
+        }
+
+        strsafe_cat_cstr(s, line->data + cp_start, cp_len);
+        if(i != ey || cp_len == len)
+            strsafe_cat_char(s, '\n');
     }
 
     /*** cleanup ***/
