@@ -30,9 +30,23 @@ def handle_buffer_key(b, key):
         b.insert(keyboard.DEL)
         return True
 
+    if key == keyboard.CTRL('t'):
+        x, y = b.get_cursor()
+        b.set_mark(x, y)
+        screen.mb_write("mark: ({}, {})".format(x, y))
+        return True
+
+    if key == keyboard.CTRL('p'):
+        if b.has_mark():
+            x, y = b.get_mark()
+            screen.mb_write("mark: ({}, {})".format(x, y))
+        else:
+            screen.mb_write("no mark")
+
+        return True
+
     if key == keyboard.CTRL('r'):
-        s = b.get_region_data(2, 2, 3, 5)
-        debug("region='{}', len={}".format(s, len(s)))
+        screen.mb_write("C-r")
         return True
 
     return False

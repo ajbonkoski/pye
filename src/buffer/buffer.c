@@ -18,6 +18,11 @@ typedef struct
     format_func_t formatter_callback;
     void *formatter_usr;
 
+    // marks
+    bool mark_set;
+    uint mark_x;
+    uint mark_y;
+
 } buffer_internal_t;
 
 // inline functions
@@ -30,6 +35,9 @@ static inline buffer_internal_t *cast_this(buffer_t *s)
 static inline bool is_visible(u32 c){ return c >= 0x20 && c <= 0x7e; }
 
 // forward declarations
+static bool get_mark(buffer_t *b, uint *x, uint *y);
+static void set_mark(buffer_t *b, uint x, uint y);
+static void clear_mark(buffer_t *b);
 static void goto_line_start(buffer_t *this);
 static void goto_line_end(buffer_t *this);
 static void get_cursor(buffer_t *this, uint *x, uint *y);
@@ -37,6 +45,29 @@ static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
 static void destroy(buffer_t *b);
+
+
+static bool get_mark(buffer_t *b, uint *x, uint *y)
+{
+    buffer_internal_t *this = cast_this(b);
+    *x = this->mark_x;
+    *y = this->mark_y;
+    return this->mark_set;
+}
+
+static void set_mark(buffer_t *b, uint x, uint y)
+{
+    buffer_internal_t *this = cast_this(b);
+    this->mark_set = true;
+    this->mark_x = x;
+    this->mark_y = y;
+}
+
+static void clear_mark(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    this->mark_set = false;
+}
 
 
 static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
@@ -217,6 +248,11 @@ buffer_internal_t *buffer_create_internal(buffer_t *b)
     this->databuf = data_buffer_create();
     this->formatter_callback = NULL;
     this->formatter_usr = NULL;
+
+    this->mark_set = false;
+    this->mark_x = 0;
+    this->mark_y = 0;
+
     return this;
 }
 
@@ -225,6 +261,11 @@ buffer_t *buffer_create(void)
     buffer_t *b = calloc(1, sizeof(buffer_t));
     b->impl = buffer_create_internal(b);
     b->impl_type = IMPL_TYPE;
+
+    b->get_mark = get_mark;
+    b->set_mark = set_mark;
+    b->clear_mark = clear_mark;
+
     b->set_filename = set_filename;
     b->get_filename = get_filename;
     b->get_cursor = get_cursor;

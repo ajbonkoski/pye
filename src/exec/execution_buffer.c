@@ -11,6 +11,43 @@ typedef struct {
     PyObject *callback_func; // XXX: this is not cleaned up properly
 } pye_Buffer;
 
+static PyObject *Buffer_has_mark(pye_Buffer *self)
+{
+    uint x, y;
+    bool has_mark = self->buffer->get_mark(self->buffer, &x, &y);
+    if(has_mark) Py_RETURN_TRUE;
+    else         Py_RETURN_FALSE;
+}
+
+static PyObject *Buffer_get_mark(pye_Buffer *self)
+{
+    uint x, y;
+    bool has_mark = self->buffer->get_mark(self->buffer, &x, &y);
+    ASSERT(has_mark, "Python attempted to get_mark() when it didn't exist");
+    PyObject *tuple = PyTuple_New(2);
+    PyTuple_SetItem(tuple, 0, PyInt_FromLong((long)x));
+    PyTuple_SetItem(tuple, 1, PyInt_FromLong((long)y));
+    return tuple;
+}
+
+static PyObject *Buffer_set_mark(pye_Buffer *self, PyObject *args)
+{
+    uint x, y;
+    if(!PyArg_ParseTuple(args, "ii", &x, &y))
+        return NULL;
+
+    self->buffer->set_mark(self->buffer, x, y);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Buffer_clear_mark(pye_Buffer *self)
+{
+    self->buffer->clear_mark(self->buffer);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 static PyObject *Buffer_get_filename(pye_Buffer *self)
 {
@@ -354,6 +391,16 @@ static PyObject *Buffer_num_lines(pye_Buffer *self)
 }
 
 static PyMethodDef Buffer_methods[] = {
+
+    {"has_mark", (PyCFunction)Buffer_has_mark, METH_NOARGS,
+     "Check to see if the buffer has a mark set."},
+    {"get_mark", (PyCFunction)Buffer_get_mark, METH_NOARGS,
+     "Get the location of the current mark."},
+    {"set_mark", (PyCFunction)Buffer_set_mark, METH_VARARGS,
+     "Set the buffer's current mark."},
+    {"clear_mark", (PyCFunction)Buffer_clear_mark, METH_NOARGS,
+     "Clear the buffer's mark."},
+
     {"get_filename", (PyCFunction)Buffer_get_filename, METH_NOARGS,
      "Get the filename the buffer was loaded from."},
     {"set_filename", (PyCFunction)Buffer_set_filename, METH_VARARGS,

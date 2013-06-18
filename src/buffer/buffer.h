@@ -75,6 +75,10 @@ struct buffer
     void *impl;
     uint impl_type;
 
+    bool (*get_mark)(buffer_t *this, uint *x, uint *y);
+    void (*set_mark)(buffer_t *this, uint x, uint y);
+    void (*clear_mark)(buffer_t *this);
+
     void (*set_filename)(buffer_t *this, const char *filename);
     const char *(*get_filename)(buffer_t *this);
 

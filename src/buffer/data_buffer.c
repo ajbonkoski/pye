@@ -300,6 +300,7 @@ data_buffer_internal_t *data_buffer_create_internal(data_buffer_t *db)
     this->data = gap_buffer_create(sizeof(gap_buffer_t *));
     gap_buffer_t *linebuf = gap_buffer_create(sizeof(char));
     gap_buffer_insert(this->data, 0, &linebuf);
+
     this->er = ER_NONE;
 
     return this;
