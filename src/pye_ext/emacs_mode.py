@@ -15,7 +15,7 @@ def key_handler(key):
 def handle_buffer_key(b, key):
 
     if key == keyboard.CTRL('k'):
-        handle_kill()
+        handle_kill(b)
         return True
 
     if key == keyboard.CTRL('a'):
@@ -30,10 +30,21 @@ def handle_buffer_key(b, key):
         b.insert(keyboard.DEL)
         return True
 
+    if key == keyboard.CTRL('y'):
+        if killbuffer.get_size() == 0:
+            screen.mb_write("Kill-buffer is empty")
+        else:
+            data = killbuffer.get(0)
+            debug("Yank Data: '{}'".format(data))
+            for c in data:
+                b.insert(ord(c))
+        return True
+
     if key == keyboard.CTRL('r'):
         x, y = b.get_cursor()
         b.set_mark(x, y)
         screen.mb_write("mark: ({}, {})".format(x, y))
+        debug("kill_buffer size={}, max={}".format(killbuffer.get_size(), killbuffer.get_max_size()))
         return True
 
     if key == keyboard.CTRL('t'):
@@ -45,12 +56,13 @@ def handle_buffer_key(b, key):
             data = b.get_region_data(sx, sy, ex, ey)
             debug("Ctrl-t Region: '{}'".format(data))
             screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
+            killbuffer.add(data)
         return True
 
     return False
 
 
-def handle_kill():
+def handle_kill(b):
     x, y = b.get_cursor()
     ll = b.line_len(y)
 
@@ -60,4 +72,3 @@ def handle_kill():
 
     for i in range(num_to_del):
         b.insert(keyboard.DEL) # insert a DEL key
-

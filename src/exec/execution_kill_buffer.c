@@ -28,6 +28,12 @@ static PyObject *KillBuffer_get_size(pye_KillBuffer *self)
     return PyInt_FromLong(sz);
 }
 
+static PyObject *KillBuffer_get_max_size(pye_KillBuffer *self)
+{
+    size_t sz = kill_buffer_get_max_size(self->kb);
+    return PyInt_FromLong(sz);
+}
+
 static PyObject *KillBuffer_add(pye_KillBuffer *self, PyObject *args)
 {
     const char *s;
@@ -49,6 +55,7 @@ static PyObject *KillBuffer_get(pye_KillBuffer *self, PyObject *args)
         return NULL;
 
     strsafe_t *ss = kill_buffer_get(self->kb, i);
+    ASSERT(ss != NULL, "kill_buffer_get return NULL");
     return PyString_FromStringAndSize(ss->data, ss->len);
 }
 
@@ -56,6 +63,8 @@ static PyObject *KillBuffer_get(pye_KillBuffer *self, PyObject *args)
 static PyMethodDef KillBuffer_methods[] = {
     {"set_max_size", (PyCFunction)KillBuffer_set_max_size, METH_VARARGS,
      "Set the maximum history size of the kill buffer."},
+    {"get_max_size", (PyCFunction)KillBuffer_get_max_size, METH_NOARGS,
+     "Gte the maximum history size of the kill buffer."},
     {"get_size", (PyCFunction)KillBuffer_get_size, METH_NOARGS,
      "Gte the current size of the kill buffer history."},
     {"add", (PyCFunction)KillBuffer_add, METH_VARARGS,

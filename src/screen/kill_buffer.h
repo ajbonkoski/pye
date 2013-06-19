@@ -14,6 +14,7 @@ kill_buffer_t *kill_buffer_create(size_t size, void (*destroyf)(void *));
 void kill_buffer_destroy(kill_buffer_t *this);
 
 void kill_buffer_set_max_size(kill_buffer_t *this, size_t size);
+size_t kill_buffer_get_max_size(kill_buffer_t *this);
 size_t kill_buffer_get_size(kill_buffer_t *this);
 
 // inserts 'obj' as the 0th element

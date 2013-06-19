@@ -5,6 +5,7 @@
 #include "execution_color.h"
 #include "execution_screen.h"
 #include "execution_buffer.h"
+#include "execution_kill_buffer.h"
 
 #define CONFIG_MODULE "config"
 
@@ -15,6 +16,16 @@ struct execution
 {
     PyObject *config_module;
 };
+
+static void execution_init(void)
+{
+    execution_display_init();
+    execution_keyboard_init();
+    execution_color_init();
+    execution_screen_init();
+    execution_buffer_init();
+    execution_kill_buffer_init();
+}
 
 static PyObject *pye_debug(PyObject *self, PyObject *args)
 {
@@ -52,19 +63,17 @@ static PyObject *load_module(const char *s)
 execution_t *execution_create(screen_t *scrn, display_t *disp)
 {
     execution_t *this = calloc(1, sizeof(execution_t));
+    kill_buffer_t *kb = scrn->get_kill_buffer(scrn);
 
     Py_Initialize();
-    execution_display_init();
-    execution_keyboard_init();
-    execution_color_init();
-    execution_screen_init();
-    execution_buffer_init();
+    execution_init();
 
     PyObject *m = Py_InitModule("pye", PyeMethods);
     PyModule_AddObject(m, "display", execution_display_create(disp));
     PyModule_AddObject(m, "keyboard", execution_keyboard_create());
     PyModule_AddObject(m, "color", execution_color_create());
     PyModule_AddObject(m, "screen",  execution_screen_create(scrn));
+    PyModule_AddObject(m, "killbuffer",  execution_kill_buffer_create(kb));
 
     this->config_module = load_module(CONFIG_MODULE);
 

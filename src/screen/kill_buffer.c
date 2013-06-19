@@ -1,5 +1,8 @@
 #include "kill_buffer.h"
 
+#undef  ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
 struct kill_buffer
 {
     size_t size;
@@ -47,6 +50,11 @@ void kill_buffer_set_max_size(kill_buffer_t *this, size_t size)
     ASSERT_UNIMPL();
 }
 
+size_t kill_buffer_get_max_size(kill_buffer_t *this)
+{
+    return this->size;
+}
+
 size_t kill_buffer_get_size(kill_buffer_t *this)
 {
     return this->used;
@@ -77,6 +85,7 @@ void kill_buffer_add(kill_buffer_t *this, void *obj)
 void *kill_buffer_get(kill_buffer_t *this, size_t i)
 {
     ASSERT(0 <= i && i < this->used, "index out-of-range in kill_buffer_get");
-    size_t ri = compute_index(this, this->start + i);
+    size_t ri = compute_index(this, i);
+    DEBUG("start=%zu, ri=%zu\n", this->start, ri);
     return this->data[ri];
 }
