@@ -27,7 +27,6 @@ def handle_buffer_key(b, key):
         if y > nlines-1:
             y = nlines - 1
         b.set_cursor(x, y)
-        #screen.mb_write("Ctrl-v")
 
     if key == keyboard.CTRL('b'):
         x, y = b.get_cursor()
@@ -38,7 +37,6 @@ def handle_buffer_key(b, key):
         if y < 0:
             y = 0
         b.set_cursor(x, y)
-        #screen.mb_write("Ctrl-v")
 
     if key == keyboard.CTRL('k'):
         handle_kill(b)
