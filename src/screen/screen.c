@@ -70,6 +70,7 @@ static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
 static kill_buffer_t *get_kill_buffer(screen_t *scrn);
 static void refresh(screen_t *scrn);
+static uint get_viewport_line(screen_t *scrn);
 
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
 {
@@ -407,6 +408,11 @@ static void refresh(screen_t *scrn)
     update_all(cast_this(scrn));
 }
 
+static uint get_viewport_line(screen_t *scrn)
+{
+    return cast_this(scrn)->cb_viewport_y;
+}
+
 static void finish_mb_ask(screen_internal_t *this, bool complete)
 {
     // add a NULL to the end of mb_response
@@ -632,6 +638,7 @@ screen_t *screen_create(display_t *disp)
     s->destroy = destroy;
     s->get_kill_buffer = get_kill_buffer;
     s->refresh = refresh;
+    s->get_viewport_line = get_viewport_line;
 
     return s;
 }

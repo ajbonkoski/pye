@@ -18,6 +18,28 @@ def handle_buffer_key(b, key):
         b.insert(' '*4)
         return True
 
+    if key == keyboard.CTRL('v'):
+        x, y = b.get_cursor()
+        w, h = display.get_size()
+        vpy = screen.get_viewport_line()
+        nlines = b.num_lines()
+        y = vpy + h + h/2
+        if y > nlines-1:
+            y = nlines - 1
+        b.set_cursor(x, y)
+        #screen.mb_write("Ctrl-v")
+
+    if key == keyboard.CTRL('b'):
+        x, y = b.get_cursor()
+        w, h = display.get_size()
+        vpy = screen.get_viewport_line()
+        nlines = b.num_lines()
+        y = vpy - h/2
+        if y < 0:
+            y = 0
+        b.set_cursor(x, y)
+        #screen.mb_write("Ctrl-v")
+
     if key == keyboard.CTRL('k'):
         handle_kill(b)
         return True
@@ -71,7 +93,14 @@ def handle_kill(b):
 
     num_to_del = ll-x
     if num_to_del == 0:
-        num_to_del = 1 # if blank line, delete newline char
+        num_to_del = 1
+        data = b.get_region_data(x, y, ll, y)
+
+    else:
+        data = b.get_region_data(x, y, ll-1, y)
+
+    killbuffer.add(data)
+    debug("kill data='{}'".format(data))
 
     for i in range(num_to_del):
         b.insert_key(keyboard.DEL) # insert a DEL key

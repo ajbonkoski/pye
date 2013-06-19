@@ -187,14 +187,16 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
     if(ey < sy)
         SWAP_UINT(sy, ey);
 
-    if(sy == ey && ex > sx)
+    if(sy == ey && ex < sx)
         SWAP_UINT(sx, ex);
 
     uint sy_linelen = line_len(db, sy);
     uint ey_linelen = line_len(db, ey);
+    DEBUG("sy_linelen=%d, ey_linelen=%d\n", sy_linelen, ey_linelen);
     ASSERT(sx >= 0 && sx <= sy_linelen, "sx is out-of-range");
     ASSERT(ex >= 0 && ex <= ey_linelen, "ex is out-of-range");
 
+    DEBUG("sx=%d, sy=%d, ex=%d, ey=%d\n", sx, sy, ex, ey);
 
     // prepare some storage
     const uint GUESS_PER_LINE = 100;
@@ -222,9 +224,13 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
             cp_start = sx;
         }
 
+        DEBUG("cp_start=%d, cp_len=%d\n", cp_start, cp_len);
+
         strsafe_cat_cstr(s, line->data + cp_start, cp_len);
         if(i != ey || cp_len == len)
             strsafe_cat_char(s, '\n');
+
+        DEBUG("End\n");
     }
 
     /*** cleanup ***/

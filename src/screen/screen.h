@@ -34,6 +34,7 @@ struct screen
     buffer_t *(*get_buffer)(screen_t *this, uint id);
     void (*set_active_buffer)(screen_t *this, uint id);
     buffer_t *(*get_active_buffer)(screen_t *this);
+    uint (*get_viewport_line)(screen_t *this);
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     void (*mb_ask)(screen_t *scrn, const char *str, mb_response_func_t func, void *usr); // ask on the message bar (returns malloc'd memory)
     void (*destroy)(screen_t *this);

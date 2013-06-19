@@ -137,6 +137,13 @@ static PyObject *Screen_refresh(pye_Screen *self)
     return Py_None;
 }
 
+// this should be in buffer_t (API is broken)
+static PyObject *Screen_get_viewport_line(pye_Screen *self)
+{
+    uint vpy = self->screen->get_viewport_line(self->screen);
+    return PyInt_FromLong(vpy);
+}
+
 static PyMethodDef Screen_methods[] = {
     {"mb_write", (PyCFunction)Screen_mb_write, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
@@ -150,6 +157,8 @@ static PyMethodDef Screen_methods[] = {
      "Get the Screen's active Buffer."},
     {"refresh", (PyCFunction)Screen_refresh, METH_NOARGS,
      "Redraw the screen on the display."},
+    {"get_viewport_line", (PyCFunction)Screen_get_viewport_line, METH_NOARGS,
+     "Get the line number at the top of the screen (Note: this should really be a method of pye.Buffer)."},
     {NULL}  /* Sentinel */
 };
 
