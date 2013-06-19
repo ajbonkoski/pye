@@ -6,6 +6,8 @@
 #include "display/display.h"
 #include "buffer/buffer.h"
 
+#include "kill_buffer.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,6 +38,7 @@ struct screen
     void (*mb_ask)(screen_t *scrn, const char *str, mb_response_func_t func, void *usr); // ask on the message bar (returns malloc'd memory)
     void (*destroy)(screen_t *this);
 
+    kill_buffer_t *(*get_kill_buffer)(screen_t *this);
 
     // refresh/redraw the screen (mostly useful for the scripting environment)
     void (*refresh)(screen_t *this);

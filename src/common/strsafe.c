@@ -46,7 +46,7 @@ void strsafe_cat(strsafe_t *ss, strsafe_t *ssc)
     ss->len = total_len;
 }
 
-void strsafe_cat_cstr(strsafe_t *ss, char *cstr, uint len)
+void strsafe_cat_cstr(strsafe_t *ss, const char *cstr, uint len)
 {
     if(len == 0) return;
 

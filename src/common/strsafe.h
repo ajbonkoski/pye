@@ -31,7 +31,7 @@ void strsafe_require(strsafe_t *ss, uint len);
 // reallocation is performed if necessary
 void strsafe_cat(strsafe_t *ss, strsafe_t *ssc);
 
-void strsafe_cat_cstr(strsafe_t *ss, char *cstr, uint len);
+void strsafe_cat_cstr(strsafe_t *ss, const char *cstr, uint len);
 void strsafe_cat_char(strsafe_t *ss, char c);
 
 #ifdef __cplusplus

@@ -9,6 +9,7 @@
 
 #define FOOTER_SIZE 2
 #define MB_RESPONSE_SIZE 200
+#define KILLBUF_DEFAULT_SIZE 5
 #define DISPLAY_SIZE(w, h) \
     uint w, h; this->display->get_size(this->display, &w, &h)
 
@@ -42,6 +43,9 @@ typedef struct
     char mb_response[MB_RESPONSE_SIZE];
     uint mb_response_index;
 
+    // kill buffer
+    kill_buffer_t *killbuf;
+
 } screen_internal_t;
 static screen_internal_t *cast_this(screen_t *s)
 {
@@ -64,6 +68,7 @@ static void mb_ask_rewrite(screen_internal_t *this);
 static void update_sb(screen_internal_t *this);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
+static kill_buffer_t *get_kill_buffer(screen_t *scrn);
 static void refresh(screen_t *scrn);
 
 static void register_kbrd_callback(screen_t *scrn, key_event_func_t f, void *usr)
@@ -224,6 +229,8 @@ static void destroy(screen_t *scrn)
         buffer->destroy(buffer);
     }
     varray_destroy(this->buffers);
+
+    kill_buffer_destroy(this->killbuf);
 
     free(this);
     free(scrn);
@@ -388,6 +395,11 @@ static void update_all(screen_internal_t *this)
     update_cursor(this);
 
     DEBUG("inside screen->update_all: leaving\n");
+}
+
+static kill_buffer_t *get_kill_buffer(screen_t *scrn)
+{
+    return cast_this(scrn)->killbuf;
 }
 
 static void refresh(screen_t *scrn)
@@ -596,6 +608,9 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
     this->mb_response_usr = NULL;
     this->mb_question = NULL;
 
+    this->killbuf = kill_buffer_create(KILLBUF_DEFAULT_SIZE,
+                                       (void (*)(void *))strsafe_destroy);
+
     return this;
 }
 
@@ -615,6 +630,7 @@ screen_t *screen_create(display_t *disp)
     s->mb_write = mb_write;
     s->mb_ask = mb_ask;
     s->destroy = destroy;
+    s->get_kill_buffer = get_kill_buffer;
     s->refresh = refresh;
 
     return s;

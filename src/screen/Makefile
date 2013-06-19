@@ -4,7 +4,7 @@ include ../common.mk
 CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON) $(CFLAGS_DISPLAY)
 LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON)
 
-SCREEN_OBJS = screen.o
+SCREEN_OBJS = screen.o kill_buffer.o
 LIBSCREEN=$(LIB_PATH)/libscreen.a
 
 all: $(LIBSCREEN)
