@@ -152,6 +152,7 @@ static void insert(data_buffer_t *db, int c)
 
     // "special" case
     switch(c) {
+        case '\b':
         case KBRD_BACKSPACE:   return delete_char_left(this);
         case KBRD_DEL:         return delete_char_right(this);
         case '\n':

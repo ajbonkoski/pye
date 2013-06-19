@@ -111,11 +111,25 @@ static PyObject *Buffer_goto_line_end(pye_Buffer *self)
 
 static PyObject *Buffer_insert(pye_Buffer *self, PyObject *args)
 {
-    int c;
-    if(!PyArg_ParseTuple(args, "i", &c))
+    const char *s;
+    uint num;
+    if(!PyArg_ParseTuple(args, "s#", &s, &num))
         return NULL;
 
-    self->dbuffer->insert(self->dbuffer, c);
+    for(uint i = 0; i < num; i++)
+        self->dbuffer->insert(self->dbuffer, s[i]);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *Buffer_insert_key(pye_Buffer *self, PyObject *args)
+{
+    uint key;
+    if(!PyArg_ParseTuple(args, "i", &key))
+        return NULL;
+
+    self->dbuffer->insert(self->dbuffer, key);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -414,7 +428,9 @@ static PyMethodDef Buffer_methods[] = {
     {"goto_line_end", (PyCFunction)Buffer_goto_line_end, METH_NOARGS,
      "Set the cursor location in the buffer to the end of the current line."},
     {"insert", (PyCFunction)Buffer_insert, METH_VARARGS,
-     "Insert a character into the buffer at the current cursor location. Note: does not automatically redraw screen."},
+     "Insert a string into the buffer at the current cursor location. Note: does not automatically redraw screen."},
+    {"insert_key", (PyCFunction)Buffer_insert_key, METH_VARARGS,
+     "Insert a single key code into the buffer at the current cursor location. Note: does not automatically redraw screen."},
     {"get_region_data", (PyCFunction)Buffer_get_region_data, METH_VARARGS,
      "Get a string of the data on between the supplied start and end points."},
     {"get_line_data", (PyCFunction)Buffer_get_line_data, METH_VARARGS,

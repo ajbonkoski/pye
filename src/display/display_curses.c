@@ -2,12 +2,13 @@
 
 #include <curses.h>
 #include "common/varray.h"
+#include "common/timeutil.h"
 #include "kbrd_curses.h"
 
 #define IMPL_TYPE 0xb3627c50
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3
@@ -145,8 +146,12 @@ static void main_loop(display_t *disp)
     display_curses_t *this = cast_this(disp);
     this->running = true;
 
+    u64 last_utime = timeutil_utime();
     while(this->good && this->running) {
         int c = getch();
+        u64 utime = timeutil_utime();
+        DEBUG("KBRD: elapsed=%ld\n", utime - last_utime);
+        last_utime = utime;
         key_event_t ke_mem;
         key_event_t *ke = kbrd_curses_keycode(this->kbrd, c, &ke_mem);
         if(ke != NULL)

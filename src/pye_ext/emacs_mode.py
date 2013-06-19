@@ -14,6 +14,10 @@ def key_handler(key):
 
 def handle_buffer_key(b, key):
 
+    if key == ord('\t'):
+        b.insert(' '*4)
+        return True
+
     if key == keyboard.CTRL('k'):
         handle_kill(b)
         return True
@@ -27,7 +31,7 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('d'):
-        b.insert(keyboard.DEL)
+        b.insert_key(keyboard.DEL)
         return True
 
     if key == keyboard.CTRL('y'):
@@ -36,8 +40,7 @@ def handle_buffer_key(b, key):
         else:
             data = killbuffer.get(0)
             debug("Yank Data: '{}'".format(data))
-            for c in data:
-                b.insert(ord(c))
+            b.insert(data)
         return True
 
     if key == keyboard.CTRL('r'):
@@ -71,4 +74,4 @@ def handle_kill(b):
         num_to_del = 1 # if blank line, delete newline char
 
     for i in range(num_to_del):
-        b.insert(keyboard.DEL) # insert a DEL key
+        b.insert_key(keyboard.DEL) # insert a DEL key
