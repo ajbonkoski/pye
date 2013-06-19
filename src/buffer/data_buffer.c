@@ -172,6 +172,8 @@ static char *get_line_data(data_buffer_t *db, uint i, char *databuf)
     return (char *)gap_buffer_to_str(line, databuf);
 }
 
+#define SWAP_UINT(a, b) do { uint t=a; a=b; b=t; }while(0)
+
 static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey)
 {
     //data_buffer_internal_t *this = cast_this(db);
@@ -179,8 +181,13 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
     // start with some validation
     ASSERT(sy >= 0 && sy < num_lines(db), "sy doesn't point to a valid line");
     ASSERT(ey >= 0 && ey < num_lines(db), "ey doesn't point to a valid line");
-    ASSERT(sy <= ey, "(sx, sy) should come before (ex, ey)");
-    if(sy == ey) { ASSERT(sx <= ex, "(sx, sy) should come before (ex, ey)"); }
+
+    // correct for backwards region selection
+    if(ey < sy)
+        SWAP_UINT(sy, ey);
+
+    if(sy == ey && ex > sx)
+        SWAP_UINT(sx, ex);
 
     uint sy_linelen = line_len(db, sy);
     uint ey_linelen = line_len(db, ey);
