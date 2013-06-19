@@ -292,6 +292,7 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     bl->styles = varray_create();
     bl->regions = varray_create();
     bl->data = data;
+    bl->highlight_style_id = DISPLAY_STYLE_NONE;
 
     if(result == NULL || !PyDict_Check(result)) {
         ERROR("python key handler did not return a dictionary\n");

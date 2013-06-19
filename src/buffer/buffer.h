@@ -45,6 +45,7 @@ typedef struct
     varray_t *styles;  // a list of "display_style_t" structs
     varray_t *regions; // a list of "buffer_line_region_t" structs
     char *data;
+    int highlight_style_id;
 
 } buffer_line_t;
 

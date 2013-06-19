@@ -187,6 +187,7 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
         bl->styles = varray_create();
         bl->regions = varray_create();
         bl->data = raw;
+        bl->highlight_style_id = DISPLAY_STYLE_NONE;
     }
 
     return bl;
