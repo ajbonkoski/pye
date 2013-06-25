@@ -1,5 +1,5 @@
 from pye import *
-from pye_ext import settings
+from pye_ext import global_settings as GS
 
 def init():
     screen.on_key(key_handler)
@@ -16,7 +16,7 @@ def key_handler(key):
 def handle_buffer_key(b, key):
 
     if key == ord('\t'):
-        b.insert(settings.get_tab())
+        b.insert(GS.get_tab())
         return True
 
     if key == keyboard.CTRL('v'):
