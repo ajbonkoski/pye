@@ -1,4 +1,4 @@
-\from pye import *
+from pye import *
 from pye_ext import std
 from pye_ext import emacs_mode
 from pye_ext import global_settings as GS
