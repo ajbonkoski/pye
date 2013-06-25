@@ -1,4 +1,5 @@
 from pye import *
+from pye_ext import settings
 
 def init():
     screen.on_key(key_handler)
@@ -15,7 +16,7 @@ def key_handler(key):
 def handle_buffer_key(b, key):
 
     if key == ord('\t'):
-        b.insert(' '*4)
+        b.insert(settings.get_tab())
         return True
 
     if key == keyboard.CTRL('v'):
