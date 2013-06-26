@@ -8,7 +8,7 @@ def key_handler(key):
 
     b = screen.get_active_buffer()
     if handle_buffer_key(b, key):
-        screen.refresh();
+        screen.refresh()
         return True
 
     return False
@@ -20,7 +20,8 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('x'):
-        b.enable_highlight(2, 6, 1)
+        b.enable_highlight(12, 16, 1)
+        screen.refresh()
         return True
 
     if key == keyboard.CTRL('v'):

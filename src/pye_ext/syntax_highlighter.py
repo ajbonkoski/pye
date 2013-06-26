@@ -34,8 +34,11 @@ def create(type):
     def fmt_handler(data, regions):
         debug("regions: {}".format(regions))
         try:
+            #formatter.set_lineno(lineno)
+            formatter.set_highlight_regions(regions)
             highlight(data, lexer, formatter)
             ret = formatter.get_formatted(data)
+            debug("fmt handler result: {}".format(ret))
         except Exception as e:
             debug("exception in syntax_highlighter: {}".format(e))
             return None
@@ -62,7 +65,9 @@ def PyeConvertColors(s):
         return s
 
 def PyeStyle(s):
-    return ' '.join(map(PyeConvertColors, s.split(' ')))
+    cs = ' '.join(map(PyeConvertColors, s.split(' ')))
+    #debug("style: '{}'".format(cs))
+    return cs
 
 class PyePythonStyle(Style):
     styles = {
@@ -72,7 +77,8 @@ class PyePythonStyle(Style):
         Name.Class:           PyeStyle("fg:green"),
         Name.Builtin:         PyeStyle("fg:blue bold"),
         Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
-        String:               PyeStyle("fg:green")
+        String:               PyeStyle("fg:green"),
+        Generic.Emph:         PyeStyle("fg:white bg:red")  ## this is used for highlighting features (really just a hack...)
         }
 
 class PyeCStyle(Style):
@@ -91,8 +97,7 @@ def extract_color(c):
     except NumberFormatException as e: raise ExtractColorException(e.value)
     if i < 0 or i > 15: raise ExtractColorException('integer out of range')
 
-    i_adj = (i+1);
-    return (i_adj%8)-1, i_adj/8 == 1
+    return i%8, i/8 == 1
 
 class PyeFormatter(Formatter):
 
@@ -102,11 +107,13 @@ class PyeFormatter(Formatter):
         self.styles = []
 
         for token, style in self.style:
+            debug("formatter: {} {}".format(token, style))
 
             try:
                 s = {}
                 if style['color']:
                     c, b = extract_color(style['color'])
+                    debug("fg color: c='{}' b='{}'".format(c, b))
                     s['fg_color'] = c
                     s['fg_bright'] = b
                 if style['bold']:
@@ -114,12 +121,15 @@ class PyeFormatter(Formatter):
                 if style['underline']:
                     s['underline'] = bool(style['underline'])
                 if style['bgcolor']:
-                    c, b = bool(style['bgcolor'])
+                    c, b = extract_color(style['bgcolor'])
+                    debug("bg color: c='{}' b='{}'".format(c, b))
                     s['bg_color'] = c
                     s['bg_bright'] = b
 
                 i = self.add_style(s) if len(s) != 0 else -1
                 self.token_map[token] = i
+
+                debug("token_map: {}".format(self.token_map))
 
             except Exception as ex:
                 ## use default formatting
@@ -144,21 +154,57 @@ class PyeFormatter(Formatter):
         s += "Number of distinct styles: {}".format(len(self.styles))
         return s
 
+    def set_highlight_regions(self, regions):
+        self.highlight_regions = regions
+
+    def set_lineno(self, lineno):
+        self.lineno = lineno
+
+    def highlighting_token_chop(self, index, ttype, value):
+        #debug("token_chop '{}' : '{}' : '{}'".format(index, ttype, value))
+        new_tokens = []
+        tok_start = index
+        tok_end = index + len(value)
+        tok_val_left = value
+        for start, length, id in self.highlight_regions:
+            end = start + length
+            if end < tok_start: continue
+            if start >= tok_end: break
+
+            if start > tok_start:
+                new_tokens.append((ttype, tok_val_left[:start-tok_start]))
+                tok_val_left = tok_val_left[start-tok_start:]
+            tok_start = start
+
+            new_tokens.append((Token.Generic.Emph, tok_val_left[:end-start]))
+            tok_val_left = tok_val_left[end-start:]
+            tok_start = end
+
+            if len(tok_val_left) == 0:
+                break
+
+        if len(tok_val_left) != 0:
+            new_tokens.append((ttype, tok_val_left))
+
+        return new_tokens
 
     def format(self, tokensource, outfile):
 
         index = 0
         self.regions = []
         for ttype, value in tokensource:
-            s = self.token_map[ttype]
-            #debug("index='{}', ttype='{}', value='{}', s='{}'".format(index, ttype, value, s))
-            if s != -1:
-                self.regions.append({'start_index': index,
-                                     'length': len(value),
-                                     'style_id': s,
-                                     })
+            newtokens = self.highlighting_token_chop(index, ttype, value)
+            #debug("newtokens: {}".format(newtokens))
+            for n_ttype, n_value in newtokens:
+                token_style_id = self.token_map[n_ttype]
 
-            index += len(value)
+                if token_style_id != -1:
+                    self.regions.append({'start_index': index,
+                                         'length': len(n_value),
+                                         'style_id': token_style_id,
+                                         })
+
+                index += len(n_value)
 
         return None
 
