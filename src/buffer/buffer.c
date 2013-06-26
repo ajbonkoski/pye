@@ -1,11 +1,24 @@
 #include "buffer.h"
 #include "display/keyboard.h"
-#include "common/gap_buffer.h"
+#include "common/varray.h"
 
 #define IMPL_TYPE 0x689a9794
 
 //#undef ENABLE_DEBUG
 //#define ENABLE_DEBUG 1
+
+typedef struct
+{
+    uint start;
+    uint end;
+    uint style;
+
+} buffer_region_t;
+
+static inline void buffer_region_destroy(buffer_region_t *this)
+{
+    free(this);
+}
 
 typedef struct
 {
@@ -22,6 +35,9 @@ typedef struct
     bool mark_set;
     uint mark_x;
     uint mark_y;
+
+    // highlight
+    varray_t *highlight_regions;  // dynamic array of buffer_region_t's
 
 } buffer_internal_t;
 
@@ -44,7 +60,7 @@ static void get_cursor(buffer_t *this, uint *x, uint *y);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
-static void enable_highlight(buffer_t *b, uint start, uint end, int highlight_style);
+static void enable_highlight(buffer_t *b, uint start, uint end, uint style);
 static void destroy(buffer_t *b);
 
 
@@ -178,7 +194,18 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
     if(this->formatter_callback != NULL) {
         buffer_line_t *pre_bl = calloc(1, sizeof(buffer_line_t));
         pre_bl->styles = NULL;
+
+        // convert our representation into the interfaces
         pre_bl->regions = varray_create();
+        buffer_region_t *br;
+        varray_iter(br, this->highlight_regions) {
+            buffer_line_region_t *blr = calloc(1, sizeof(buffer_line_region_t));
+            blr->start_index = br->start;
+            blr->length = br->end - br->start;
+            blr->style_id = br->style;
+            varray_add(pre_bl->regions, blr);
+        }
+
         pre_bl->data = raw;
         bl = this->formatter_callback(this->formatter_usr, pre_bl);
 
@@ -234,9 +261,66 @@ static data_buffer_t *get_data_buffer(buffer_t *b)
     return this->databuf;
 }
 
-static void enable_highlight(buffer_t *b, uint start, uint end, int highlight_style)
+static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
 {
-    ASSERT_UNIMPL();
+    buffer_internal_t *this = cast_this(b);
+
+    // this is a simple, stupid implementation it is highly
+    // inefficient and WILL fail in under some common situations
+    uint sz = varray_size(this->highlight_regions);
+    buffer_region_t *br;
+    uint i;
+
+    for(i = 0; i < sz; i++) {
+        br = varray_get(this->highlight_regions, i);
+        if(br->start >= start)
+            break;
+    }
+
+    // some aliases
+    varray_t *va = this->highlight_regions;  // a quick alias
+
+    // style is NONE, then remove it if possible
+    if(style == HIGHLIGHT_STYLE_NONE) {
+        if(br->start != start || br->end != end) {
+            DEBUG("WRN: tried to remove highlighting of disjoint region: unsupported, ignoring...");
+            return;
+        }
+
+        // free the element
+        buffer_region_destroy(br);
+
+        // shift the array
+        for(; i < sz-1; i++) {
+            varray_set(va, i, varray_get(va, i+1));
+        }
+        varray_shrink(va, sz-1, NULL);
+
+        return;
+    }
+
+    // an enabled style region
+    else {
+
+        // begin by shifting the array
+        DEBUG("buffer->enable_highlight(): before va->size == %d\n", varray_size(va));
+        varray_grow(va, sz+1, NULL);
+        DEBUG("buffer->enable_highlight(): after va->size == %d\n", varray_size(va));
+        for(uint j = sz-1; j >= i && i >= 0 && sz > 0; j--) {
+            varray_set(va, j+1, varray_get(va, j));
+            if(j == 0)
+                break;
+        }
+
+        // set the new buffer_region_t
+        br = calloc(1, sizeof(buffer_region_t));
+        br->start = start;
+        br->end = end;
+        br->style = style;
+        varray_set(va, i, br);
+
+        return;
+    }
 }
 
 static void destroy(buffer_t *b)
@@ -244,6 +328,9 @@ static void destroy(buffer_t *b)
     buffer_internal_t *this = cast_this(b);
 
     this->databuf->destroy(this->databuf);
+    varray_map(this->highlight_regions, (void (*)(void *))buffer_region_destroy);
+    varray_destroy(this->highlight_regions);
+
     free(this);
     free(b);
 }
@@ -259,6 +346,8 @@ static buffer_internal_t *buffer_create_internal(buffer_t *b)
     this->mark_set = false;
     this->mark_x = 0;
     this->mark_y = 0;
+
+    this->highlight_regions = varray_create();
 
     return this;
 }

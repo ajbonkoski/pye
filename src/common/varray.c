@@ -21,6 +21,27 @@ varray_t *varray_create()
     return this;
 }
 
+void  varray_grow(varray_t *this, uint sz, void *val)
+{
+    ASSERT(this->size < sz, "sz must be greater than this->size in varray_grow()");
+
+    while(this->size < sz)
+        varray_add(this, val);
+}
+
+void  varray_shrink(varray_t *this, uint sz, void (*destroy)(void *))
+{
+    ASSERT(this->size > sz, "sz must be less than this->size in varray_shrink()");
+
+    if(destroy != NULL) {
+        for(uint i = sz; i < this->size; i++) {
+            destroy(this->data[i]);
+        }
+    }
+
+    this->size = sz;
+}
+
 void varray_add(varray_t *this, void *obj)
 {
     DEBUG("varray_add(): Adding obj=0x%lx at i=%d\n", (ulong)obj, this->size);
@@ -39,6 +60,12 @@ void *varray_get(varray_t *this, uint i)
     ASSERT(0 <= i && i < this->size, "Error: Out of Bounds in varray_get()");
     DEBUG("varray_add(): getting now data[%d] == 0x%lx\n", i, (ulong)this->data[i]);
     return this->data[i];
+}
+
+void  varray_set(varray_t *this, uint i, void *obj)
+{
+    ASSERT(0 <= i && i < this->size, "Error: Out of Bounds in varray_set()");
+    this->data[i] = obj;
 }
 
 uint varray_size(varray_t *this)

@@ -284,9 +284,10 @@ static PyObject *convert_bl_regions_to_py_list(varray_t *regions)
     uint i = 0;
     buffer_line_region_t *r;
     varray_iter(r, regions){
-        PyObject *v = PyTuple_New(2);
+        PyObject *v = PyTuple_New(3);
         PyTuple_SetItem(v, 0, PyInt_FromLong(r->start_index));
         PyTuple_SetItem(v, 1, PyInt_FromLong(r->length));
+        PyTuple_SetItem(v, 2, PyInt_FromLong(r->style_id));
         PyList_SetItem(r_list, i, v);
         i++;
     }
@@ -422,6 +423,18 @@ static PyObject *Buffer_num_lines(pye_Buffer *self)
     return PyInt_FromLong(nlines);
 }
 
+static PyObject *Buffer_enable_highlight(pye_Buffer *self, PyObject *args)
+{
+    uint start, end, style;
+    if(!PyArg_ParseTuple(args, "iii", &start, &end, &style))
+        return NULL;
+
+    self->buffer->enable_highlight(self->buffer, start, end, style);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef Buffer_methods[] = {
 
     {"has_mark", (PyCFunction)Buffer_has_mark, METH_NOARGS,
@@ -461,6 +474,8 @@ static PyMethodDef Buffer_methods[] = {
      "Get the character at the requested x, y location."},
     {"num_lines", (PyCFunction)Buffer_num_lines, METH_NOARGS,
      "Get the number of lines contained in the buffer."},
+    {"enable_highlight", (PyCFunction)Buffer_enable_highlight, METH_VARARGS,
+     "Enable/disable a region of the buffer to be highlighted."},
     {NULL}  /* Sentinel */
 };
 

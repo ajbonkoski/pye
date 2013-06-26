@@ -19,6 +19,10 @@ def handle_buffer_key(b, key):
         b.insert(GS.get_tab())
         return True
 
+    if key == keyboard.CTRL('x'):
+        b.enable_highlight(2, 6, 1)
+        return True
+
     if key == keyboard.CTRL('v'):
         x, y = b.get_cursor()
         w, h = display.get_size()
@@ -28,7 +32,7 @@ def handle_buffer_key(b, key):
         if y > nlines-1:
             y = nlines - 1
         b.set_cursor(x, y)
-
+    
     if key == keyboard.CTRL('b'):
         x, y = b.get_cursor()
         w, h = display.get_size()
