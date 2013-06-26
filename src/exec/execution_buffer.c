@@ -277,11 +277,29 @@ static void fmt_extract_regions(PyObject *pRegions, varray_t *vregions)
 #undef EXTRACT_BOOL
 #undef EXTRACT_INT
 
-static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
+static PyObject *convert_bl_regions_to_py_list(varray_t *regions)
+{
+    PyObject *r_list = PyList_New(varray_size(regions));
+
+    uint i = 0;
+    buffer_line_region_t *r;
+    varray_iter(r, regions){
+        PyObject *v = PyTuple_New(2);
+        PyTuple_SetItem(v, 0, PyInt_FromLong(r->start_index));
+        PyTuple_SetItem(v, 1, PyInt_FromLong(r->length));
+        PyList_SetItem(r_list, i, v);
+        i++;
+    }
+
+    return r_list;
+}
+
+static buffer_line_t *buffer_formatter_handler(void *usr, buffer_line_t *pre_bl)
 {
     PyObject *func = (PyObject *)usr;
-    PyObject *args = PyTuple_New(1);
-    PyTuple_SetItem(args, 0, PyString_FromString(data));
+    PyObject *args = PyTuple_New(2);
+    PyTuple_SetItem(args, 0, PyString_FromString(pre_bl->data));
+    PyTuple_SetItem(args, 1, convert_bl_regions_to_py_list(pre_bl->regions));
     PyObject *result = PyObject_CallObject(func, args);
 
     PyObject *pData = NULL;
@@ -291,8 +309,7 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     buffer_line_t *bl = calloc(1, sizeof(buffer_line_t));
     bl->styles = varray_create();
     bl->regions = varray_create();
-    bl->data = data;
-    bl->highlight_style_id = DISPLAY_STYLE_NONE;
+    bl->data = strdup(pre_bl->data);
 
     if(result == NULL || !PyDict_Check(result)) {
         ERROR("python key handler did not return a dictionary\n");
@@ -303,9 +320,6 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
     pData    = PyDict_GetItemString(result, "data");
     pStyles  = PyDict_GetItemString(result, "styles");
     pRegions = PyDict_GetItemString(result, "regions");
-
-    // to shut up the compiler
-    if(0) {pStyles = pRegions; pRegions = pStyles;}
 
     if(!pData || !PyString_Check(pData)) {
         ERROR("python key handler: returned dictionary has no 'data' key of type string\n");
@@ -349,6 +363,9 @@ static buffer_line_t *buffer_formatter_handler(void *usr, char *data)
  done:
     Py_XDECREF(result);
     Py_DECREF(args);
+
+    // we are responsible for freeing 'pre_bl'
+    buffer_line_destroy(pre_bl);
 
     return bl;
 }

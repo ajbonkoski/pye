@@ -31,7 +31,8 @@ def create(type):
         raise UndefinedSyntaxType("Cannot create a syntax highligher for '{}'".format(type))
 
 
-    def fmt_handler(data):
+    def fmt_handler(data, regions):
+        debug("regions: {}".format(regions))
         try:
             highlight(data, lexer, formatter)
             ret = formatter.get_formatted(data)

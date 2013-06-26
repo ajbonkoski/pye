@@ -44,6 +44,7 @@ static void get_cursor(buffer_t *this, uint *x, uint *y);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
+static void enable_highlight(buffer_t *b, uint start, uint end, int highlight_style);
 static void destroy(buffer_t *b);
 
 
@@ -175,11 +176,12 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
     buffer_line_t *bl = NULL;
 
     if(this->formatter_callback != NULL) {
-        bl = this->formatter_callback(this->formatter_usr, raw);
+        buffer_line_t *pre_bl = calloc(1, sizeof(buffer_line_t));
+        pre_bl->styles = NULL;
+        pre_bl->regions = varray_create();
+        pre_bl->data = raw;
+        bl = this->formatter_callback(this->formatter_usr, pre_bl);
 
-        // if raw is no longer needed, we are responsible for freeing if
-        if(bl->data != raw)
-            free(raw);
     }
 
     else {
@@ -187,7 +189,6 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
         bl->styles = varray_create();
         bl->regions = varray_create();
         bl->data = raw;
-        bl->highlight_style_id = DISPLAY_STYLE_NONE;
     }
 
     return bl;
@@ -233,6 +234,11 @@ static data_buffer_t *get_data_buffer(buffer_t *b)
     return this->databuf;
 }
 
+static void enable_highlight(buffer_t *b, uint start, uint end, int highlight_style)
+{
+    ASSERT_UNIMPL();
+}
+
 static void destroy(buffer_t *b)
 {
     buffer_internal_t *this = cast_this(b);
@@ -242,7 +248,7 @@ static void destroy(buffer_t *b)
     free(b);
 }
 
-buffer_internal_t *buffer_create_internal(buffer_t *b)
+static buffer_internal_t *buffer_create_internal(buffer_t *b)
 {
     buffer_internal_t *this = calloc(1, sizeof(buffer_internal_t));
     this->super = b;
@@ -278,6 +284,7 @@ buffer_t *buffer_create(void)
     b->register_formatter = register_formatter;
     b->num_lines = num_lines;
     b->input_key = input_key;
+    b->enable_highlight = enable_highlight;
     b->destroy = destroy;
 
     b->get_data_buffer = get_data_buffer;

@@ -9,10 +9,19 @@
 extern "C" {
 #endif
 
+// highlight styles
+#define HIGHLIGHT_STYLE_NONE      0
+#define HIGHLIGHT_STYLE_NORMAL    1
+#define HIGHLIGHT_STYLE_STANDOUT  2
+
 typedef struct
 {
     uint start_index;
     uint length;
+
+    // Serves a dual purpose:
+    //    used to specify the highlighted area before the formatter
+    //    used to index 'styles' array after the formatter
     uint style_id;
 
 } buffer_line_region_t;
@@ -45,7 +54,6 @@ typedef struct
     varray_t *styles;  // a list of "display_style_t" structs
     varray_t *regions; // a list of "buffer_line_region_t" structs
     char *data;
-    int highlight_style_id;
 
 } buffer_line_t;
 
@@ -68,7 +76,7 @@ static inline void buffer_line_destroy(buffer_line_t *bl)
 }
 
 
-typedef buffer_line_t *(*format_func_t)(void *usr, char *data);
+typedef buffer_line_t *(*format_func_t)(void *usr, buffer_line_t *data);
 
 typedef struct buffer buffer_t;
 struct buffer
@@ -93,6 +101,7 @@ struct buffer
     void (*register_formatter)(buffer_t *this, format_func_t func, void *usr);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
+    void (*enable_highlight)(buffer_t *this, uint start, uint end, int highlight_style);
 
     void (*destroy)(buffer_t *this);
 
