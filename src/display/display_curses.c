@@ -52,6 +52,7 @@ static inline display_curses_t *cast_this(display_t *d)
 static inline int get_new_color_index(display_curses_t *this)
 {
     int ci = this->color_index;
+    DEBUG("Color Index: %d\n", ci);
 
     if(++this->color_index >= COLORS)
         this->color_index = START_COLOR;
@@ -62,6 +63,7 @@ static inline int get_new_color_index(display_curses_t *this)
 static inline int get_new_pair_index(display_curses_t *this)
 {
     int cp = this->pair_index;
+    DEBUG("Color Pair: %d\n", cp);
 
     if(++this->pair_index >= 200) //COLOR_PAIRS)
         this->pair_index = START_PAIR;
@@ -221,6 +223,11 @@ static inline int decode_color_to_curses(uint color, bool bright)
     #undef GET_COLOR
 }
 
+static inline int get_pair_by_colors(int fg_curses_color, int bg_curses_color)
+{
+    return COLOR_PAIR(START_PAIR + fg_curses_color*8 + bg_curses_color);
+}
+
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
     //DEBUG("inside set_style()\n");
@@ -234,10 +241,12 @@ static inline void set_style(display_curses_t *this, display_style_t *style)
     /* DEBUG("bold: %d, highlight: %d, under: %d\n", */
     /*       style->bold, style->highlight, style->underline); */
 
-    int pi = get_new_pair_index(this);
-    init_pair(pi, fg_curses_color, bg_curses_color);
-    int attr = COLOR_PAIR(pi);
+    /**** old way ****/
+    /* int pi = get_new_pair_index(this); */
+    /* init_pair(pi, fg_curses_color, bg_curses_color); */
+    /* int attr = COLOR_PAIR(pi); */
 
+    int attr = get_pair_by_colors(fg_curses_color, bg_curses_color);
     if(style->bold)      attr |= A_BOLD;
     if(style->highlight) attr |= A_STANDOUT;
     if(style->underline) attr |= A_UNDERLINE;
@@ -258,6 +267,8 @@ static inline void clear_style(display_curses_t *this)
 static void _write(display_t *disp, const char *s, size_t num, int style)
 {
     display_curses_t *this = cast_this(disp);
+
+    DEBUG("Inside _write()\n");
 
     if(style != DISPLAY_STYLE_NONE) {
         ASSERT(this->styles != NULL, "tried to use a style before calling display->set_styles()");
@@ -328,6 +339,11 @@ static void internal_initialize(display_t *disp)
     if(!can_change_color()) {
         ERROR("WRN: curses cannot change colors!\n");
     }
+
+    // initialize the color pairs
+    for(uint fg = 0; fg < 8; fg++)
+        for(uint bg = 0; bg < 8; bg++)
+            init_pair(START_PAIR + fg*8 + bg, fg, bg);
 
     set_crash_func((crash_func_t)endwin, NULL);
 }
