@@ -38,7 +38,7 @@ def create(type):
             formatter.set_highlight_regions(regions)
             highlight(data, lexer, formatter)
             ret = formatter.get_formatted(data)
-            debug("fmt handler result: {}".format(ret))
+            #debug("fmt handler result: {}".format(ret))
         except Exception as e:
             debug("exception in syntax_highlighter: {}".format(e))
             return None
@@ -78,7 +78,7 @@ class PyePythonStyle(Style):
         Name.Builtin:         PyeStyle("fg:blue bold"),
         Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
         String:               PyeStyle("fg:green"),
-        Generic.Emph:         PyeStyle("fg:white bg:red")  ## this is used for highlighting features (really just a hack...)
+        Generic.Emph:         PyeStyle("fg:white bg:blue")  ## this is used for highlighting features (really just a hack...)
         }
 
 class PyeCStyle(Style):
@@ -161,7 +161,7 @@ class PyeFormatter(Formatter):
         self.lineno = lineno
 
     def highlighting_token_chop(self, index, ttype, value):
-        #debug("token_chop '{}' : '{}' : '{}'".format(index, ttype, value))
+        debug("token_chop '{}' : '{}' : '{}'".format(index, ttype, value))
         new_tokens = []
         tok_start = index
         tok_end = index + len(value)
@@ -174,11 +174,12 @@ class PyeFormatter(Formatter):
             if start > tok_start:
                 new_tokens.append((ttype, tok_val_left[:start-tok_start]))
                 tok_val_left = tok_val_left[start-tok_start:]
-            tok_start = start
+                tok_start = start
 
-            new_tokens.append((Token.Generic.Emph, tok_val_left[:end-start]))
-            tok_val_left = tok_val_left[end-start:]
-            tok_start = end
+            sel_size = end-tok_start
+            new_tokens.append((Token.Generic.Emph, tok_val_left[:sel_size]))
+            tok_val_left = tok_val_left[sel_size:]
+            tok_start += sel_size
 
             if len(tok_val_left) == 0:
                 break
@@ -194,7 +195,7 @@ class PyeFormatter(Formatter):
         self.regions = []
         for ttype, value in tokensource:
             newtokens = self.highlighting_token_chop(index, ttype, value)
-            #debug("newtokens: {}".format(newtokens))
+            debug("newtokens: {}".format(newtokens))
             for n_ttype, n_value in newtokens:
                 token_style_id = self.token_map[n_ttype]
 
