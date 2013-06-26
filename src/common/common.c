@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common/string_util.h"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -7,6 +8,7 @@
 static crash_func_t crash_func = NULL;
 static void *usr = NULL;
 static bool sigsegv_handler_init = false;
+static const char *log_path = NULL;
 static FILE *debug_file = NULL;
 #define DEBUG_FILENAME "debug.log"
 
@@ -41,11 +43,27 @@ bool do_crash()
 FILE *common_get_debug_file(void)
 {
     if(debug_file == NULL) {
-        debug_file = fopen(DEBUG_FILENAME, "w");
+        const char *path = DEBUG_FILENAME;
+
+        char *path_str = NULL;
+        if(log_path != NULL) {
+            path = path_str = string_util_concat(log_path, "/", DEBUG_FILENAME);
+        }
+
+        debug_file = fopen(path, "w");
         setbuf(debug_file, NULL); // disable buffering
+
+        // cleanup
+        if(path_str != NULL)
+            free(path_str);
     }
 
     return debug_file;
+}
+
+void common_set_log_path(const char *path)
+{
+    log_path = path;
 }
 
 void common_redirect_stderr(void)

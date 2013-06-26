@@ -2,6 +2,7 @@
 #include "display/display.h"
 #include "screen/screen.h"
 #include "fileio/fileio.h"
+#include "dirman/dirman.h"
 #include "exec/execution.h"
 
 #undef  ENABLE_DEBUG
@@ -21,6 +22,8 @@ typedef struct
 
 int main(int argc, char *argv[])
 {
+    dirman_t *dm = dirman_create(argv[0]);
+    common_set_log_path(dirman_get_log_dir(dm));
     common_redirect_stderr();
 
     // parse args
@@ -33,7 +36,7 @@ int main(int argc, char *argv[])
     this.scrn = screen_create(this.disp);
 
     // make the scripting execution context
-    this.exec = execution_create(this.scrn, this.disp);
+    this.exec = execution_create(dirman_get_pye_script_dir(dm), this.scrn, this.disp);
 
     // create the buffer
     if(filename != NULL) {
@@ -52,5 +55,7 @@ int main(int argc, char *argv[])
     execution_destroy(this.exec);
     this.scrn->destroy(this.scrn);
     this.disp->destroy(this.disp);
+
+    dirman_destroy(dm);
     return 0;
 }

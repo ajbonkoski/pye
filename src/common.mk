@@ -73,6 +73,11 @@ LIB_FILEIO       := $(LIB_PATH)/libfileio.a
 CFLAGS_FILEIO    := -I$(SRC_PATH)
 LDFLAGS_FILEIO   := $(LIB_FILEIO) $(LIB_COMMON) $(LDFLAGS_BUFFER)
 
+# fileio library
+LIB_DIRMAN       := $(LIB_PATH)/libdirman.a
+CFLAGS_DIRMAN    := -I$(SRC_PATH)
+LDFLAGS_DIRMAN   := $(LIB_DIRMAN) $(LIB_COMMON)
+
 # execution library
 LIB_EXEC         := $(LIB_PATH)/libexecution.a
 CFLAGS_EXEC      := -I$(SRC_PATH) `pkg-config --cflags python`

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <stddef.h>
 #include <string.h>
@@ -33,6 +34,7 @@ typedef uint64_t  u64;
 
 // define debugging and error macros
 #define ENABLE_DEBUG 0
+void common_set_log_path(const char *path);
 void common_redirect_stderr(void);
 FILE *common_get_debug_file(void);
 #define DEBUG(...) do { if(ENABLE_DEBUG) { \

@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 typedef struct execution execution_t;
-execution_t *execution_create(screen_t *scrn, display_t *disp);
+execution_t *execution_create(const char *pye_script_dir, screen_t *scrn, display_t *disp);
 void execution_destroy(execution_t *this);
 
 #ifdef __cplusplus

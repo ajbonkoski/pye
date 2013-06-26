@@ -14,6 +14,7 @@
 
 struct execution
 {
+    const char *pye_script_dir;
     PyObject *config_module;
 };
 
@@ -46,8 +47,15 @@ static PyMethodDef PyeMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-static PyObject *load_module(const char *s)
+static void sys_path_append(const char *pye_script_dir)
 {
+    PyObject *path = PySys_GetObject("path");
+    PyList_Append(path, PyString_FromString(pye_script_dir));
+}
+
+static PyObject *load_module(const char *pye_script_dir, const char *s)
+{
+    sys_path_append(pye_script_dir);
     PyObject *name = PyString_FromString(s);
     PyObject *module = PyImport_Import(name);
     Py_DECREF(name);
@@ -60,10 +68,12 @@ static PyObject *load_module(const char *s)
     return module;
 }
 
-execution_t *execution_create(screen_t *scrn, display_t *disp)
+execution_t *execution_create(const char *pye_script_dir, screen_t *scrn, display_t *disp)
 {
-    execution_t *this = calloc(1, sizeof(execution_t));
     kill_buffer_t *kb = scrn->get_kill_buffer(scrn);
+
+    execution_t *this = calloc(1, sizeof(execution_t));
+    this->pye_script_dir = pye_script_dir;
 
     Py_Initialize();
     execution_init();
@@ -75,7 +85,7 @@ execution_t *execution_create(screen_t *scrn, display_t *disp)
     PyModule_AddObject(m, "screen",  execution_screen_create(scrn));
     PyModule_AddObject(m, "killbuffer",  execution_kill_buffer_create(kb));
 
-    this->config_module = load_module(CONFIG_MODULE);
+    this->config_module = load_module(pye_script_dir, CONFIG_MODULE);
 
     return this;
 }
