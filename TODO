@@ -1,0 +1,20 @@
+
+ ==============================================================================
+ =  PyE Todo List
+ ==============================================================================
+
+  1) Support for Search (and replace)
+     - Hopefully with regex from the beginning
+
+  2) Region selection highlighting
+
+  3) Better c-mode sytax highlighting
+
+  4) User configuration settings and user/project/directory config files
+
+  5) Mult-buffer and Split-screen modes
+
+  6) Bug fixes: do we need a tracker (and where?)
+
+  7) Documentation: Mostly for the pye extenstion API
+
