@@ -554,17 +554,7 @@ static bool key_handler(void *usr, key_event_t *e)
     this->display->get_cursor(this->display, &x, &y);
 
     // message buffer keystrokes
-    if(c == KBRD_CTRL('r')) {
-        sprintf(buffer, "|w=%d h=%d|", w, h);
-        mb_write(this->super, buffer);
-    }
-
-    else if(c == KBRD_CTRL('l')) {
-        sprintf(buffer, "|x=%d y=%d|", x, y);
-        mb_write(this->super, buffer);
-    }
-
-    else if(c == KBRD_CTRL('g')) {
+    if(c == KBRD_CTRL('g')) {
         mb_write(this->super, NULL);
     }
 
@@ -572,7 +562,7 @@ static bool key_handler(void *usr, key_event_t *e)
         mb_ask(this->super, "File", (mb_response_func_t)open_file, this);
     }
 
-    else if(c == KBRD_CTRL('w')) {
+    else if(c == KBRD_CTRL('s')) {
         const char *filename = this->cb->get_filename(this->cb);
         bool success = fileio_save_buffer(this->cb, filename);
         if(!success) {
