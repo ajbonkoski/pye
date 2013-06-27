@@ -1,6 +1,8 @@
-
  ==============================================================================
  =  PyE Todo List
+ =  -------------------------------
+ =
+ =  Last Updated: June 27th, 2013
  ==============================================================================
 
   1) Support for Search (and replace)
@@ -16,7 +18,8 @@
 
   6) Bug fixes: do we need a tracker (and where?)
      DONE: - Cursor refresh glitching
-     - Curses coloring (and random text highlighting with sustained use)
+     DONE: - Curses coloring (and random text highlighting with sustained use)
+     - PyE crashes if passed a non-existent file as a command-line arg
 
   7) Documentation: Mostly for the pye extenstion API
 
