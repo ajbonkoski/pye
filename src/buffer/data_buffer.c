@@ -237,7 +237,7 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
         DEBUG("cp_start=%d, cp_len=%d\n", cp_start, cp_len);
 
         strsafe_cat_cstr(s, line->data + cp_start, cp_len);
-        if(i != ey || cp_len == len)
+        if(i != ey)
             strsafe_cat_char(s, '\n');
 
         DEBUG("End\n");

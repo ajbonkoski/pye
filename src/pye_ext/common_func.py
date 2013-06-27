@@ -5,19 +5,20 @@ def kill_line(b):
     x, y = b.get_cursor()
     ll = b.line_len(y)
 
-    num_to_del = ll-x
-    if num_to_del == 0:
-        num_to_del = 1
-        data = b.get_region_data(x, y, ll, y)
-
+    if ll-x == 0:
+        sx, sy, ex, ey = x, y, 0, y+1
+ 
     else:
-        data = b.get_region_data(x, y, ll-1, y)
+        sx, sy, ex, ey = x, y, ll, y
 
+    data = b.get_region_data(sx, sy, ex, ey)
     killbuffer.add(data)
     debug("kill data='{}'".format(data))
+    b.remove_region_data(sx, sy, ex, ey)
 
-    for i in range(num_to_del):
-        b.insert_key(keyboard.DEL) # insert a DEL key
+    # for i in range(num_to_del):
+    #     b.insert_key(keyboard.DEL) # insert a DEL key
+
 
 def set_mark(b):
     x, y = b.get_cursor()
