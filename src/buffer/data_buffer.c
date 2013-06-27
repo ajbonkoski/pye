@@ -285,15 +285,23 @@ static void remove_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uin
 
             // end line?
             else if(n == nlines-1) {
-                gap_buffer_t *gb = get_line_gb(this, sy);
+                gap_buffer_t *gb_last = get_line_gb(this, sy+1);
                 for(uint i = 0; i < ex; i++)
-                    gap_buffer_delr(gb, 0);
+                    gap_buffer_delr(gb_last, 0);
+
+                // we should now merge this line with the first line
+                gap_buffer_t *gb_first = get_line_gb(this, sy);
+                gap_buffer_delr(this->data, sy+1);
+                gap_buffer_join(gb_first, gb_last);
+
             }
 
             // middle line?
             else {
                 // delete a full line
-                gap_buffer_delr(this->data, sy);
+                gap_buffer_t *gb = get_line_gb(this, sy+1);
+                gap_buffer_destroy(gb);
+                gap_buffer_delr(this->data, sy+1);
             }
         }
 
