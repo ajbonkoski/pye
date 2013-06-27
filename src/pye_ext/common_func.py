@@ -7,7 +7,7 @@ def kill_line(b):
 
     if ll-x == 0:
         sx, sy, ex, ey = x, y, 0, y+1
- 
+
     else:
         sx, sy, ex, ey = x, y, ll, y
 
@@ -22,7 +22,7 @@ def copy_line(b):
 
     if ll-x == 0:
         sx, sy, ex, ey = x, y, 0, y+1
- 
+
     else:
         sx, sy, ex, ey = x, y, ll, y
 
@@ -63,3 +63,34 @@ def scroll_down(b):
     if y > nlines-1:
         y = nlines - 1
     b.set_cursor(x, y)
+
+def insert_newline(b):
+    x, y = b.get_cursor()
+    b.insert("\n")
+    b.set_cursor(x, y)
+
+def kill_region(b):
+    if not b.has_mark():
+        screen.mb_write("no mark")
+    else:
+        sx, sy = b.get_mark()
+        ex, ey = b.get_cursor()
+        data = b.get_region_data(sx, sy, ex, ey)
+        screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
+        killbuffer.add(data)
+        b.clear_mark()
+        return True
+
+def copy_region(b):
+    if not b.has_mark():
+        screen.mb_write("no mark")
+    else:
+        sx, sy = b.get_mark()
+        ex, ey = b.get_cursor()
+        data = b.get_region_data(sx, sy, ex, ey)
+        debug("Ctrl-t Region: '{}'".format(data))
+        screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
+        killbuffer.add(data)
+        b.clear_mark()
+        b.remove_region_data(sx, sy, ex, ey)
+        b.set_cursor(sx, sy)
