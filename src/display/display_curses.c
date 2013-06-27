@@ -7,8 +7,8 @@
 
 #define IMPL_TYPE 0xb3627c50
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 #define MIN_WIDTH   10
 #define MIN_HEIGHT   3
@@ -250,8 +250,6 @@ static inline void clear_style(display_curses_t *this)
 static void _write(display_t *disp, const char *s, size_t num, int style)
 {
     display_curses_t *this = cast_this(disp);
-
-    DEBUG("Inside _write()\n");
 
     if(style != DISPLAY_STYLE_NONE) {
         ASSERT(this->styles != NULL, "tried to use a style before calling display->set_styles()");
