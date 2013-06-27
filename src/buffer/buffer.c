@@ -200,6 +200,18 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
         buffer_line_t *pre_bl = calloc(1, sizeof(buffer_line_t));
         pre_bl->styles = NULL;
 
+        uint x, y;
+        data_buffer_t *d = this->databuf;
+        d->get_cursor(d, &x, &y);
+
+        // add the marked region to the enable_highlight array
+        if(this->mark_set) {
+            enable_highlight(b,
+                             this->mark_x, this->mark_y,
+                             x, y,
+                             HIGHLIGHT_STYLE_MARK);
+        }
+
         // convert our representation into the interfaces
         pre_bl->regions = varray_create();
         buffer_region_t *br;
@@ -213,6 +225,15 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
             }
         }
         pre_bl->data = raw;
+
+        // remove the marked region from the enable_highlight array (if needed)
+        if(this->mark_set) {
+            enable_highlight(b,
+                             this->mark_x, this->mark_y,
+                             x, y,
+                             HIGHLIGHT_STYLE_NONE);
+        }
+
         bl = this->formatter_callback(this->formatter_usr, pre_bl);
 
     }
@@ -258,6 +279,11 @@ static enum edit_result input_key(buffer_t *b, u32 c)
 
     enum edit_result er = d->get_edit_result(d);
     d->reset_edit_result(d);
+
+    // force a full update if a mark is set...
+    if(this->mark_set)
+        er = ER_ALL;
+
     return er;
 }
 

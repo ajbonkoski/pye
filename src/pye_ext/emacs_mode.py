@@ -20,7 +20,7 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('x'):
-        b.enable_highlight(0, 0, 100, 100, 1)
+        b.enable_highlight(2, 3, 5, 10, 1)
         screen.refresh()
         return True
 
@@ -93,7 +93,13 @@ def handle_buffer_key(b, key):
             debug("Ctrl-t Region: '{}'".format(data))
             screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
             killbuffer.add(data)
+            b.clear_mark()
         return True
+
+    if key == keyboard.CTRL('g'):
+        b.clear_mark()
+        screen.refresh()
+        return False  ## we return false here, so the standard clear functions can run
 
     return False
 
