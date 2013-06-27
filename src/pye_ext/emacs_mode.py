@@ -83,18 +83,18 @@ def handle_buffer_key(b, key):
         debug("kill_buffer size={}, max={}".format(killbuffer.get_size(), killbuffer.get_max_size()))
         return True
 
-    # if key == keyboard.CTRL('t'):
-    #     if not b.has_mark():
-    #         screen.mb_write("no mark")
-    #     else:
-    #         sx, sy = b.get_mark()
-    #         ex, ey = b.get_cursor()
-    #         data = b.get_region_data(sx, sy, ex, ey)
-    #         debug("Ctrl-t Region: '{}'".format(data))
-    #         screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
-    #         killbuffer.add(data)
-    #         b.clear_mark()
-    #     return True
+    if key == keyboard.CTRL('w'):
+        if not b.has_mark():
+            screen.mb_write("no mark")
+        else:
+            sx, sy = b.get_mark()
+            ex, ey = b.get_cursor()
+            data = b.get_region_data(sx, sy, ex, ey)
+            debug("Ctrl-t Region: '{}'".format(data))
+            screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
+            killbuffer.add(data)
+            b.clear_mark()
+        return True
 
     if key == keyboard.CTRL('t'):
         if not b.has_mark():
