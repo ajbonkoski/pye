@@ -435,6 +435,13 @@ static PyObject *Buffer_enable_highlight(pye_Buffer *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *Buffer_clear_highlight(pye_Buffer *self)
+{
+    self->buffer->clear_highlight(self->buffer);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef Buffer_methods[] = {
 
     {"has_mark", (PyCFunction)Buffer_has_mark, METH_NOARGS,
@@ -476,6 +483,8 @@ static PyMethodDef Buffer_methods[] = {
      "Get the number of lines contained in the buffer."},
     {"enable_highlight", (PyCFunction)Buffer_enable_highlight, METH_VARARGS,
      "Enable/disable a region of the buffer to be highlighted."},
+    {"clear_highlight", (PyCFunction)Buffer_clear_highlight, METH_NOARGS,
+     "Clear the list of highlighted regions for the buffer."},
     {NULL}  /* Sentinel */
 };
 

@@ -102,6 +102,7 @@ struct buffer
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
     void (*enable_highlight)(buffer_t *this, uint start, uint end, uint style);
+    void (*clear_highlight)(buffer_t *this);
 
     void (*destroy)(buffer_t *this);
 

@@ -20,7 +20,12 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('x'):
-        b.enable_highlight(12, 16, 1)
+        b.enable_highlight(1, 5, 1)
+        screen.refresh()
+        return True
+
+    if key == keyboard.CTRL('n'):
+        b.clear_highlight()
         screen.refresh()
         return True
 
@@ -33,7 +38,8 @@ def handle_buffer_key(b, key):
         if y > nlines-1:
             y = nlines - 1
         b.set_cursor(x, y)
-    
+        return True
+
     if key == keyboard.CTRL('b'):
         x, y = b.get_cursor()
         w, h = display.get_size()
@@ -43,6 +49,7 @@ def handle_buffer_key(b, key):
         if y < 0:
             y = 0
         b.set_cursor(x, y)
+        return True
 
     if key == keyboard.CTRL('k'):
         handle_kill(b)

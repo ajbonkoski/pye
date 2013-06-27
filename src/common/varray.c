@@ -31,7 +31,7 @@ void  varray_grow(varray_t *this, uint sz, void *val)
 
 void  varray_shrink(varray_t *this, uint sz, void (*destroy)(void *))
 {
-    ASSERT(this->size > sz, "sz must be less than this->size in varray_shrink()");
+    ASSERT(this->size >= sz, "sz must be less than this->size in varray_shrink()");
 
     if(destroy != NULL) {
         for(uint i = sz; i < this->size; i++) {

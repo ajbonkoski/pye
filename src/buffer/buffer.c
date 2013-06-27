@@ -61,6 +61,7 @@ static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
 static void enable_highlight(buffer_t *b, uint start, uint end, uint style);
+static void clear_highlight(buffer_t *b);
 static void destroy(buffer_t *b);
 
 
@@ -323,6 +324,13 @@ static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
     }
 }
 
+static void clear_highlight(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    varray_shrink(this->highlight_regions, 0,
+                  (void (*)(void *))buffer_region_destroy);
+}
+
 static void destroy(buffer_t *b)
 {
     buffer_internal_t *this = cast_this(b);
@@ -374,6 +382,7 @@ buffer_t *buffer_create(void)
     b->num_lines = num_lines;
     b->input_key = input_key;
     b->enable_highlight = enable_highlight;
+    b->clear_highlight = clear_highlight;
     b->destroy = destroy;
 
     b->get_data_buffer = get_data_buffer;
