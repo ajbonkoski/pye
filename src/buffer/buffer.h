@@ -13,6 +13,7 @@ extern "C" {
 #define HIGHLIGHT_STYLE_NONE      0
 #define HIGHLIGHT_STYLE_NORMAL    1
 #define HIGHLIGHT_STYLE_STANDOUT  2
+#define HIGHLIGHT_STYLE_MARK      3
 
 typedef struct
 {
@@ -101,7 +102,8 @@ struct buffer
     void (*register_formatter)(buffer_t *this, format_func_t func, void *usr);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
-    void (*enable_highlight)(buffer_t *this, uint start, uint end, uint style);
+    void (*enable_highlight)(buffer_t *this, uint startx, uint starty,
+                             uint endx, uint endy, uint style);
     void (*clear_highlight)(buffer_t *this);
 
     void (*destroy)(buffer_t *this);

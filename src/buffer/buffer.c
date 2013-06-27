@@ -9,8 +9,10 @@
 
 typedef struct
 {
-    uint start;
-    uint end;
+    uint startx;
+    uint starty;
+    uint endx;
+    uint endy;
     uint style;
 
 } buffer_region_t;
@@ -60,7 +62,8 @@ static void get_cursor(buffer_t *this, uint *x, uint *y);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
-static void enable_highlight(buffer_t *b, uint start, uint end, uint style);
+static void enable_highlight(buffer_t *b, uint startx, uint starty,
+                             uint endx, uint endy, uint style);
 static void clear_highlight(buffer_t *b);
 static void destroy(buffer_t *b);
 
@@ -190,6 +193,7 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
     data_buffer_t *d = this->databuf;
 
     char *raw = d->get_line_data(d, i, NULL);
+    uint raw_len = strlen(raw);
     buffer_line_t *bl = NULL;
 
     if(this->formatter_callback != NULL) {
@@ -200,13 +204,14 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
         pre_bl->regions = varray_create();
         buffer_region_t *br;
         varray_iter(br, this->highlight_regions) {
-            buffer_line_region_t *blr = calloc(1, sizeof(buffer_line_region_t));
-            blr->start_index = br->start;
-            blr->length = br->end - br->start;
-            blr->style_id = br->style;
-            varray_add(pre_bl->regions, blr);
+            if(i >= br->starty && i <= br->endy) {
+                buffer_line_region_t *blr = calloc(1, sizeof(buffer_line_region_t));
+                blr->start_index = br->starty == i ? br->startx : 0;
+                blr->length = (br->endy == i ? br->endx : raw_len+1) - br->startx;
+                blr->style_id = br->style;
+                varray_add(pre_bl->regions, blr);
+            }
         }
-
         pre_bl->data = raw;
         bl = this->formatter_callback(this->formatter_usr, pre_bl);
 
@@ -262,7 +267,17 @@ static data_buffer_t *get_data_buffer(buffer_t *b)
     return this->databuf;
 }
 
-static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
+static inline int point_cmp(uint ax, uint ay, uint bx, uint by)
+{
+    if(ay != by)
+        return (int)ay - (int)by;
+
+    // ay == by: compare ax and bx
+    return (int)ax - (int)bx;
+}
+
+static void enable_highlight(buffer_t *b, uint startx, uint starty,
+                             uint endx, uint endy, uint style)
 {
     buffer_internal_t *this = cast_this(b);
 
@@ -274,7 +289,7 @@ static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
 
     for(i = 0; i < sz; i++) {
         br = varray_get(this->highlight_regions, i);
-        if(br->start >= start)
+        if(point_cmp(br->startx, br->starty, startx, starty) >= 0)
             break;
     }
 
@@ -283,7 +298,8 @@ static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
 
     // style is NONE, then remove it if possible
     if(style == HIGHLIGHT_STYLE_NONE) {
-        if(br->start != start || br->end != end) {
+        if(point_cmp(br->startx, br->starty, startx, starty) != 0 ||
+           point_cmp(br->endx,   br->endy,   endx,   endy)   != 0) {
             DEBUG("WRN: tried to remove highlighting of disjoint region: unsupported, ignoring...");
             return;
         }
@@ -315,8 +331,10 @@ static void enable_highlight(buffer_t *b, uint start, uint end, uint style)
 
         // set the new buffer_region_t
         br = calloc(1, sizeof(buffer_region_t));
-        br->start = start;
-        br->end = end;
+        br->startx = startx;
+        br->starty = starty;
+        br->endx = endx;
+        br->endy = endy;
         br->style = style;
         varray_set(va, i, br);
 

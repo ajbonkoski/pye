@@ -20,7 +20,7 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('x'):
-        b.enable_highlight(1, 5, 1)
+        b.enable_highlight(0, 0, 100, 100, 1)
         screen.refresh()
         return True
 

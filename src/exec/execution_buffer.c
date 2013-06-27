@@ -425,11 +425,13 @@ static PyObject *Buffer_num_lines(pye_Buffer *self)
 
 static PyObject *Buffer_enable_highlight(pye_Buffer *self, PyObject *args)
 {
-    uint start, end, style;
-    if(!PyArg_ParseTuple(args, "iii", &start, &end, &style))
+    uint startx, starty, endx, endy, style;
+    if(!PyArg_ParseTuple(args, "iiiii",
+                         &startx, &starty,
+                         &endx, &endy, &style))
         return NULL;
 
-    self->buffer->enable_highlight(self->buffer, start, end, style);
+    self->buffer->enable_highlight(self->buffer, startx, starty, endx, endy, style);
 
     Py_INCREF(Py_None);
     return Py_None;
