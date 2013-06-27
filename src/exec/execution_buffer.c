@@ -176,6 +176,19 @@ static PyObject *Buffer_get_region_data(pye_Buffer *self, PyObject *args)
     return pString;
 }
 
+static PyObject *Buffer_remove_region_data(pye_Buffer *self, PyObject *args)
+{
+    uint sx, sy, ex, ey;
+    if(!PyArg_ParseTuple(args, "iiii", &sx, &sy, &ex, &ey))
+        return NULL;
+
+    data_buffer_t *db = self->dbuffer;
+    db->remove_region_data(db, sx, sy, ex, ey);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 // define some very useful macros for both fmt_extract_styles and
 // fmt_extract_regions
@@ -473,6 +486,8 @@ static PyMethodDef Buffer_methods[] = {
      "Insert a single key code into the buffer at the current cursor location. Note: does not automatically redraw screen."},
     {"get_region_data", (PyCFunction)Buffer_get_region_data, METH_VARARGS,
      "Get a string of the data on between the supplied start and end points."},
+    {"remove_region_data", (PyCFunction)Buffer_remove_region_data, METH_VARARGS,
+     "Remove the string of the data on between the supplied start and end points."},
     {"get_line_data", (PyCFunction)Buffer_get_line_data, METH_VARARGS,
      "Get a string of the data on the requested line."},
     {"register_formatter", (PyCFunction)Buffer_register_formatter, METH_VARARGS,

@@ -42,6 +42,7 @@ static void split_line(data_buffer_internal_t *this);
 static void insert(data_buffer_t *db, int c);
 static char *get_line_data(data_buffer_t *db, uint i, char *databuf);
 static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey);
+static void remove_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey);
 static uint line_len(data_buffer_t *db, uint i);
 static char get_char_at(data_buffer_t *db, uint x, uint y);
 static uint num_lines(data_buffer_t *db);
@@ -175,28 +176,37 @@ static char *get_line_data(data_buffer_t *db, uint i, char *databuf)
 
 #define SWAP_UINT(a, b) do { uint t=a; a=b; b=t; }while(0)
 
+// verify the validity of the region and correct ordering
+// such that (sx, sy) is always before (ex, ey)
+static inline void region_verify_and_recify(data_buffer_t *db, uint *sx, uint *sy, uint *ex, uint *ey)
+{
+    // start with some validation
+    ASSERT(*sy >= 0 && *sy < num_lines(db),
+           "sy doesn't point to a valid line");
+    ASSERT(*ey >= 0 && *ey < num_lines(db),
+           "ey doesn't point to a valid line");
+
+    // correct for backwards region selection
+    if(*ey < *sy)
+        SWAP_UINT(*sy, *ey);
+
+    if(*sy == *ey && *ex < *sx)
+        SWAP_UINT(*sx, *ex);
+
+    uint sy_linelen = line_len(db, *sy);
+    uint ey_linelen = line_len(db, *ey);
+    DEBUG("sy_linelen=%d, ey_linelen=%d\n", sy_linelen, ey_linelen);
+    ASSERT(*sx >= 0 && *sx <= sy_linelen, "sx is out-of-range");
+    ASSERT(*ex >= 0 && *ex <= ey_linelen, "ex is out-of-range");
+
+    DEBUG("sx=%d, sy=%d, ex=%d, ey=%d\n", *sx, *sy, *ex, *ey);
+}
+
 static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey)
 {
     //data_buffer_internal_t *this = cast_this(db);
 
-    // start with some validation
-    ASSERT(sy >= 0 && sy < num_lines(db), "sy doesn't point to a valid line");
-    ASSERT(ey >= 0 && ey < num_lines(db), "ey doesn't point to a valid line");
-
-    // correct for backwards region selection
-    if(ey < sy)
-        SWAP_UINT(sy, ey);
-
-    if(sy == ey && ex < sx)
-        SWAP_UINT(sx, ex);
-
-    uint sy_linelen = line_len(db, sy);
-    uint ey_linelen = line_len(db, ey);
-    DEBUG("sy_linelen=%d, ey_linelen=%d\n", sy_linelen, ey_linelen);
-    ASSERT(sx >= 0 && sx <= sy_linelen, "sx is out-of-range");
-    ASSERT(ex >= 0 && ex <= ey_linelen, "ex is out-of-range");
-
-    DEBUG("sx=%d, sy=%d, ex=%d, ey=%d\n", sx, sy, ex, ey);
+    region_verify_and_recify(db, &sx, &sy, &ex, &ey);
 
     // prepare some storage
     const uint GUESS_PER_LINE = 100;
@@ -238,6 +248,57 @@ static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, 
     strsafe_cleanup(&line_mem);
 
     return s;
+}
+
+static void remove_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey)
+{
+    data_buffer_internal_t *this = cast_this(db);
+
+    region_verify_and_recify(db, &sx, &sy, &ex, &ey);
+
+    // two cases here: sy and ey are the same line... and different lines
+
+    // same line?
+    if(sy == ey) {
+
+        gap_buffer_t *gb = get_line_gb(this, sy);
+        uint num_char_to_del = ex - sx;
+        for(uint i = 0; i < num_char_to_del; i++)
+            gap_buffer_delr(gb, sx);
+
+    }
+
+    // different lines?
+    else {
+
+        uint nlines = ey - sy + 1;
+        for(uint n = 0; n < nlines; n++) {
+
+            // start line?
+            if(n == 0) {
+                gap_buffer_t *gb = get_line_gb(this, sy);
+                uint linelen = line_len(db, sy);
+                uint num_char_to_del = linelen - sx;
+                for(uint i = 0; i < num_char_to_del; i++)
+                    gap_buffer_delr(gb, sx);
+            }
+
+            // end line?
+            else if(n == nlines-1) {
+                gap_buffer_t *gb = get_line_gb(this, sy);
+                for(uint i = 0; i < ex; i++)
+                    gap_buffer_delr(gb, 0);
+            }
+
+            // middle line?
+            else {
+                // delete a full line
+                gap_buffer_delr(this->data, sy);
+            }
+        }
+
+    }
+
 }
 
 static uint line_len(data_buffer_t *db, uint i)
@@ -331,6 +392,7 @@ data_buffer_t *data_buffer_create(void)
     db->insert = insert;
     db->get_line_data = get_line_data;
     db->get_region_data = get_region_data;
+    db->remove_region_data = remove_region_data;
     db->line_len = line_len;
     db->get_char_at = get_char_at;
     db->num_lines = num_lines;
