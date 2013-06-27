@@ -1,6 +1,7 @@
 #include "display_curses.h"
 
 #include <curses.h>
+#include <signal.h>
 #include "common/varray.h"
 #include "common/timeutil.h"
 #include "kbrd_curses.h"
@@ -44,6 +45,23 @@ static inline display_curses_t *cast_this(display_t *d)
 {
     ASSERT(d->impl_type == IMPL_TYPE, "expected a display_curses object");
     return (display_curses_t *)d->impl;
+}
+
+//the standard event handler, to implement basic Unix interupt key commands
+static bool key_handler(void *usr, key_event_t *e)
+{
+    display_t *this = (display_t *)usr;
+
+    switch(e->key_code) {
+        case KBRD_CTRL('c'):
+            this->main_quit(this);
+            return true;
+        /* case KBRD_CTRL('z'): */
+        /*     raise(SIGSTOP); */
+        /*     return true; */
+    }
+
+    return false;
 }
 
 typedef struct
@@ -332,7 +350,7 @@ static void internal_initialize(display_t *disp)
     //setenv("TERM", "linux", 1);
 
     this->wind = initscr();
-    cbreak();
+    raw();
     noecho();
     keypad(stdscr, TRUE);
     start_color();
@@ -351,6 +369,12 @@ static void internal_initialize(display_t *disp)
     display_curses_init_color_pairs();
 
     set_crash_func((crash_func_t)endwin, NULL);
+
+    // register the key handler
+    register_kbrd_callback(disp,
+                           (key_event_func_t)key_handler,
+                           disp);
+
 }
 
 display_t *display_curses_create(void)
