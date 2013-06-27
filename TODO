@@ -6,7 +6,7 @@
   1) Support for Search (and replace)
      - Hopefully with regex from the beginning
 
-  2) Region selection highlighting
+  DONE: 2) Region selection highlighting
 
   3) Better c-mode sytax highlighting
 
