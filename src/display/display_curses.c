@@ -16,6 +16,8 @@
 #define START_COLOR  9
 #define START_PAIR  9
 
+#define MAX_DEFINED_COLORS 16
+
 typedef struct
 {
     display_t *super;
@@ -33,11 +35,6 @@ typedef struct
 
     // styles
     varray_t *styles;
-
-    // this is quite the hack
-    // we just iterate around the available colors and pairs!
-    int color_index;
-    int pair_index;
     int cur_attr;
 
 } display_curses_t;
@@ -48,29 +45,6 @@ static inline display_curses_t *cast_this(display_t *d)
     ASSERT(d->impl_type == IMPL_TYPE, "expected a display_curses object");
     return (display_curses_t *)d->impl;
 }
-
-static inline int get_new_color_index(display_curses_t *this)
-{
-    int ci = this->color_index;
-    DEBUG("Color Index: %d\n", ci);
-
-    if(++this->color_index >= COLORS)
-        this->color_index = START_COLOR;
-
-    return ci;
-}
-
-static inline int get_new_pair_index(display_curses_t *this)
-{
-    int cp = this->pair_index;
-    DEBUG("Color Pair: %d\n", cp);
-
-    if(++this->pair_index >= 200) //COLOR_PAIRS)
-        this->pair_index = START_PAIR;
-
-    return cp;
-}
-
 
 typedef struct
 {
@@ -223,30 +197,39 @@ static inline int decode_color_to_curses(uint color, bool bright)
     #undef GET_COLOR
 }
 
+static inline int decode_color_to_curses_raw(uint color)
+{
+    return decode_color_to_curses(color % (MAX_DEFINED_COLORS/2),
+                                  (color / (MAX_DEFINED_COLORS/2)) == 1);
+}
+
 static inline int get_pair_by_colors(int fg_curses_color, int bg_curses_color)
 {
-    return COLOR_PAIR(START_PAIR + fg_curses_color*8 + bg_curses_color);
+    return START_PAIR +
+        fg_curses_color*MAX_DEFINED_COLORS +
+        bg_curses_color;
+}
+
+static inline void display_curses_init_color_pairs(void)
+{
+    for(uint fg = 0; fg < MAX_DEFINED_COLORS; fg++) {
+        for(uint bg = 0; bg < MAX_DEFINED_COLORS; bg++) {
+            int fg_color = decode_color_to_curses_raw(fg);
+            int bg_color = decode_color_to_curses_raw(bg);
+            init_pair(get_pair_by_colors(fg, bg),
+                      fg_color, bg_color);
+        }
+    }
 }
 
 static inline void set_style(display_curses_t *this, display_style_t *style)
 {
-    //DEBUG("inside set_style()\n");
-
     int bg_curses_color = decode_color_to_curses(style->bg_color,
                                                  style->bg_bright);
     int fg_curses_color = decode_color_to_curses(style->fg_color,
                                                  style->fg_bright);
 
-    /* DEBUG("fg_color: %d, bg_color: %d\n", fg_curses_color, bg_curses_color); */
-    /* DEBUG("bold: %d, highlight: %d, under: %d\n", */
-    /*       style->bold, style->highlight, style->underline); */
-
-    /**** old way ****/
-    /* int pi = get_new_pair_index(this); */
-    /* init_pair(pi, fg_curses_color, bg_curses_color); */
-    /* int attr = COLOR_PAIR(pi); */
-
-    int attr = get_pair_by_colors(fg_curses_color, bg_curses_color);
+    int attr = COLOR_PAIR(get_pair_by_colors(fg_curses_color, bg_curses_color));
     if(style->bold)      attr |= A_BOLD;
     if(style->highlight) attr |= A_STANDOUT;
     if(style->underline) attr |= A_UNDERLINE;
@@ -309,8 +292,6 @@ static display_curses_t *display_curses_create_internal(display_t *disp)
     this->good = true;
     this->running = false;
     this->key_delegates = varray_create();
-    this->color_index = START_COLOR;
-    this->pair_index = START_PAIR;
 
     return this;
 }
@@ -341,9 +322,7 @@ static void internal_initialize(display_t *disp)
     }
 
     // initialize the color pairs
-    for(uint fg = 0; fg < 8; fg++)
-        for(uint bg = 0; bg < 8; bg++)
-            init_pair(START_PAIR + fg*8 + bg, fg, bg);
+    display_curses_init_color_pairs();
 
     set_crash_func((crash_func_t)endwin, NULL);
 }
