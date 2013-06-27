@@ -16,9 +16,19 @@ def kill_line(b):
     debug("kill data='{}'".format(data))
     b.remove_region_data(sx, sy, ex, ey)
 
-    # for i in range(num_to_del):
-    #     b.insert_key(keyboard.DEL) # insert a DEL key
+def copy_line(b):
+    x, y = b.get_cursor()
+    ll = b.line_len(y)
 
+    if ll-x == 0:
+        sx, sy, ex, ey = x, y, 0, y+1
+ 
+    else:
+        sx, sy, ex, ey = x, y, ll, y
+
+    data = b.get_region_data(sx, sy, ex, ey)
+    killbuffer.add(data)
+    debug("copy data='{}'".format(data))
 
 def set_mark(b):
     x, y = b.get_cursor()

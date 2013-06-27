@@ -38,6 +38,10 @@ def handle_buffer_key(b, key):
         CF.kill_line(b)
         return True
 
+    if key == keyboard.CTRL('n'):
+        CF.copy_line(b)
+        return True
+
     if key == keyboard.CTRL('a'):
         b.goto_line_start()
         return True
