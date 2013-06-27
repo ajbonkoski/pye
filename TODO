@@ -15,7 +15,7 @@
   5) Mult-buffer and Split-screen modes
 
   6) Bug fixes: do we need a tracker (and where?)
-     - Cursor refresh glitching
+     DONE: - Cursor refresh glitching
      - Curses coloring (and random text highlighting with sustained use)
 
   7) Documentation: Mostly for the pye extenstion API

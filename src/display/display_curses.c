@@ -66,6 +66,7 @@ static void main_quit(display_t *disp);
 static void set_styles(display_t *this, varray_t *styles);
 static void remove_styles(display_t *this);
 static void _write(display_t *disp, const char *s, size_t num, int style);
+static void _write_xy(display_t *disp, uint x, uint y, const char *s, size_t num, int style);
 static void destroy(display_t *disp);
 static display_curses_t *display_curses_create_internal(display_t *disp);
 
@@ -273,6 +274,33 @@ static void _write(display_t *disp, const char *s, size_t num, int style)
     //doupdate();
 }
 
+static void _write_xy(display_t *disp, uint x, uint y, const char *s, size_t num, int style)
+{
+    display_curses_t *this = cast_this(disp);
+
+    if(style != DISPLAY_STYLE_NONE) {
+        ASSERT(this->styles != NULL, "tried to use a style before calling display->set_styles()");
+        ASSERT(0 <= style && style < varray_size(this->styles), "varray out-of bounds in display->write()");
+        display_style_t *st = varray_get(this->styles, style);
+        set_style(this, st);
+    }
+
+    for(size_t i = 0; i < num; i++) {
+        int c;
+        if(s != NULL)
+            c = (int)s[i];
+        else
+            c = (int)' ';
+        mvaddch(y, x, c);
+        x++;
+    }
+
+    if(style != DISPLAY_STYLE_NONE)
+        clear_style(this);
+
+    //doupdate();
+}
+
 static void destroy(display_t *disp)
 {
     display_curses_t *this = cast_this(disp);
@@ -339,6 +367,7 @@ display_t *display_curses_create(void)
     d->set_styles = set_styles;
     d->remove_styles = remove_styles;
     d->write = _write;
+    d->write_xy = _write_xy;
     d->destroy = destroy;
 
     d->impl_type = IMPL_TYPE;

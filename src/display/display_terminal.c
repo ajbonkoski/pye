@@ -92,6 +92,7 @@ static void flush(display_t *disp);
 static void main_loop(display_t *disp);
 static void main_quit(display_t *disp);
 static void _write(display_t *disp, const char *s, size_t num, int style);
+static void _write_xy(display_t *disp, uint x, uint y, const char *s, size_t num, int style);
 static void destroy(display_t *disp);
 static display_terminal_t *display_terminal_create_internal(display_t *s);
 
@@ -263,6 +264,11 @@ static void _write(display_t *disp, const char *s, size_t num, int style)
     ttflush();
 }
 
+static void _write_xy(display_t *disp, uint x, uint y, const char *s, size_t num, int style)
+{
+    ASSERT_UNIMPL();
+}
+
 static void destroy(display_t *disp)
 {
     display_terminal_t *this = cast_this(disp);
@@ -322,6 +328,7 @@ display_t *display_terminal_create(void)
     d->main_loop = main_loop;
     d->main_quit = main_quit;
     d->write = _write;
+    d->write_xy = _write_xy;
     d->destroy = destroy;
 
     d->impl_type = IMPL_TYPE;
@@ -331,4 +338,3 @@ display_t *display_terminal_create(void)
 
     return d;
 }
-

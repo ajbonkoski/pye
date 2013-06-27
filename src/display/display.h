@@ -85,6 +85,7 @@ struct display
     void (*set_styles)(display_t *this, varray_t *styles);
     void (*remove_styles)(display_t *this);
     void (*write)(display_t *this, const char *s, size_t num, int style); // style == -1 means "no style"
+    void (*write_xy)(display_t *disp, uint x, uint y, const char *s, size_t num, int style);
     void (*flush)(display_t *this);
     void (*main_loop)(display_t *this);
     void (*main_quit)(display_t *this);

@@ -242,14 +242,17 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
     DISPLAY_SIZE(w, h);
     ASSERT(lineno + FOOTER_SIZE < h, "tried to write to an invalid line");
 
-    this->display->set_cursor(this->display, 0, lineno);
+    //this->display->set_cursor(this->display, 0, lineno);
     this->display->set_styles(this->display, line->styles);
+
 
     uint index = 0;
     uint line_len = strlen(line->data);
     uint num_styles = varray_size(line->styles);
-    buffer_line_region_t *r;
 
+    uint x = 0, y = lineno;
+
+    buffer_line_region_t *r;
     varray_iter(r, line->regions) {
         ASSERT(r != NULL, "line->regions contains NULL pointers");
 
@@ -281,15 +284,19 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
         // display the "un-stylized"
         uint unstyled_size = r->start_index - index;
         if(unstyled_size > 0) {
-            this->display->write(this->display,
-                                 line->data + index,
-                                 unstyled_size, -1);
+            this->display->write_xy(this->display,
+                                    x, y,
+                                    line->data + index,
+                                    unstyled_size, -1);
+            x += unstyled_size;
         }
 
         // display this region
-        this->display->write(this->display,
-                                 line->data + r->start_index,
-                                 r->length, r->style_id);
+        this->display->write_xy(this->display,
+                                x, y,
+                                line->data + r->start_index,
+                                r->length, r->style_id);
+        x+= r->length;
 
         // update the index
         index = r->start_index + r->length;
@@ -299,18 +306,19 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
     uint left = line_len - index;
     if(index < line_len && left > 0) {
         DEBUG("Handling the residuals: data='%s'\n", line->data + index);
-        this->display->write(this->display,
-                             line->data + index,
-                             left, -1);
+        this->display->write_xy(this->display,
+                                x, y,
+                                line->data + index,
+                                left, -1);
+        x += left;
     }
 
     this->display->remove_styles(this->display);
 
 
     // write some blanks (to the end of the line)
-    uint x, y;
-    this->display->get_cursor(this->display, &x, &y);
-    this->display->write(this->display, NULL, w-(x+1), -1);
+    if(x < w)
+        this->display->write(this->display, NULL, w-(x+1), -1);
 }
 
 static void update_cursor(screen_internal_t *this)
