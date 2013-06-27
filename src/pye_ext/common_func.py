@@ -94,3 +94,8 @@ def copy_region(b):
         b.clear_mark()
         b.remove_region_data(sx, sy, ex, ey)
         b.set_cursor(sx, sy)
+
+
+## basically: API-level aliases
+def goto_line_start(b): b.goto_line_start()
+def goto_line_end(b): b.goto_line_end()
