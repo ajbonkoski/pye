@@ -1,5 +1,6 @@
 from pye import *
 from pye_ext import global_settings as GS
+from pye_ext import common_func as CF
 
 def init():
     screen.on_key(key_handler)
@@ -15,44 +16,26 @@ def key_handler(key):
 
 def handle_buffer_key(b, key):
 
+    debug('got key={}'.format(key))
+
     if key == ord('\t'):
         b.insert(GS.get_tab())
         return True
 
-    if key == keyboard.CTRL('x'):
-        b.enable_highlight(2, 3, 5, 10, 1)
-        screen.refresh()
-        return True
-
-    if key == keyboard.CTRL('n'):
-        b.clear_highlight()
-        screen.refresh()
+    if key == keyboard.CTRL_SPACE:
+        CF.set_mark(b)
         return True
 
     if key == keyboard.CTRL('v'):
-        x, y = b.get_cursor()
-        w, h = display.get_size()
-        vpy = screen.get_viewport_line()
-        nlines = b.num_lines()
-        y = vpy + h + h/2
-        if y > nlines-1:
-            y = nlines - 1
-        b.set_cursor(x, y)
+        CF.scroll_down(b)
         return True
 
     if key == keyboard.CTRL('b'):
-        x, y = b.get_cursor()
-        w, h = display.get_size()
-        vpy = screen.get_viewport_line()
-        nlines = b.num_lines()
-        y = vpy - h/2
-        if y < 0:
-            y = 0
-        b.set_cursor(x, y)
+        CF.scroll_up(b)
         return True
 
     if key == keyboard.CTRL('k'):
-        handle_kill(b)
+        CF.kill_line(b)
         return True
 
     if key == keyboard.CTRL('a'):
@@ -68,19 +51,7 @@ def handle_buffer_key(b, key):
         return True
 
     if key == keyboard.CTRL('y'):
-        if killbuffer.get_size() == 0:
-            screen.mb_write("Kill-buffer is empty")
-        else:
-            data = killbuffer.get(0)
-            debug("Yank Data: '{}'".format(data))
-            b.insert(data)
-        return True
-
-    if key == keyboard.CTRL('r'):
-        x, y = b.get_cursor()
-        b.set_mark(x, y)
-        screen.mb_write("mark: ({}, {})".format(x, y))
-        debug("kill_buffer size={}, max={}".format(killbuffer.get_size(), killbuffer.get_max_size()))
+        CF.yank(b)
         return True
 
     if key == keyboard.CTRL('w'):
@@ -90,13 +61,12 @@ def handle_buffer_key(b, key):
             sx, sy = b.get_mark()
             ex, ey = b.get_cursor()
             data = b.get_region_data(sx, sy, ex, ey)
-            debug("Ctrl-t Region: '{}'".format(data))
             screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
             killbuffer.add(data)
             b.clear_mark()
         return True
 
-    if key == keyboard.CTRL('t'):
+    if key == keyboard.CTRL('q'):
         if not b.has_mark():
             screen.mb_write("no mark")
         else:
@@ -117,22 +87,3 @@ def handle_buffer_key(b, key):
         return False  ## we return false here, so the standard clear functions can run
 
     return False
-
-
-def handle_kill(b):
-    x, y = b.get_cursor()
-    ll = b.line_len(y)
-
-    num_to_del = ll-x
-    if num_to_del == 0:
-        num_to_del = 1
-        data = b.get_region_data(x, y, ll, y)
-
-    else:
-        data = b.get_region_data(x, y, ll-1, y)
-
-    killbuffer.add(data)
-    debug("kill data='{}'".format(data))
-
-    for i in range(num_to_del):
-        b.insert_key(keyboard.DEL) # insert a DEL key

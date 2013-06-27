@@ -8,6 +8,7 @@ typedef struct {
     PyObject_HEAD
 
     /* constants from "display/keyboard.h" */
+    uint CTRL_SPACE;
     uint ARROW_LEFT;
     uint ARROW_RIGHT;
     uint ARROW_UP;
@@ -36,6 +37,7 @@ typedef struct {
     {#key, T_INT, offsetof(pye_Keyboard, key), 0}
 
 static PyMemberDef Keyboard_members[] = {
+    KEY_FIELD(CTRL_SPACE),
     KEY_FIELD(ARROW_LEFT),
     KEY_FIELD(ARROW_RIGHT),
     KEY_FIELD(ARROW_UP),
@@ -133,6 +135,7 @@ PyObject *execution_keyboard_create(void)
 
     // do static init - this is probably the wrong place,
     // but Keyboard should be a Singleton anyways
+    KEY_ASSIGN(CTRL_SPACE);
     KEY_ASSIGN(ARROW_LEFT);
     KEY_ASSIGN(ARROW_RIGHT);
     KEY_ASSIGN(ARROW_UP);
