@@ -17,6 +17,20 @@
 
 typedef struct
 {
+    char *key;
+    edit_mode_t *mode;
+
+} mode_data_t;
+
+static inline void mode_data_destroy(mode_data_t *md)
+{
+    if(md->key != NULL)
+        free(md->key);
+    md->mode->destroy(md->mode);
+}
+
+typedef struct
+{
     screen_t *super;
 
     display_t *display;
@@ -43,14 +57,12 @@ typedef struct
     /* char mb_response[MB_RESPONSE_SIZE]; */
     /* uint mb_response_index; */
 
-    // this will almost definitely be pulled into
-    // an edit_mode_t hash_table
-    edit_mode_t *mode_mb_ask;
-
     // kill buffer
     kill_buffer_t *killbuf;
 
-
+    /* container holding all the modes */
+    /* this should become a hashtable */
+    varray_t *added_modes;
     edit_mode_t *current_mode;
 
 
@@ -75,6 +87,7 @@ static buffer_t *get_active_buffer(screen_t *scrn);
 static void mb_write(screen_t *scrn, const char *str);
 static uint mb_get_yloc(screen_t *this);
 static void update_sb(screen_internal_t *this);
+static void add_mode(screen_t *scrn, const char *mode_name, edit_mode_t *mode);
 static void trigger_mode(screen_t *this, const char *mode, ...);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
@@ -234,22 +247,33 @@ static void update_sb(screen_internal_t *this)
     this->display->set_cursor(this->display, x, y);
 }
 
-static void trigger_mode(screen_t *scrn, const char *mode, ...)
+static void add_mode(screen_t *scrn, const char *mode_name, edit_mode_t *mode)
 {
     screen_internal_t *this = cast_this(scrn);
-    DEBUG("trigger_mode(): %s\n", mode);
+    mode_data_t *md = calloc(1, sizeof(mode_data_t));
+    md->key = strdup(mode_name);
+    md->mode = mode;
+    varray_add(this->added_modes, md);
+}
+
+static void trigger_mode(screen_t *scrn, const char *mode_name, ...)
+{
+    screen_internal_t *this = cast_this(scrn);
+    DEBUG("trigger_mode(): %s\n", mode_name);
 
     va_list args;
-    va_start(args, mode);
+    va_start(args, mode_name);
 
-    if(strcmp(mode, "mb_ask") == 0) {
-        this->current_mode = this->mode_mb_ask;
-    } else {
-        ERROR("Failed to recognize mode: %s\n", mode);
-        goto done;
+    mode_data_t *md;
+    varray_iter(md, this->added_modes) {
+        if(strcmp(md->key, mode_name) == 0) {
+            this->current_mode = md->mode;
+            this->current_mode->begin_mode(this->current_mode, args);
+            goto done;
+        }
     }
 
-    this->current_mode->begin_mode(this->current_mode, args);
+    ERROR("Failed to recognize mode: %s\n", mode_name);
 
  done:
     va_end(args);
@@ -267,8 +291,11 @@ static void destroy(screen_t *scrn)
     }
     varray_destroy(this->buffers);
 
-    this->mode_mb_ask->destroy(this->mode_mb_ask);
     kill_buffer_destroy(this->killbuf);
+
+
+    varray_map(this->added_modes, (void (*)(void *))mode_data_destroy);
+    varray_destroy(this->added_modes);
 
     free(this);
     free(scrn);
@@ -574,19 +601,19 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
     this->buf_callback = NULL;
     this->buf_usr = NULL;
 
-    /* this->mb_mode = false; */
-    /* this->mb_response_func = NULL; */
-    /* this->mb_response_usr = NULL; */
-    /* this->mb_question = NULL; */
-
-    this->mode_mb_ask = edit_mode_mb_ask_create(s);
     this->killbuf = kill_buffer_create(KILLBUF_DEFAULT_SIZE,
                                        (void (*)(void *))strsafe_destroy);
 
 
+    this->added_modes = varray_create();
     this->current_mode = NULL;
 
     return this;
+}
+
+static void internal_initialize(screen_t *s)
+{
+    add_mode(s, "mb_ask", edit_mode_mb_ask_create(s));
 }
 
 screen_t *screen_create(display_t *disp)
@@ -606,12 +633,15 @@ screen_t *screen_create(display_t *disp)
     s->get_active_buffer = get_active_buffer;
     s->mb_write = mb_write;
     s->mb_get_yloc = mb_get_yloc;
+    s->add_mode = add_mode;
     s->trigger_mode = trigger_mode;
     s->destroy = destroy;
 
     s->get_kill_buffer = get_kill_buffer;
     s->refresh = refresh;
     s->get_viewport_line = get_viewport_line;
+
+    internal_initialize(s);
 
     return s;
 }

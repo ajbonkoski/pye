@@ -4,6 +4,7 @@
 #include "common/common.h"
 #include "common/varray.h"
 #include "display/display.h"
+#include "mode/edit_mode.h"
 #include "buffer/buffer.h"
 
 #include "kill_buffer.h"
@@ -41,6 +42,7 @@ struct screen
     uint (*get_viewport_line)(screen_t *this);
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     uint (*mb_get_yloc)(screen_t *this);
+    void (*add_mode)(screen_t *this, const char *mode_name, edit_mode_t *mode);
     void (*trigger_mode)(screen_t *this, const char *mode, ...);
     void (*destroy)(screen_t *this);
 
