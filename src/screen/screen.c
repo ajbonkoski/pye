@@ -461,27 +461,27 @@ static uint get_viewport_line(screen_t *scrn)
     return cast_this(scrn)->cb_viewport_y;
 }
 
-static void open_file(screen_internal_t *this, const char *filename)
-{
-    if(filename == NULL) {
-        DEBUG("open_file() received filename=NULL, ignoring...\n");
-        return;
-    }
+/* static void open_file(screen_internal_t *this, const char *filename) */
+/* { */
+/*     if(filename == NULL) { */
+/*         DEBUG("open_file() received filename=NULL, ignoring...\n"); */
+/*         return; */
+/*     } */
 
-    const int BUFSZ = 256;
-    char buffer[BUFSZ+1];
+/*     const int BUFSZ = 256; */
+/*     char buffer[BUFSZ+1]; */
 
-    screen_t *s = this->super;
-    buffer_t *b = fileio_load_buffer(filename);
-    if(b == NULL) {
-        snprintf(buffer, BUFSZ, "failed to read: %s", filename);
-        mb_write(s, buffer);
-    } else {
-        s->set_active_buffer(s, s->add_buffer(s, b));
-        update_all(this);
-    }
+/*     screen_t *s = this->super; */
+/*     buffer_t *b = fileio_load_buffer(filename); */
+/*     if(b == NULL) { */
+/*         snprintf(buffer, BUFSZ, "failed to read: %s", filename); */
+/*         mb_write(s, buffer); */
+/*     } else { */
+/*         s->set_active_buffer(s, s->add_buffer(s, b)); */
+/*         update_all(this); */
+/*     } */
 
-}
+/* } */
 
 static bool key_handler(void *usr, key_event_t *e)
 {
@@ -493,8 +493,11 @@ static bool key_handler(void *usr, key_event_t *e)
 
     DEBUG("inside key_handler(): entering\n");
 
-    if(this->current_mode != NULL)
-        this->current_mode->on_key();
+    if(this->current_mode != NULL) {
+      edit_mode_t *em = this->current_mode;
+      em->on_key(em, e);
+    }
+
     /* if(this->mb_mode) { */
     /*     DEBUG("key will be handled by message box mode\n"); */
     /*     return mb_key_handler(this, e); */
@@ -522,7 +525,7 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        this->scrn->trigger_mode(this->scrn, "mb_ask_file_open");
+        this->super->trigger_mode(this->super, "mb_ask_file_open");
         /* edit_mode_t *m = this->mode_mb_ask; */
         /* m->begin_mode(m, "File", (mb_response_func_t)open_file, this, NULL); */
         /* // Disabled for mow */

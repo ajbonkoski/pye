@@ -231,6 +231,10 @@ static inline int get_pair_by_colors(int fg_curses_color, int bg_curses_color)
 
 static inline void display_curses_init_color_pairs(void)
 {
+    init_color(COLOR_BLACK, 0, 0, 0);
+    init_color(COLOR_WHITE, 700, 700, 700);
+    assume_default_colors(COLOR_WHITE, COLOR_BLACK);
+
     for(uint fg = 0; fg < MAX_DEFINED_COLORS; fg++) {
         for(uint bg = 0; bg < MAX_DEFINED_COLORS; bg++) {
             int fg_color = decode_color_to_curses_raw(fg);

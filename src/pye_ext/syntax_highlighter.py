@@ -122,7 +122,7 @@ class PyeFormatter(Formatter):
                     s['underline'] = bool(style['underline'])
                 if style['bgcolor']:
                     c, b = extract_color(style['bgcolor'])
-                    #debug("bg color: c='{}' b='{}'".format(c, b))
+                    debug("bg color: c='{}' b='{}'".format(c, b))
                     s['bg_color'] = c
                     s['bg_bright'] = b
 
