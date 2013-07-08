@@ -77,7 +77,7 @@ static uint mb_get_yloc(screen_t *this);
 static void mb_ask(screen_t *scrn, const char *str, mb_response_func_t func, void *usr);
 //static void mb_ask_rewrite(screen_internal_t *this);
 static void update_sb(screen_internal_t *this);
-static void trigger_mode(screen_t *this, const char *mode);
+static void trigger_mode(screen_t *this, const char *mode, ...);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
 static kill_buffer_t *get_kill_buffer(screen_t *scrn);
@@ -254,9 +254,26 @@ static void update_sb(screen_internal_t *this)
     this->display->set_cursor(this->display, x, y);
 }
 
-static void trigger_mode(screen_t *this, const char *mode)
+static void trigger_mode(screen_t *scrn, const char *mode, ...)
 {
+    screen_internal_t *this = cast_this(scrn);
     DEBUG("trigger_mode(): %s\n", mode);
+
+    va_list args;
+    va_start(args, mode);
+
+    if(strcmp(mode, "mb_ask") == 0) {
+        this->current_mode = this->mode_mb_ask;
+    } else {
+        ERROR("Failed to recognize mode: %s\n", mode);
+        goto done;
+    }
+
+    this->current_mode->begin_mode(this->current_mode, args);
+
+ done:
+    va_end(args);
+    return;
 }
 
 
@@ -461,27 +478,29 @@ static uint get_viewport_line(screen_t *scrn)
     return cast_this(scrn)->cb_viewport_y;
 }
 
-/* static void open_file(screen_internal_t *this, const char *filename) */
-/* { */
-/*     if(filename == NULL) { */
-/*         DEBUG("open_file() received filename=NULL, ignoring...\n"); */
-/*         return; */
-/*     } */
+static void open_file(screen_internal_t *this, const char *filename)
+{
+    this->current_mode = NULL;
 
-/*     const int BUFSZ = 256; */
-/*     char buffer[BUFSZ+1]; */
+    if(filename == NULL) {
+        DEBUG("open_file() received filename=NULL, ignoring...\n");
+        return;
+    }
 
-/*     screen_t *s = this->super; */
-/*     buffer_t *b = fileio_load_buffer(filename); */
-/*     if(b == NULL) { */
-/*         snprintf(buffer, BUFSZ, "failed to read: %s", filename); */
-/*         mb_write(s, buffer); */
-/*     } else { */
-/*         s->set_active_buffer(s, s->add_buffer(s, b)); */
-/*         update_all(this); */
-/*     } */
+    const int BUFSZ = 256;
+    char buffer[BUFSZ+1];
 
-/* } */
+    screen_t *s = this->super;
+    buffer_t *b = fileio_load_buffer(filename);
+    if(b == NULL) {
+        snprintf(buffer, BUFSZ, "failed to read: %s", filename);
+        mb_write(s, buffer);
+    } else {
+        s->set_active_buffer(s, s->add_buffer(s, b));
+        update_all(this);
+    }
+
+}
 
 static bool key_handler(void *usr, key_event_t *e)
 {
@@ -495,7 +514,8 @@ static bool key_handler(void *usr, key_event_t *e)
 
     if(this->current_mode != NULL) {
       edit_mode_t *em = this->current_mode;
-      em->on_key(em, e);
+      if(em->on_key(em, e))
+          return true;
     }
 
     /* if(this->mb_mode) { */
@@ -525,7 +545,8 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        this->super->trigger_mode(this->super, "mb_ask_file_open");
+        this->super->trigger_mode(this->super, "mb_ask",
+                                  "File", open_file, this);
         /* edit_mode_t *m = this->mode_mb_ask; */
         /* m->begin_mode(m, "File", (mb_response_func_t)open_file, this, NULL); */
         /* // Disabled for mow */

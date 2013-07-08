@@ -31,7 +31,7 @@ static inline edit_mode_mb_ask_t *cast_this(edit_mode_t *s)
 
 // forward declarations
 static void mb_redraw(edit_mode_mb_ask_t *this);
-static void begin_mode(edit_mode_t *m, ...) __attribute__((sentinel));
+static void begin_mode(edit_mode_t *m, va_list args);
 static bool on_key(edit_mode_t *m, key_event_t *key);
 static void destroy(edit_mode_t *m);
 
@@ -75,12 +75,10 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
 }
 
 
-static void begin_mode(edit_mode_t *m, ...)
+static void begin_mode(edit_mode_t *m, va_list args)
 {
     DEBUG("inside begin_mode()\n");
     edit_mode_mb_ask_t *this = cast_this(m);
-    va_list args;
-    va_start(args, m);
 
     // get the question
     const char *question = va_arg(args, const char *);

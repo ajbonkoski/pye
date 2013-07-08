@@ -14,7 +14,7 @@ struct edit_mode {
     void *impl;
     uint impl_type;
 
-    void (*begin_mode)(edit_mode_t *this, ...) __attribute__((sentinel));
+    void (*begin_mode)(edit_mode_t *this, va_list args);
     bool (*on_key)(edit_mode_t *this, key_event_t *key);
     void (*destroy)(edit_mode_t *this);
 };
