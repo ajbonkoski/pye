@@ -74,8 +74,6 @@ static void set_active_buffer(screen_t *scrn, uint id);
 static buffer_t *get_active_buffer(screen_t *scrn);
 static void mb_write(screen_t *scrn, const char *str);
 static uint mb_get_yloc(screen_t *this);
-static void mb_ask(screen_t *scrn, const char *str, mb_response_func_t func, void *usr);
-//static void mb_ask_rewrite(screen_internal_t *this);
 static void update_sb(screen_internal_t *this);
 static void trigger_mode(screen_t *this, const char *mode, ...);
 static void destroy(screen_t *scrn);
@@ -206,24 +204,6 @@ static uint mb_get_yloc(screen_t *scrn)
     screen_internal_t *this = cast_this(scrn);
     DISPLAY_SIZE(w, h);
     return h-1;
-}
-
-static void mb_ask(screen_t *scrn, const char *str, mb_response_func_t func, void *usr)
-{
-    //screen_internal_t *this = cast_this(scrn);
-    //ASSERT(!this->mb_mode, "cannot call mb_ask while already pending!");
-
-    /* this->mb_question = strdup(str); */
-    /* this->mb_mode = true; */
-    /* this->mb_response_index = 0; */
-    /* this->mb_response_func = func; */
-    /* this->mb_response_usr = usr; */
-
-    /* mb_ask_rewrite(this); */
-
-     ASSERT_UNIMPL();
-
-    return;
 }
 
 static void update_sb(screen_internal_t *this)
@@ -547,10 +527,6 @@ static bool key_handler(void *usr, key_event_t *e)
     else if(c == KBRD_CTRL('f')) {
         this->super->trigger_mode(this->super, "mb_ask",
                                   "File", open_file, this);
-        /* edit_mode_t *m = this->mode_mb_ask; */
-        /* m->begin_mode(m, "File", (mb_response_func_t)open_file, this, NULL); */
-        /* // Disabled for mow */
-        /* //mb_ask(this->super, "File", (mb_response_func_t)open_file, this); */
     }
 
     else if(c == KBRD_CTRL('s')) {
@@ -630,7 +606,6 @@ screen_t *screen_create(display_t *disp)
     s->get_active_buffer = get_active_buffer;
     s->mb_write = mb_write;
     s->mb_get_yloc = mb_get_yloc;
-    s->mb_ask = mb_ask;
     s->trigger_mode = trigger_mode;
     s->destroy = destroy;
 

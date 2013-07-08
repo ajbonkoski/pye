@@ -41,7 +41,6 @@ struct screen
     uint (*get_viewport_line)(screen_t *this);
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     uint (*mb_get_yloc)(screen_t *this);
-    void (*mb_ask)(screen_t *scrn, const char *str, mb_response_func_t func, void *usr); // ask on the message bar (returns malloc'd memory)
     void (*trigger_mode)(screen_t *this, const char *mode, ...);
     void (*destroy)(screen_t *this);
 
