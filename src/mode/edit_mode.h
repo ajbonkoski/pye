@@ -8,6 +8,13 @@
 extern "C" {
 #endif
 
+typedef struct {
+
+    bool finished;
+    bool key_handled;
+
+} edit_mode_result_t;
+
 typedef struct edit_mode edit_mode_t;
 struct edit_mode {
 
@@ -15,7 +22,7 @@ struct edit_mode {
     uint impl_type;
 
     void (*begin_mode)(edit_mode_t *this, va_list args);
-    bool (*on_key)(edit_mode_t *this, key_event_t *key);
+    edit_mode_result_t (*on_key)(edit_mode_t *this, key_event_t *key);
     void (*destroy)(edit_mode_t *this);
 };
 

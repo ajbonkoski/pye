@@ -32,7 +32,7 @@ static inline edit_mode_mb_ask_t *cast_this(edit_mode_t *s)
 // forward declarations
 static void mb_redraw(edit_mode_mb_ask_t *this);
 static void begin_mode(edit_mode_t *m, va_list args);
-static bool on_key(edit_mode_t *m, key_event_t *key);
+static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *key);
 static void destroy(edit_mode_t *m);
 
 static void mb_redraw(edit_mode_mb_ask_t *this)
@@ -100,17 +100,15 @@ static void begin_mode(edit_mode_t *m, va_list args)
     mb_redraw(this);
 }
 
-static bool on_key(edit_mode_t *m, key_event_t *e)
+static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *e)
 {
      edit_mode_mb_ask_t *this = cast_this(m);
-    /* ASSERT_UNIMPL(); */
-    /* return false; */
-
 
     ASSERT(this->mode_running, "edit_mode_mb_ask->on_key() called, but not in mb_mode");
 
     u32 c = e->key_code;
     char ch = (char)c;
+    bool finished = false;
 
     // echo any visible keys
     if(key_is_visible(c)) {
@@ -127,24 +125,31 @@ static bool on_key(edit_mode_t *m, key_event_t *e)
 
             case KBRD_CTRL('g'):
                 finish_mb_ask(this, false);
+                finished = true;
                 break;
 
             case '\n':
             case KBRD_ENTER:
                 finish_mb_ask(this, true);
+                finished = true;
+                break;
 
             case KBRD_BACKSPACE:
                 if(this->mb_response_index > 0) {
                     this->mb_response[--this->mb_response_index] = '\0';
                     mb_redraw(this);
                 }
+                break;
 
             default:
                 ERROR("Invisible key on mb_response... Ignoring...\n");
         }
     }
 
-    return true;
+    edit_mode_result_t res =
+        { .finished = finished, .key_handled = true };
+
+    return res;
 
 }
 

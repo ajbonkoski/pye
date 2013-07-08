@@ -487,8 +487,6 @@ static uint get_viewport_line(screen_t *scrn)
 
 static void open_file(screen_internal_t *this, const char *filename)
 {
-    this->current_mode = NULL;
-
     if(filename == NULL) {
         DEBUG("open_file() received filename=NULL, ignoring...\n");
         return;
@@ -521,7 +519,12 @@ static bool key_handler(void *usr, key_event_t *e)
 
     if(this->current_mode != NULL) {
       edit_mode_t *em = this->current_mode;
-      if(em->on_key(em, e))
+      edit_mode_result_t res = em->on_key(em, e);
+      if(res.finished) {
+          this->current_mode = NULL;
+          update_all(this);
+      }
+      if(res.key_handled)
           return true;
     }
 
