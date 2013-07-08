@@ -58,10 +58,15 @@ LIB_DISPLAY      := $(LIB_PATH)/libdisplay.a
 CFLAGS_DISPLAY   := -I$(SRC_PATH)
 LDFLAGS_DISPLAY  := $(LIB_DISPLAY) $(LIB_COMMON) -ltermcap -lcurses
 
+# mode library
+LIB_MODE         := $(LIB_PATH)/libmode.a
+CFLAGS_MODE      := -I$(SRC_PATH)
+LDFLAGS_MODE     := $(LIB_MODE) $(LIB_COMMON)
+
 # screen library
 LIB_SCREEN       := $(LIB_PATH)/libscreen.a
 CFLAGS_SCREEN    := -I$(SRC_PATH)
-LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LIB_COMMON)
+LDFLAGS_SCREEN   := $(LIB_SCREEN) $(LIB_MODE) $(LIB_COMMON)
 
 # buffer library
 LIB_BUFFER       := $(LIB_PATH)/libbuffer.a
@@ -73,7 +78,7 @@ LIB_FILEIO       := $(LIB_PATH)/libfileio.a
 CFLAGS_FILEIO    := -I$(SRC_PATH)
 LDFLAGS_FILEIO   := $(LIB_FILEIO) $(LIB_COMMON) $(LDFLAGS_BUFFER)
 
-# fileio library
+# dirmano library
 LIB_DIRMAN       := $(LIB_PATH)/libdirman.a
 CFLAGS_DIRMAN    := -I$(SRC_PATH)
 LDFLAGS_DIRMAN   := $(LIB_DIRMAN) $(LIB_COMMON)

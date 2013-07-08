@@ -39,6 +39,8 @@ typedef struct
 #define KBRD_INS           ((20)<<8)
 #define KBRD_ENTER         ((21)<<8)
 
+static inline bool key_is_visible(u32 c){ return c >= 0x20 && c <= 0x7e; }
+
 // true means "handled", false means "not handled"
 typedef bool (*key_event_func_t)(void *usr, key_event_t *e);
 

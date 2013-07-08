@@ -24,6 +24,10 @@ struct screen
     void *impl;
     uint impl_type;
 
+    // essentially just alias's directly to display->
+    void (*set_cursor)(screen_t *this, uint x, uint y);
+    void (*get_cursor)(screen_t *this, uint *x, uint *y);
+
     // this will override the default handler
     void (*register_kbrd_callback)(screen_t *this, key_event_func_t f, void *usr);
     void (*register_buf_added_callback)(screen_t *this, buf_event_func_t f, void *usr);
@@ -36,7 +40,9 @@ struct screen
     buffer_t *(*get_active_buffer)(screen_t *this);
     uint (*get_viewport_line)(screen_t *this);
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
+    uint (*mb_get_yloc)(screen_t *this);
     void (*mb_ask)(screen_t *scrn, const char *str, mb_response_func_t func, void *usr); // ask on the message bar (returns malloc'd memory)
+    void (*trigger_mode)(screen_t *this, const char *mode);
     void (*destroy)(screen_t *this);
 
     kill_buffer_t *(*get_kill_buffer)(screen_t *this);
