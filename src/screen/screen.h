@@ -2,6 +2,7 @@
 #define SCREEN_H
 
 #include "common/common.h"
+#include "common/varargs.h"
 #include "common/varray.h"
 #include "display/display.h"
 #include "mode/edit_mode.h"
@@ -43,7 +44,7 @@ struct screen
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     uint (*mb_get_yloc)(screen_t *this);
     void (*add_mode)(screen_t *this, const char *mode_name, edit_mode_t *mode);
-    void (*trigger_mode)(screen_t *this, const char *mode, uint nargs, ...);
+    void (*trigger_mode)(screen_t *this, const char *mode, varargs_t *va);
     void (*destroy)(screen_t *this);
 
     kill_buffer_t *(*get_kill_buffer)(screen_t *this);

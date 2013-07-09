@@ -1,6 +1,7 @@
 #include "execution_screen.h"
 #include "execution_buffer.h"
 #include "mode/edit_mode.h"
+#include "common/varargs.h"
 
 //#undef ENABLE_DEBUG
 //#define ENABLE_DEBUG 1
@@ -153,7 +154,7 @@ static PyObject *Screen_mb_get_yloc(pye_Screen *self)
     return PyInt_FromLong(yloc);
 }
 
-static void edit_mode_python_begin_mode(edit_mode_t *em, uint nargs, va_list args)
+static void edit_mode_python_begin_mode(edit_mode_t *em, varargs_t *args)
 {
     ASSERT(em->impl_type == EDIT_MODE_PYTHON_IMPL, "wrong impl");
     PyObject *obj = (PyObject *)em->impl;

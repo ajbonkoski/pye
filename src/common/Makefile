@@ -3,7 +3,7 @@ include ../common.mk
 CFLAGS = $(CFLAGS_STD) $(CFLAGS_COMMON)
 LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON)
 
-COMMON_OBJS = common.o string_lib.o timeutil.o varray.o gap_buffer.o strsafe.o string_util.o
+COMMON_OBJS = common.o string_lib.o timeutil.o varray.o gap_buffer.o strsafe.o string_util.o varargs.o
 
 TEST_OBJS = test/gap_buffer_test.o
 TEST_BIN =$(BIN_PATH)/test/gap_buffer

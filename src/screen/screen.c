@@ -49,14 +49,6 @@ typedef struct
     buf_event_func_t buf_callback;
     void *buf_usr;
 
-    // message box state
-    /* bool mb_mode; */
-    /* mb_response_func_t mb_response_func; */
-    /* void *mb_response_usr; */
-    /* char *mb_question; */
-    /* char mb_response[MB_RESPONSE_SIZE]; */
-    /* uint mb_response_index; */
-
     // kill buffer
     kill_buffer_t *killbuf;
 
@@ -88,7 +80,7 @@ static void mb_write(screen_t *scrn, const char *str);
 static uint mb_get_yloc(screen_t *this);
 static void update_sb(screen_internal_t *this);
 static void add_mode(screen_t *scrn, const char *mode_name, edit_mode_t *mode);
-static void trigger_mode(screen_t *this, const char *mode, uint nargs, ...);
+static void trigger_mode(screen_t *this, const char *mode, varargs_t *va);
 static void destroy(screen_t *scrn);
 static void update_all(screen_internal_t *this);
 static kill_buffer_t *get_kill_buffer(screen_t *scrn);
@@ -256,27 +248,21 @@ static void add_mode(screen_t *scrn, const char *mode_name, edit_mode_t *mode)
     varray_add(this->added_modes, md);
 }
 
-static void trigger_mode(screen_t *scrn, const char *mode_name, uint nargs, ...)
+static void trigger_mode(screen_t *scrn, const char *mode_name, varargs_t *va)
 {
     screen_internal_t *this = cast_this(scrn);
     DEBUG("trigger_mode(): %s\n", mode_name);
-
-    va_list args;
-    va_start(args, nargs);
 
     mode_data_t *md;
     varray_iter(md, this->added_modes) {
         if(strcmp(md->key, mode_name) == 0) {
             this->current_mode = md->mode;
-            this->current_mode->begin_mode(this->current_mode, nargs, args);
-            goto done;
+            this->current_mode->begin_mode(this->current_mode, va);
+            return;
         }
     }
 
     ERROR("Failed to recognize mode: %s\n", mode_name);
-
- done:
-    va_end(args);
     return;
 }
 
@@ -555,8 +541,13 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        this->super->trigger_mode(this->super, "mb_ask", 3,
-                                  "File", open_file, this);
+        varargs_t *va = varargs_create_v(3,
+                                         "s", "File",
+                                         "f", open_file,
+                                         "v", this);
+
+        this->super->trigger_mode(this->super, "mb_ask", va);
+        varargs_destroy(va);
     }
 
     else if(c == KBRD_CTRL('s')) {

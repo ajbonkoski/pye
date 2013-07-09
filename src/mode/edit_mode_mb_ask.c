@@ -31,7 +31,7 @@ static inline edit_mode_mb_ask_t *cast_this(edit_mode_t *s)
 
 // forward declarations
 static void mb_redraw(edit_mode_mb_ask_t *this);
-static void begin_mode(edit_mode_t *m, uint nargs, va_list args);
+static void begin_mode(edit_mode_t *m, varargs_t *va);
 static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *key);
 static void destroy(edit_mode_t *m);
 
@@ -75,25 +75,25 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
 }
 
 
-static void begin_mode(edit_mode_t *m, uint nargs, va_list args)
+static void begin_mode(edit_mode_t *m, varargs_t *va)
 {
     DEBUG("inside begin_mode()\n");
-    ASSERT(nargs == 3, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
+    ASSERT(varargs_size(va) == 3, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
     edit_mode_mb_ask_t *this = cast_this(m);
 
     // get the question
-    const char *question = va_arg(args, const char *);
+    const char *question = varargs_get(va, 0);
     ASSERT(question != NULL, "edit_mode_mb_ask_t->begin_mode() was passed question == NULL!");
     if(this->mb_question != NULL)
         free(this->mb_question);
     this->mb_question = strdup(question);
 
     // get the response func
-    this->mb_response_func = va_arg(args, mb_response_func_t);
+    this->mb_response_func = varargs_get(va, 1);
     ASSERT(this->mb_response_func != NULL, "edit_mode_mb_ask_t->begin_mode() was passed mb_response_func == NULL!");
 
     // get the response usr data
-    this->mb_response_usr = va_arg(args, void *);
+    this->mb_response_usr = varargs_get(va, 2);
     // Note: its perfectly acceptable if usr is NULL here
 
     // enable the mode
