@@ -31,7 +31,7 @@ static inline edit_mode_mb_ask_t *cast_this(edit_mode_t *s)
 
 // forward declarations
 static void mb_redraw(edit_mode_mb_ask_t *this);
-static void begin_mode(edit_mode_t *m, va_list args);
+static void begin_mode(edit_mode_t *m, uint nargs, va_list args);
 static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *key);
 static void destroy(edit_mode_t *m);
 
@@ -75,9 +75,10 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
 }
 
 
-static void begin_mode(edit_mode_t *m, va_list args)
+static void begin_mode(edit_mode_t *m, uint nargs, va_list args)
 {
     DEBUG("inside begin_mode()\n");
+    ASSERT(nargs == 3, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
     edit_mode_mb_ask_t *this = cast_this(m);
 
     // get the question

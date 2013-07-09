@@ -102,7 +102,8 @@ struct buffer
     void (*register_formatter)(buffer_t *this, format_func_t func, void *usr);
     uint (*num_lines)(buffer_t *this);
     enum edit_result (*input_key)(buffer_t *this, u32 c);
-    void (*enable_highlight)(buffer_t *this, uint startx, uint starty,
+    enum edit_result (*input_data)(buffer_t *this, const char *s, uint size);
+   void (*enable_highlight)(buffer_t *this, uint startx, uint starty,
                              uint endx, uint endy, uint style);
     void (*clear_highlight)(buffer_t *this);
 

@@ -62,6 +62,7 @@ static void get_cursor(buffer_t *this, uint *x, uint *y);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
+static enum edit_result input_data(buffer_t *b, const char *s, uint size);
 static void enable_highlight(buffer_t *b, uint startx, uint starty,
                              uint endx, uint endy, uint style);
 static void clear_highlight(buffer_t *b);
@@ -262,9 +263,8 @@ static uint num_lines(buffer_t *b)
     return d->num_lines(d);
 }
 
-static enum edit_result input_key(buffer_t *b, u32 c)
+static void input_key_internal(buffer_internal_t *this, u32 c)
 {
-    buffer_internal_t *this = cast_this(b);
     data_buffer_t *d = this->databuf;
 
     // handle special chars
@@ -276,7 +276,14 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         default:  // hande "normal" keys
             d->insert(d, c);
     }
+}
 
+static enum edit_result input_key(buffer_t *b, u32 c)
+{
+    buffer_internal_t *this = cast_this(b);
+    input_key_internal(this, c);
+
+    data_buffer_t *d = this->databuf;
     enum edit_result er = d->get_edit_result(d);
     d->reset_edit_result(d);
 
@@ -285,6 +292,27 @@ static enum edit_result input_key(buffer_t *b, u32 c)
         er = ER_ALL;
 
     return er;
+}
+
+static enum edit_result input_data(buffer_t *b, const char *s, uint size)
+{
+    ASSERT(size >= 0, "size must be non-negative");
+    buffer_internal_t *this = cast_this(b);
+
+    for(uint i = 0; i < size; i++) {
+        input_key_internal(this, (u32)s[i]);
+    }
+
+    data_buffer_t *d = this->databuf;
+    enum edit_result er = d->get_edit_result(d);
+    d->reset_edit_result(d);
+
+    // force a full update if a mark is set...
+    if(this->mark_set)
+        er = ER_ALL;
+
+    return er;
+
 }
 
 static data_buffer_t *get_data_buffer(buffer_t *b)
@@ -425,6 +453,7 @@ buffer_t *buffer_create(void)
     b->register_formatter = register_formatter;
     b->num_lines = num_lines;
     b->input_key = input_key;
+    b->input_data = input_data;
     b->enable_highlight = enable_highlight;
     b->clear_highlight = clear_highlight;
     b->destroy = destroy;
