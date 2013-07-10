@@ -1,9 +1,13 @@
 from pye import *
 from pye_ext import global_settings as GS
 from pye_ext import common_func as CF
+from pye_ext.search_mode import SearchMode
 
+search_mode = SearchMode()
 def init():
     screen.on_key(key_handler)
+    debug("adding search mode")
+    screen.add_mode("search", search_mode);
 
 def key_handler(key):
 
@@ -14,6 +18,11 @@ def key_handler(key):
 
     return False
 
+
+def start_search_mode(b):
+    debug("starting search mode")
+    screen.trigger_mode("search")
+    return True
 
 bindings = {
     ord('\t'):            lambda b: b.insert(GS.get_tab()),
@@ -29,6 +38,8 @@ bindings = {
     keyboard.CTRL('y'):   CF.yank,
     keyboard.CTRL('w'):   CF.kill_region,
     keyboard.CTRL('q'):   CF.copy_region,
+
+    keyboard.CTRL('x'):   start_search_mode,
 }
 
 def handle_buffer_key(b, key):

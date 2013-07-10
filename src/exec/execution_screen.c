@@ -4,8 +4,8 @@
 #include "mode/edit_mode.h"
 #include "common/varargs.h"
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
 
 #define EDIT_MODE_PYTHON_IMPL 0xe51ecb06
 
@@ -227,6 +227,7 @@ static void register_new_mode_on_screen(pye_Screen *self, const char *mode_name,
     em->begin_mode = edit_mode_python_begin_mode;
     em->on_key = edit_mode_python_on_key;
     em->destroy = edit_mode_python_destroy;
+    DEBUG("mode name: '%s'\n", mode_name);
     self->screen->add_mode(self->screen, mode_name, em);
 }
 
@@ -241,13 +242,13 @@ static PyObject *Screen_add_mode(pye_Screen *self, PyObject *args)
     PyObject *begin_f = NULL, *on_key_f = NULL;
 
     begin_f = PyObject_GetAttrString(mode_obj, "begin_mode");
-    if(PyCallable_Check(begin_f)) {
+    if(!PyCallable_Check(begin_f)) {
         ERROR("Screen_add_mode recieved an object without callable 'begin_mode' parameter\n");
         goto ret;
     }
 
     on_key_f = PyObject_GetAttrString(mode_obj, "on_key");
-    if(PyCallable_Check(on_key_f)) {
+    if(!PyCallable_Check(on_key_f)) {
         ERROR("Screen_add_mode recieved an object without callable 'on_key' parameter\n");
         goto ret;
     }
