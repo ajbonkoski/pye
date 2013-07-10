@@ -1,5 +1,6 @@
 #include "execution_screen.h"
 #include "execution_buffer.h"
+#include "execution_varargs.h"
 #include "mode/edit_mode.h"
 #include "common/varargs.h"
 
@@ -154,16 +155,16 @@ static PyObject *Screen_mb_get_yloc(pye_Screen *self)
     return PyInt_FromLong(yloc);
 }
 
-static void edit_mode_python_begin_mode(edit_mode_t *em, varargs_t *args)
+static void edit_mode_python_begin_mode(edit_mode_t *em, varargs_t *va)
 {
     ASSERT(em->impl_type == EDIT_MODE_PYTHON_IMPL, "wrong impl");
     PyObject *obj = (PyObject *)em->impl;
 
     PyObject *meth = PyObject_GetAttrString(obj, "begin_mode");
+    PyObject *args = execution_varargs_to_py(va);
+    PyObject_CallObject(meth, args);
 
-    /* PyObject *result = PyObject_CallObject(meth, args); */
-    DEBUG("inside edit_mode_python_begin_mode()\n");
-
+    Py_XDECREF(args);
     Py_XDECREF(meth);
 }
 
@@ -262,6 +263,25 @@ static PyObject *Screen_add_mode(pye_Screen *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *Screen_trigger_mode(pye_Screen *self, PyObject *args)
+{
+    if(!PyTuple_Check(args) || PyTuple_Size(args) < 1) {
+        ERROR("args should be a tuple of size >= 1 in Screen_trigger_mode()\n");
+        return NULL;
+    }
+
+    PyObject *first = PyTuple_GET_ITEM(args, 0);
+    ASSERT(PyString_Check(first), "Expected string in first arg of Screen_trigger_mode()");
+    const char *mode_name = PyString_AsString(first);
+    varargs_t *va = execution_varargs_to_c_skip(args, 1);
+    self->screen->trigger_mode(self->screen, mode_name, va);
+
+
+    varargs_destroy(va);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef Screen_methods[] = {
     {"on_key", (PyCFunction)Screen_register_kbrd_callback, METH_VARARGS,
      "Register a key event handler for the screen object."},
@@ -281,6 +301,8 @@ static PyMethodDef Screen_methods[] = {
      "Get the y-coord of the message buffer."},
     {"add_mode", (PyCFunction)Screen_add_mode, METH_VARARGS,
      "Add a new edit mode to the screen object."},
+    {"trigger_mode", (PyCFunction)Screen_trigger_mode, METH_VARARGS,
+     "Trigger an edit mode registered with the screen object."},
     {NULL}  /* Sentinel */
 };
 
