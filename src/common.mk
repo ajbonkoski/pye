@@ -22,8 +22,8 @@ SRC_PATH     := $(ROOT_PATH)/src
 BIN_PATH     := $(ROOT_PATH)/bin
 LIB_PATH     := $(ROOT_PATH)/lib
 
-CC           := gcc
-LD           := gcc
+CC           := clang -fcolor-diagnostics
+LD           := clang -fcolor-diagnostics
 
 # dynamic libraries
 ifeq "$(shell uname -s)" "Darwin"

@@ -56,14 +56,13 @@ varargs_t *execution_varargs_to_c_skip(PyObject *args, uint skip)
         } else if(PyCallable_Check(obj)) {
             cobj = (void *)obj;
             ctype = 'f';
-        } else {
-            ERROR("Failed to get the type in execution_varargs_to_c\n");
-            goto ret;
+        } else { // assume its a PyObject
+            cobj = (void *)obj;
+            ctype = 'v';
         }
 
         varargs_add(va, ctype, cobj);
     }
 
- ret:
     return va;
 }

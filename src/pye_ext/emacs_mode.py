@@ -21,7 +21,7 @@ def key_handler(key):
 
 def start_search_mode(b):
     debug("starting search mode")
-    screen.trigger_mode("search")
+    screen.trigger_mode("search", b)
     return True
 
 bindings = {

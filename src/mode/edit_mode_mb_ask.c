@@ -6,7 +6,6 @@
 
 #define IMPL_TYPE 0x28004c5
 #define MB_RESPONSE_SIZE 200
-typedef void (*mb_response_func_t)(void *usr, char *response);
 
 typedef struct {
 

@@ -377,7 +377,7 @@ static void enable_highlight(buffer_t *b, uint startx, uint starty,
         DEBUG("buffer->enable_highlight(): before va->size == %d\n", varray_size(va));
         varray_grow(va, sz+1, NULL);
         DEBUG("buffer->enable_highlight(): after va->size == %d\n", varray_size(va));
-        for(uint j = sz-1; j >= i && i >= 0 && sz > 0; j--) {
+        for(uint j = sz-1; j >= i && sz > 0; j--) {
             varray_set(va, j+1, varray_get(va, j));
             if(j == 0)
                 break;
