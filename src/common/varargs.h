@@ -24,8 +24,8 @@ uint varargs_size(varargs_t *this);
 /*******  Char Types *******
  * s:   char *
  * i:   long
- * v:   void *
- * f:   func
+ * c:   callable_t * (managed internally by varargs_t)
+ * o:    void *      (some generic object)
  **************************/
 
 #ifdef __cplusplus

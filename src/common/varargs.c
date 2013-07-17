@@ -1,5 +1,6 @@
 #include "varargs.h"
 #include "common/varray.h"
+#include "common/callable.h"
 
 #define MAX_SIZE 128
 
@@ -38,6 +39,11 @@ varargs_t *varargs_create_v(uint num, ...)
 
 void varargs_destroy(varargs_t *this)
 {
+    for(uint i = 0; i < this->size; i++) {
+        if(this->fmt[i] == 'c')
+            callable_destroy(varray_get(this->args, i));
+    }
+
     varray_destroy(this->args);
     free(this);
 }

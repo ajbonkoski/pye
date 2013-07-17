@@ -22,6 +22,9 @@ typedef enum {
 } bool;
 #endif
 
+// function pointers
+typedef void (*function_t)();
+
 // some integer typedefs
 typedef int8_t    i8;
 typedef uint8_t   u8;

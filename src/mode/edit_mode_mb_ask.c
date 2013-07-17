@@ -1,4 +1,5 @@
 #include "edit_mode_mb_ask.h"
+#include "common/callable.h"
 #include "display/keyboard.h"
 
 #undef  ENABLE_DEBUG
@@ -13,8 +14,7 @@ typedef struct {
 
     screen_t *scrn;
     bool mode_running;
-    mb_response_func_t mb_response_func;
-    void *mb_response_usr;
+    callable_t *mb_response_func;
     char *mb_question;
     char mb_response[MB_RESPONSE_SIZE];
     uint mb_response_index;
@@ -54,8 +54,6 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
     // fix the screen...
     this->scrn->mb_write(this->scrn, NULL);
 
-    //update_cursor(this); // todo: is this needed?
-
     // send the data off to the original requester
     this->mode_running = false;
     this->mb_response_index = 0;
@@ -65,19 +63,22 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
     }
 
     char *data = complete ? this->mb_response : NULL;
-    if(this->mb_response_func != NULL)
-        this->mb_response_func(this->mb_response_usr, data);
+    if(this->mb_response_func != NULL) {
+        varargs_t *va = varargs_create_v(1, "s", data);
+        callable_call(this->mb_response_func, va);
+        varargs_destroy(va);
+        callable_destroy(this->mb_response_func);
+    }
 
     this->mb_response[0] = '\0';
-    this->mb_response_func = NULL;
-    this->mb_response_usr = NULL;
 }
 
 
 static void begin_mode(edit_mode_t *m, varargs_t *va)
 {
     DEBUG("inside begin_mode()\n");
-    ASSERT(varargs_size(va) == 3, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
+    uint size = varargs_size(va);
+    ASSERT(size == 2, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
     edit_mode_mb_ask_t *this = cast_this(m);
 
     // get the question
@@ -88,12 +89,9 @@ static void begin_mode(edit_mode_t *m, varargs_t *va)
     this->mb_question = strdup(question);
 
     // get the response func
-    this->mb_response_func = varargs_get(va, 1);
-    ASSERT(this->mb_response_func != NULL, "edit_mode_mb_ask_t->begin_mode() was passed mb_response_func == NULL!");
-
-    // get the response usr data
-    this->mb_response_usr = varargs_get(va, 2);
-    // Note: its perfectly acceptable if usr is NULL here
+    callable_t *ctmp = varargs_get(va, 1);
+    ASSERT(ctmp != NULL, "edit_mode_mb_ask_t->begin_mode() was passed mb_response_func == NULL!");
+    this->mb_response_func = callable_copy(ctmp);
 
     // enable the mode
     this->mode_running = true;
@@ -171,7 +169,6 @@ static edit_mode_mb_ask_t *edit_mode_create_internal(edit_mode_t *m, screen_t *s
     this->scrn = scrn;
     this->mode_running = false;
     this->mb_response_func = NULL;
-    this->mb_response_usr = NULL;
     this->mb_question = NULL;
     this->mb_response_index = 0;
 

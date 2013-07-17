@@ -1,4 +1,6 @@
 from pye import *
+import sys
+import traceback
 #def printf(s): print s
 #debug = printf
 
@@ -40,7 +42,9 @@ def create(type):
             ret = formatter.get_formatted(data)
             #debug("fmt handler result: {}".format(ret))
         except Exception as e:
-            debug("exception in syntax_highlighter: {}".format(e))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            debug(''.join('!! ' + line for line in lines))
             return None
 
         return ret

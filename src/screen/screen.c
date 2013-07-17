@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "common/callable.h"
 #include "fileio/fileio.h"
 #include "mode/edit_mode.h"
 #include "mode/edit_mode_mb_ask.h"
@@ -55,7 +56,8 @@ typedef struct
     /* container holding all the modes */
     /* this should become a hashtable */
     varray_t *added_modes;
-    edit_mode_t *current_mode;
+    varray_t *mode_stack;
+    //edit_mode_t *current_mode;
 
 
 } screen_internal_t;
@@ -64,6 +66,23 @@ static screen_internal_t *cast_this(screen_t *s)
     ASSERT(s->impl_type == IMPL_TYPE, "expected a screen_internal_t object");
     return (screen_internal_t *)s->impl;
 }
+
+// debugging function
+static void print_mode_info(screen_internal_t *this)
+{
+    DEBUG("Added Modes:\n");
+    mode_data_t *md;
+    varray_iter(md, this->added_modes) {
+        DEBUG("%s: 0x%lx\n", md->key, (u64)md->mode);
+    }
+
+    DEBUG("Mode Stack:\n");
+    edit_mode_t *m;
+    varray_iter(m, this->mode_stack) {
+        DEBUG("0x%lx\n", (u64)m);
+    }
+}
+
 
 // forward declarations
 static void set_cursor(screen_t *scrn, uint x, uint y);
@@ -256,8 +275,8 @@ static void trigger_mode(screen_t *scrn, const char *mode_name, varargs_t *va)
     mode_data_t *md;
     varray_iter(md, this->added_modes) {
         if(strcmp(md->key, mode_name) == 0) {
-            this->current_mode = md->mode;
-            this->current_mode->begin_mode(this->current_mode, va);
+            varray_push(this->mode_stack, md->mode);
+            md->mode->begin_mode(md->mode, va);
             return;
         }
     }
@@ -282,6 +301,8 @@ static void destroy(screen_t *scrn)
 
     varray_map(this->added_modes, (void (*)(void *))mode_data_destroy);
     varray_destroy(this->added_modes);
+
+    varray_destroy(this->mode_stack);
 
     free(this);
     free(scrn);
@@ -373,18 +394,18 @@ static void display_write_line(screen_internal_t *this, buffer_line_t *line, int
 
 static void update_cursor(screen_internal_t *this)
 {
-    DEBUG("inside screen->update_cursor(): entering\n");
+    //DEBUG("inside screen->update_cursor(): entering\n");
 
     uint x, y;
     this->cb->get_cursor(this->cb, &x, &y);
-    DEBUG("x=%d, y=%d\n", x, y);
+    //DEBUG("x=%d, y=%d\n", x, y);
 
     uint w, h;
     this->display->get_size(this->display, &w, &h);
 
     // first: check the viewport
     uint *vpy = &this->cb_viewport_y;
-    DEBUG("*vpy=%d\n", *vpy);
+    //DEBUG("*vpy=%d\n", *vpy);
     bool adjust_viewport = false;
     bool adjust_go_up = false;
 
@@ -401,8 +422,8 @@ static void update_cursor(screen_internal_t *this)
         }
     }
 
-    DEBUG("adjust_viewport=%d, adjust_go_up=%d\n",
-          adjust_viewport, adjust_go_up);
+    //DEBUG("adjust_viewport=%d, adjust_go_up=%d\n",
+    //      adjust_viewport, adjust_go_up);
 
     // second: adjust viewport if needed (and force a full redraw)
     if(adjust_viewport) {
@@ -411,8 +432,8 @@ static void update_cursor(screen_internal_t *this)
         else
             *vpy += h/2;
 
-        DEBUG("new *vpy=%d\n", *vpy);
-        DEBUG("new this->cb_viewport_y=%d\n", this->cb_viewport_y);
+        //DEBUG("new *vpy=%d\n", *vpy);
+        //DEBUG("new this->cb_viewport_y=%d\n", this->cb_viewport_y);
         update_all(this);
     }
 
@@ -421,7 +442,7 @@ static void update_cursor(screen_internal_t *this)
         this->display->set_cursor(this->display, x, y - *vpy);
     }
 
-    DEBUG("inside screen->update_cursor(): leaving\n");
+    //DEBUG("inside screen->update_cursor(): leaving\n");
 }
 
 static void update_all(screen_internal_t *this)
@@ -471,8 +492,12 @@ static uint get_viewport_line(screen_t *scrn)
     return cast_this(scrn)->cb_viewport_y;
 }
 
-static void open_file(screen_internal_t *this, const char *filename)
+static void open_file(void *usr, varargs_t *va)
 {
+    screen_internal_t *this = (screen_internal_t *)usr;
+
+    ASSERT(varargs_get_type(va, 0) == 's', "");
+    const char *filename = varargs_get(va, 0);
     if(filename == NULL) {
         DEBUG("open_file() received filename=NULL, ignoring...\n");
         return;
@@ -502,16 +527,17 @@ static bool key_handler(void *usr, key_event_t *e)
     char buffer[BUFSZ+1];
 
     DEBUG("inside key_handler(): entering\n");
+    print_mode_info(this);
 
-    if(this->current_mode != NULL) {
-      edit_mode_t *em = this->current_mode;
-      edit_mode_result_t res = em->on_key(em, e);
-      if(res.finished) {
-          this->current_mode = NULL;
-          update_all(this);
-      }
-      if(res.key_handled)
-          return true;
+    if(varray_size(this->mode_stack) > 0) {
+        edit_mode_t *em = varray_top(this->mode_stack);
+        edit_mode_result_t res = em->on_key(em, e);
+        if(res.finished) {
+            varray_pop(this->mode_stack);
+            update_all(this);
+        }
+        if(res.key_handled)
+            return true;
     }
 
     /* if(this->mb_mode) { */
@@ -541,10 +567,9 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        varargs_t *va = varargs_create_v(3,
+        varargs_t *va = varargs_create_v(2,
                                          "s", "File",
-                                         "f", open_file,
-                                         "v", this);
+                                         "c", callable_create_c(open_file, this));
 
         this->super->trigger_mode(this->super, "mb_ask", va);
         varargs_destroy(va);
@@ -600,7 +625,7 @@ static screen_internal_t *screen_create_internal(screen_t *s, display_t *disp)
 
 
     this->added_modes = varray_create();
-    this->current_mode = NULL;
+    this->mode_stack = varray_create();
 
     return this;
 }

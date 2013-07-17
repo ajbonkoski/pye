@@ -17,7 +17,7 @@ extern "C" {
 // 'response' is internal memory, and should be copied if needed long-term
 // Special cases: a NULL response means "canceled by user"
 //                an empty string is just an empty response
-typedef void (*mb_response_func_t)(void *usr, char *response);
+typedef void (*mb_response_func_t)(char *response, void *usr);
 typedef void (*buf_event_func_t)(void *usr, uint index);
 
 typedef struct screen screen_t;

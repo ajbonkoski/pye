@@ -68,6 +68,24 @@ void  varray_set(varray_t *this, uint i, void *obj)
     this->data[i] = obj;
 }
 
+void  varray_push(varray_t *this, void *obj)
+{
+    varray_add(this, obj);
+}
+
+void *varray_pop(varray_t *this)
+{
+    void *data = varray_top(this);
+    this->size--;
+    return data;
+}
+
+void *varray_top(varray_t *this)
+{
+    ASSERT(this->size > 0, "Tried to get the top() from an empty stack");
+    return varray_get(this, this->size-1);
+}
+
 uint varray_size(varray_t *this)
 {
     return this->size;
