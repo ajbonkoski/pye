@@ -16,6 +16,7 @@ class SearchMode:
         b = screen.get_active_buffer()
         self.search_buffer_for_regions(b, data)
         self.enable_region_highlight(True)
+        self.next_match()
 
     def search_buffer_for_regions(self, b, data):
         self.regions = []
@@ -54,7 +55,9 @@ class SearchMode:
             elif key == keyboard.CTRL('x'):
                 self.next_match()
                 return (False, True)
-            return (False, False)
+            else:
+                self.enable_region_highlight(False)
+                return (True, False)
         except Exception as e:
             import sys
             import traceback
