@@ -44,7 +44,7 @@ def create(type):
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            debug(''.join('!! ' + line for line in lines))
+            debug(''.join(line for line in lines))
             return None
 
         return ret
