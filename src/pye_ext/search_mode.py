@@ -31,4 +31,4 @@ class SearchMode:
     def on_key(self, key):
         debug("SearchMode: on_key");
         self.enable_region_highlight(False)
-        return (True, False)
+        return (True, True)

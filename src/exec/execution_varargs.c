@@ -17,6 +17,13 @@ PyObject *python_wrapped_c_callback(PyObject *obj, PyObject *args)
     return Py_None;
 }
 
+struct PyMethodDef def = {
+    "python_wrapped_c_callback", /* ml_name  */
+    python_wrapped_c_callback,   /* ml_meth  */
+    0,                           /* ml_flags */
+    "A python function object wrapping a C callback", /* ml_doc   */
+};
+
 void c_wrapped_python_callback(void *this, varargs_t *va)
 {
     PyObject *func = (PyObject *)this;
@@ -36,12 +43,6 @@ PyObject *convert_callable_to_py(callable_t *c)
 {
     switch(c->impl) {
         case CALLABLE_C_IMPL: {
-            struct PyMethodDef def = {
-                "python_wrapped_c_callback", /* ml_name  */
-                python_wrapped_c_callback,   /* ml_meth  */
-                0,                           /* ml_flags */
-                "A python function object wrapping a C callback", /* ml_doc   */
-            };
             PyObject *f = PyCFunction_New(&def, (PyObject *)c);
             Py_INCREF(f);
             return f;
@@ -73,7 +74,7 @@ PyObject *execution_varargs_to_py(varargs_t *va)
             case 's': obj = PyString_FromString(varargs_get(va, i));    break;
             case 'i': obj = PyInt_FromLong((long)varargs_get(va, i));   break;
             case 'c': obj = convert_callable_to_py(varargs_get(va, i)); break;
-            case 'o': obj = (PyObject *)varargs_get(va, i);           break;
+            case 'o': obj = (PyObject *)varargs_get(va, i);             break;
             default:
                 ERROR("Unrecognized type character: %c\n", datatype);
                 goto ret;
@@ -117,6 +118,7 @@ varargs_t *execution_varargs_to_c_skip(PyObject *args, uint skip)
             cobj = callable_create(c_wrapped_python_callback, (void *)obj, CALLABLE_PY_IMPL);
             ctype = 'c';
         } else { // assume its a PyObject
+            Py_INCREF(obj);
             cobj = (void *)obj;
             ctype = 'o';
         }
