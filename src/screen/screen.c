@@ -105,6 +105,7 @@ static void update_all(screen_internal_t *this);
 static kill_buffer_t *get_kill_buffer(screen_t *scrn);
 static void refresh(screen_t *scrn);
 static uint get_viewport_line(screen_t *scrn);
+static void center_viewport(screen_t *scrn);
 
 static void set_cursor(screen_t *scrn, uint x, uint y)
 {
@@ -492,6 +493,15 @@ static uint get_viewport_line(screen_t *scrn)
     return cast_this(scrn)->cb_viewport_y;
 }
 
+static void center_viewport(screen_t *scrn)
+{
+    screen_internal_t *this = cast_this(scrn);
+    uint x, y;
+    this->cb->get_cursor(this->cb, &x, &y);
+    DISPLAY_SIZE(w, h);
+    this->cb_viewport_y = (y < h/2) ? y : y-h/2;
+}
+
 static void open_file(void *usr, varargs_t *va)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
@@ -659,6 +669,7 @@ screen_t *screen_create(display_t *disp)
     s->get_kill_buffer = get_kill_buffer;
     s->refresh = refresh;
     s->get_viewport_line = get_viewport_line;
+    s->center_viewport = center_viewport;
 
     internal_initialize(s);
 

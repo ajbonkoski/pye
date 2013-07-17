@@ -137,6 +137,14 @@ static PyObject *Screen_get_viewport_line(pye_Screen *self)
     return PyInt_FromLong(vpy);
 }
 
+// this should be in buffer_t (API is broken)
+static PyObject *Screen_center_viewport(pye_Screen *self)
+{
+    self->screen->center_viewport(self->screen);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject *Screen_mb_write(pye_Screen *self, PyObject *args)
 {
     const char *str;
@@ -296,6 +304,8 @@ static PyMethodDef Screen_methods[] = {
      "Redraw the screen on the display."},
     {"get_viewport_line", (PyCFunction)Screen_get_viewport_line, METH_NOARGS,
      "Get the line number at the top of the screen (Note: this should really be a method of pye.Buffer)."},
+    {"center_viewport", (PyCFunction)Screen_center_viewport, METH_NOARGS,
+     "Center the buffer viewport on the current cursor position in the buffer (Note: this should really be a method of pye.Buffer)."},
     {"mb_write", (PyCFunction)Screen_mb_write, METH_VARARGS,
      "Write a message to the screen's Message buffer."},
     {"mb_get_yloc", (PyCFunction)Screen_mb_get_yloc, METH_NOARGS,

@@ -41,6 +41,7 @@ struct screen
     void (*set_active_buffer)(screen_t *this, uint id);
     buffer_t *(*get_active_buffer)(screen_t *this);
     uint (*get_viewport_line)(screen_t *this);
+    void (*center_viewport)(screen_t *this);
     void (*mb_write)(screen_t *this, const char *str); // write to the message bar
     uint (*mb_get_yloc)(screen_t *this);
     void (*add_mode)(screen_t *this, const char *mode_name, edit_mode_t *mode);
