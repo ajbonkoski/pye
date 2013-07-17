@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     // main loop
     this.disp->main_loop(this.disp);
 
-    this.buf->destroy(this.buf);
+    //this.buf->destroy(this.buf);
 
     execution_destroy(this.exec);
     this.scrn->destroy(this.scrn);

@@ -33,7 +33,7 @@ kill_buffer_t *kill_buffer_create(size_t size, void (*destroyf)(void *))
 void kill_buffer_destroy(kill_buffer_t *this)
 {
     // delete each element
-    for(size_t i = 0; i < this->size; i++) {
+    for(size_t i = 0; i < this->used; i++) {
         void *elem = kill_buffer_get(this, i);
         this->destroyf(elem);
     }
