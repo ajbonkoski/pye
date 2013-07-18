@@ -221,8 +221,9 @@ static edit_mode_result_t edit_mode_python_on_key(edit_mode_t *em, key_event_t *
 static void edit_mode_python_destroy(edit_mode_t *em)
 {
     ASSERT(em->impl_type == EDIT_MODE_PYTHON_IMPL, "wrong impl");
-    PyObject *obj = (PyObject *)em->impl;
-    Py_XDECREF(obj);
+    // XXX - get this to free properly
+    //PyObject *obj = (PyObject *)em->impl;
+    //1Py_DECREF(obj);
     free(em);
 }
 
