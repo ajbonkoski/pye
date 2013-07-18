@@ -1,5 +1,6 @@
 from pye import *
 from pye_ext import global_settings as GS
+from pye_ext import util
 
 def kill_line(b):
     x, y = b.get_cursor()
@@ -92,7 +93,8 @@ def kill_region(b):
         killbuffer.add(data)
         b.clear_mark()
         b.remove_region_data(sx, sy, ex, ey)
-        b.set_cursor(sx, sy)
+        x, y = util.point_select_first(sx, sy, ex, ey)
+        b.set_cursor(x, y)
 
 
 ## basically: API-level aliases
