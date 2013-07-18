@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "common/callable.h"
+#include "common/line_formatter.h"
 #include "fileio/fileio.h"
 #include "mode/edit_mode.h"
 #include "mode/edit_mode_mb_ask.h"
@@ -245,12 +246,18 @@ static void update_sb(screen_internal_t *this)
     ds->bg_color = DISPLAY_COLOR_WHITE;
     ds->bg_bright = false;
     ds->fg_color = DISPLAY_COLOR_BLACK;
-    ds->fg_bright = true;
+    ds->fg_bright = false;
     ds->highlight = false;
     varray_add(s, ds);
     this->display->set_styles(this->display, s);
 
-    this->display->write(this->display, NULL, w, 0);
+    line_formatter_t *lf = line_formatter_create(w, '-');
+    line_formatter_add_str(lf, NULL, 5, '\0');
+    line_formatter_add_str(lf, NULL, 2, ' ');
+    const char *cb_name = this->cb->get_filename(this->cb);
+    line_formatter_add_str(lf, cb_name, 20, ' ');
+    this->display->write(this->display, line_formatter_cstr(lf), w, 0);
+    line_formatter_destroy(lf);
 
     this->display->remove_styles(this->display);
     display_style_destroy(ds);
