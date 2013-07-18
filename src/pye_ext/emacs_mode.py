@@ -36,8 +36,8 @@ bindings = {
     keyboard.CTRL('e'):   CF.goto_line_end, #lambda b: b.goto_line_end(),
     keyboard.CTRL('d'):   lambda b: b.insert_key(keyboard.DEL),
     keyboard.CTRL('y'):   CF.yank,
-    keyboard.CTRL('w'):   CF.kill_region,
-    keyboard.CTRL('q'):   CF.copy_region,
+    keyboard.CTRL('w'):   CF.copy_region,
+    keyboard.CTRL('q'):   CF.kill_region,
 
     keyboard.CTRL('s'):   start_search_mode,
 }

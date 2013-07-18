@@ -69,7 +69,7 @@ def insert_newline(b):
     b.insert("\n")
     b.set_cursor(x, y)
 
-def kill_region(b):
+def copy_region(b):
     if not b.has_mark():
         screen.mb_write("no mark")
     else:
@@ -81,14 +81,13 @@ def kill_region(b):
         b.clear_mark()
         return True
 
-def copy_region(b):
+def kill_region(b):
     if not b.has_mark():
         screen.mb_write("no mark")
     else:
         sx, sy = b.get_mark()
         ex, ey = b.get_cursor()
         data = b.get_region_data(sx, sy, ex, ey)
-        debug("Ctrl-t Region: '{}'".format(data))
         screen.mb_write("grabbed region: ({}, {}) -> ({}, {})".format(sx, sy, ex, ey))
         killbuffer.add(data)
         b.clear_mark()
