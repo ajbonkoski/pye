@@ -16,6 +16,7 @@ typedef struct
     gap_buffer_t *data;
 
     enum edit_result er;
+    bool is_edited; /* Has the buffer been edited since last saved */
 
 } data_buffer_internal_t;
 
@@ -40,6 +41,8 @@ static void delete_char_left(data_buffer_internal_t *this);
 static void delete_char_right(data_buffer_internal_t *this);
 static void split_line(data_buffer_internal_t *this);
 static void insert(data_buffer_t *db, int c);
+static bool get_is_edited(data_buffer_t *db);
+static void set_is_edited(data_buffer_t *db, bool e);
 static char *get_line_data(data_buffer_t *db, uint i, char *databuf);
 static strsafe_t *get_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey);
 static void remove_region_data(data_buffer_t *db, uint sx, uint sy, uint ex, uint ey);
@@ -141,6 +144,9 @@ static void insert(data_buffer_t *db, int c)
 {
     data_buffer_internal_t *this = cast_this(db);
 
+    // mark the buffer as 'is_edited'
+    db->set_is_edited(db, true);
+
     // "normal" case
     if(is_visible(c)) {
         char ch = (char)c;
@@ -162,7 +168,16 @@ static void insert(data_buffer_t *db, int c)
         default:
             DEBUG("WRN: char '%c' not handled in buffer->input_key()\n", c);
     }
+}
 
+static bool get_is_edited(data_buffer_t *db)
+{
+    return cast_this(db)->is_edited;
+}
+
+static void set_is_edited(data_buffer_t *db, bool e)
+{
+    cast_this(db)->is_edited = e;
 }
 
 static char *get_line_data(data_buffer_t *db, uint i, char *databuf)
@@ -398,6 +413,8 @@ data_buffer_t *data_buffer_create(void)
     db->get_cursor = get_cursor;
     db->set_cursor = set_cursor;
     db->insert = insert;
+    db->get_is_edited = get_is_edited;
+    db->set_is_edited = set_is_edited;
     db->get_line_data = get_line_data;
     db->get_region_data = get_region_data;
     db->remove_region_data = remove_region_data;

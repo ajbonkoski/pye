@@ -3,7 +3,6 @@
 
 SUBDIRS = common display mode screen buffer fileio dirman exec core
 
-
 all:
 	@for dir in $(SUBDIRS) ; do \
 	echo $$dir ; $(MAKE) $(SILENT) -C $$dir all || exit 2; done

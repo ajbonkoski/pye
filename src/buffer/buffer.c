@@ -59,6 +59,8 @@ static void clear_mark(buffer_t *b);
 static void goto_line_start(buffer_t *this);
 static void goto_line_end(buffer_t *this);
 static void get_cursor(buffer_t *this, uint *x, uint *y);
+static bool get_is_edited(buffer_t *b);
+static void set_is_edited(buffer_t *b, bool e);
 static char *get_line_data(buffer_t *this, uint i);
 static uint num_lines(buffer_t *this);
 static enum edit_result input_key(buffer_t *b, u32 c);
@@ -179,6 +181,20 @@ static void set_cursor(buffer_t *b, uint x, uint y)
     buffer_internal_t *this = cast_this(b);
     data_buffer_t *d = this->databuf;
     d->set_cursor(d, x, y);
+}
+
+static bool get_is_edited(buffer_t *b)
+{
+    buffer_internal_t *this = cast_this(b);
+    data_buffer_t *d = this->databuf;
+    return d->get_is_edited(d);
+}
+
+static void set_is_edited(buffer_t *b, bool e)
+{
+    buffer_internal_t *this = cast_this(b);
+    data_buffer_t *d = this->databuf;
+    d->set_is_edited(d, e);
 }
 
 static char *get_line_data(buffer_t *b, uint i)
@@ -446,6 +462,8 @@ buffer_t *buffer_create(void)
     b->get_filename = get_filename;
     b->get_cursor = get_cursor;
     b->set_cursor = set_cursor;
+    b->get_is_edited = get_is_edited;
+    b->set_is_edited = set_is_edited;
     b->goto_line_start = goto_line_start;
     b->goto_line_end = goto_line_end;
     b->get_line_data = get_line_data;

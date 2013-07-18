@@ -253,7 +253,9 @@ static void update_sb(screen_internal_t *this)
 
     line_formatter_t *lf = line_formatter_create(w, '-');
     line_formatter_add_str(lf, NULL, 5, '\0');
-    line_formatter_add_str(lf, NULL, 2, ' ');
+    line_formatter_add_str(lf, NULL, 1, ' ');
+    const char *is_edited_marker = this->cb->get_is_edited(this->cb) ? "*" : "";
+    line_formatter_add_str(lf, is_edited_marker, 1, ' ');
     const char *cb_name = this->cb->get_filename(this->cb);
     line_formatter_add_str(lf, cb_name, 70, ' ');
     this->display->write(this->display, line_formatter_cstr(lf), w, 0);
@@ -548,8 +550,12 @@ static void save_current_buffer(screen_internal_t *this)
         snprintf(buffer, BUFSZ, "failed to save: %s", filename);
     } else {
         snprintf(buffer, BUFSZ, "successfully saved: %s", filename);
+        // on success, clear the 'is_edited' flag
+        this->cb->set_is_edited(this->cb, false);
     }
+
     mb_write(this->super, buffer);
+    update_all(this);
 }
 
 static void save_file_as_mb_ask_wrapper(void *usr, varargs_t *va)

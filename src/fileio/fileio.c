@@ -28,6 +28,7 @@ buffer_t *fileio_load_buffer(const char *filename)
 
  ret:
     b->set_cursor(b, 0, 0); // start cursor at the top
+    b->set_is_edited(b, false); // clear the 'is_edited' because we just loaded it
     return b;
 }
 

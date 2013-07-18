@@ -33,6 +33,10 @@ struct data_buffer
     // "just works" with the special chars (\n, backspace, del)
     void (*insert)(data_buffer_t *this, int c);
 
+    // "is edited?" methods
+    bool (*get_is_edited)(data_buffer_t *this);
+    void (*set_is_edited)(data_buffer_t *this, bool e);
+
     // use databuf if != NULL, otherwise allocate memory
     // (if allocate, user is responsib;le for cleanup)
     char *(*get_line_data)(data_buffer_t *this, uint i, char *databuf);

@@ -95,6 +95,12 @@ struct buffer
     void (*get_cursor)(buffer_t *this, uint *x, uint *y);
     void (*set_cursor)(buffer_t *this, uint x, uint y);
 
+    // "is edited?" methods
+    // (essentially wrapper methods around data_buffer_t, but these
+    //  should be prefered for the cleaner interface)
+    bool (*get_is_edited)(buffer_t *this);
+    void (*set_is_edited)(buffer_t *this, bool e);
+
     void (*goto_line_start)(buffer_t *this);
     void (*goto_line_end)(buffer_t *this);
     char *(*get_line_data)(buffer_t *this, uint i);
