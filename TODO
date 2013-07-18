@@ -20,7 +20,7 @@
      DONE: - Cursor refresh glitching
      DONE: - Curses coloring (and random text highlighting with sustained use)
      - PyE crashes if passed a non-existent file as a command-line arg
-     - PyE doesn't shut down correctly, causing a segfault every time
+     DONE: - PyE doesn't shut down correctly, causing a segfault every time
      - Background coloring is broken (ncurses stuff)
 
   7) Documentation: Mostly for the pye extenstion API
