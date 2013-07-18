@@ -39,11 +39,7 @@ int main(int argc, char *argv[])
     this.exec = execution_create(dirman_get_pye_script_dir(dm), this.scrn, this.disp);
 
     // create the buffer
-    if(filename != NULL) {
-        this.buf = fileio_load_buffer(filename);
-    } else {
-        this.buf = buffer_create();
-    }
+    this.buf = fileio_load_buffer(filename); // if filename == NULL, create an empty buffer
     this.scrn->add_buffer(this.scrn, this.buf);
 
 
