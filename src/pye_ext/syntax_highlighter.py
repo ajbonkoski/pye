@@ -85,12 +85,14 @@ class PyePythonStyle(Style):
         Name.Builtin:         PyeStyle("fg:blue bold"),
         Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
         String:               PyeStyle("fg:green"),
-        Generic.Emph:         PyeStyle("fg:white bg:blue")  ## this is used for highlighting features (really just a hack...)
+        Generic.Emph:         PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
+        Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
         }
 
 class PyeTextStyle(Style):
     styles = {
-        Generic.Emph:         PyeStyle("fg:white bg:blue")  ## this is used for highlighting features (really just a hack...)
+        Generic.Emph:         PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
+        Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
         }
 
 class PyeCStyle(Style):
@@ -98,7 +100,9 @@ class PyeCStyle(Style):
         Comment:         "#000004 bold",
         Keyword:         PyeStyle("fg:cyan bold"),
         #Name:            "#000004 bold",
-        String:          PyeStyle("fg:green")
+        String:          PyeStyle("fg:green"),
+        Generic.Emph:    PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
+        Generic.Strong:  PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
         }
 
 class ExtractColorException(Exception): pass
@@ -189,7 +193,8 @@ class PyeFormatter(Formatter):
                 tok_start = start
 
             sel_size = end-tok_start
-            new_tokens.append((Token.Generic.Emph, tok_val_left[:sel_size]))
+            style = Token.Generic.Strong if id == 2 else Token.Generic.Emph
+            new_tokens.append((style, tok_val_left[:sel_size]))
             tok_val_left = tok_val_left[sel_size:]
             tok_start += sel_size
 

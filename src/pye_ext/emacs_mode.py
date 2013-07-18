@@ -39,7 +39,7 @@ bindings = {
     keyboard.CTRL('w'):   CF.kill_region,
     keyboard.CTRL('q'):   CF.copy_region,
 
-    keyboard.CTRL('x'):   start_search_mode,
+    keyboard.CTRL('s'):   start_search_mode,
 }
 
 def handle_buffer_key(b, key):

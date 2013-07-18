@@ -40,8 +40,13 @@ class SearchMode:
             if point_cmp(sx, sy, x, y) > 0:
                 found = True
                 break
+            else:
+                b.enable_highlight(sx, sy, ex, ey, 0)
+                b.enable_highlight(sx, sy, ex, ey, 1)
 
         if found:
+            b.enable_highlight(sx, sy, ex, ey, 0)
+            b.enable_highlight(sx, sy, ex, ey, 2)
             b.set_cursor(sx, sy)
             screen.center_viewport()
             screen.refresh()
@@ -52,7 +57,7 @@ class SearchMode:
             if key == keyboard.CTRL('g'):
                 self.enable_region_highlight(False)
                 return (True, True)
-            elif key == keyboard.CTRL('x'):
+            elif key == keyboard.CTRL('s'):
                 self.next_match()
                 return (False, True)
             else:

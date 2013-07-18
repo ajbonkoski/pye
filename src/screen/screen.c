@@ -624,7 +624,7 @@ static bool key_handler(void *usr, key_event_t *e)
         varargs_destroy(va);
     }
 
-    else if(c == KBRD_CTRL('s')) {
+    else if(c == KBRD_CTRL('x')) {
         const char *filename = this->cb->get_filename(this->cb);
 
         // No filename? Ask...
