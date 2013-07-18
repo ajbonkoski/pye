@@ -255,7 +255,7 @@ static void update_sb(screen_internal_t *this)
     line_formatter_add_str(lf, NULL, 5, '\0');
     line_formatter_add_str(lf, NULL, 2, ' ');
     const char *cb_name = this->cb->get_filename(this->cb);
-    line_formatter_add_str(lf, cb_name, 20, ' ');
+    line_formatter_add_str(lf, cb_name, 70, ' ');
     this->display->write(this->display, line_formatter_cstr(lf), w, 0);
     line_formatter_destroy(lf);
 
