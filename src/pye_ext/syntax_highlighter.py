@@ -8,6 +8,7 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.lexers import CLexer
 from pygments.lexers import CppLexer
+from pygments.lexers import TextLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
 from pygments.formatters import TerminalFormatter
@@ -32,8 +33,9 @@ def create(type):
         formatter = PyeFormatter(style=PyeCStyle)
 
     else:
-        error("Cannot create a syntax highligher for '{}'".format(type))
-        valid = False
+        debug("Cannot create a syntax highligher for '{}'... using TextLexer".format(type))
+        lexer = TextLexer()
+        formatter = PyeFormatter(style=PyeTextStyle)
 
     def fmt_handler(data, regions):
         #debug("regions: {}".format(regions))
@@ -50,7 +52,7 @@ def create(type):
 
         return ret
 
-    return fmt_handler if valid else None
+    return fmt_handler
 
 def PyeConvertColors(s):
     if s.startswith("fg:"):
@@ -83,6 +85,11 @@ class PyePythonStyle(Style):
         Name.Builtin:         PyeStyle("fg:blue bold"),
         Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
         String:               PyeStyle("fg:green"),
+        Generic.Emph:         PyeStyle("fg:white bg:blue")  ## this is used for highlighting features (really just a hack...)
+        }
+
+class PyeTextStyle(Style):
+    styles = {
         Generic.Emph:         PyeStyle("fg:white bg:blue")  ## this is used for highlighting features (really just a hack...)
         }
 

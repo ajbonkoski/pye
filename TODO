@@ -25,7 +25,7 @@
      DONE: - PyE formatter will crash the process (on next key press) if it
      DONE:   cannot register a formatter
      DONE:    - This is related to C not handling the exceptions...
-
+     - Backwards highlight mode doesn't work correctly
 
   7) Documentation: Mostly for the pye extenstion API
 
