@@ -177,7 +177,7 @@ static edit_mode_mb_ask_t *edit_mode_create_internal(edit_mode_t *m, screen_t *s
 
 edit_mode_t *edit_mode_mb_ask_create(screen_t *screen)
 {
-    edit_mode_t *m = calloc(1, sizeof(mode_t));
+    edit_mode_t *m = calloc(1, sizeof(edit_mode_t));
     m->impl = edit_mode_create_internal(m, screen);
     m->impl_type = IMPL_TYPE;
 
