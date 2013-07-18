@@ -16,7 +16,7 @@ typedef struct {
     bool mode_running;
     callable_t *mb_response_func;
     char *mb_question;
-    char mb_response[MB_RESPONSE_SIZE];
+    char mb_response[MB_RESPONSE_SIZE+1];
     uint mb_response_index;
 
 } edit_mode_mb_ask_t;
@@ -115,6 +115,7 @@ static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *e)
         } else {
             //this->display->write(this->display, &ch, 1, -1);
             this->mb_response[this->mb_response_index++] = ch;
+            this->mb_response[this->mb_response_index] = '\0';
             mb_redraw(this);
         }
     } else {
