@@ -535,13 +535,39 @@ static void open_file(void *usr, varargs_t *va)
 
 }
 
+static void save_current_buffer(screen_internal_t *this)
+{
+    const char *filename = this->cb->get_filename(this->cb);
+    ASSERT(filename != NULL, "Filename must be valid in save_current_buffer()");
+
+    const int BUFSZ = 256;
+    char buffer[BUFSZ+1];
+
+    bool success = fileio_save_buffer(this->cb, filename);
+    if(!success) {
+        snprintf(buffer, BUFSZ, "failed to save: %s", filename);
+    } else {
+        snprintf(buffer, BUFSZ, "successfully saved: %s", filename);
+    }
+    mb_write(this->super, buffer);
+}
+
+static void save_file_as_mb_ask_wrapper(void *usr, varargs_t *va)
+{
+    screen_internal_t *this = (screen_internal_t *)usr;
+    ASSERT(varargs_get_type(va, 0) == 's', "Expected a string as the first argument of varargs_t");
+    const char *s = varargs_get(va, 0);
+    this->cb->set_filename(this->cb, s);
+    save_current_buffer(this);
+}
+
 static bool key_handler(void *usr, key_event_t *e)
 {
     screen_internal_t *this = (screen_internal_t *)usr;
     bool ret = false;
 
-    const int BUFSZ = 256;
-    char buffer[BUFSZ+1];
+    /* const int BUFSZ = 256; */
+    /* char buffer[BUFSZ+1]; */
 
     DEBUG("inside key_handler(): entering\n");
     print_mode_info(this);
@@ -594,13 +620,16 @@ static bool key_handler(void *usr, key_event_t *e)
 
     else if(c == KBRD_CTRL('s')) {
         const char *filename = this->cb->get_filename(this->cb);
-        bool success = fileio_save_buffer(this->cb, filename);
-        if(!success) {
-            snprintf(buffer, BUFSZ, "failed to save: %s", filename);
+
+        // No filename? Ask...
+        if(filename == NULL) {
+            callable_t *c = callable_create_c(save_file_as_mb_ask_wrapper, this);
+            varargs_t *va = varargs_create_v(2, "s", "Save as", "c", c);
+            this->super->trigger_mode(this->super, "mb_ask", va);
+            varargs_destroy(va);
         } else {
-            snprintf(buffer, BUFSZ, "successfully saved: %s", filename);
+            save_current_buffer(this);
         }
-        mb_write(this->super, buffer);
     }
 
     // "normal" keystrokes - reroute these to the buffer
