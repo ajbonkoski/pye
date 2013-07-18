@@ -22,7 +22,9 @@
      DONE: - PyE formatter will crash the process (on next key press) if it
      DONE:   cannot register a formatter
      DONE:    - This is related to C not handling the exceptions...
-     - Backwards highlight mode doesn't work correctly
+     DONE: - Backwards highlight mode doesn't work correctly
+     - Canceling search mode with Ctrl-G crahes the process
+        - Should modes have an edit_mode->cancel method for handling this?
 
   7) Documentation: Mostly for the pye extenstion API
 

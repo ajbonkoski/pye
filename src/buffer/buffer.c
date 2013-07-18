@@ -346,10 +346,28 @@ static inline int point_cmp(uint ax, uint ay, uint bx, uint by)
     return (int)ax - (int)bx;
 }
 
+#define SWAP_UINT(a, b) do { uint t=a; a=b; b=t; }while(0)
+
+// This function makes sure that (sx, sy) <= (ex, ey)
+// If this is not true, the points are swapped
+static void rectify_points(uint *sx, uint *sy, uint *ex, uint *ey)
+{
+    if(point_cmp(*sx, *sy, *ex, *ey) <= 0)
+        return;
+
+    // test failed, perform a swap
+    SWAP_UINT(*sx, *ex);
+    SWAP_UINT(*sy, *ey);
+}
+
 static void enable_highlight(buffer_t *b, uint startx, uint starty,
                              uint endx, uint endy, uint style)
 {
     buffer_internal_t *this = cast_this(b);
+
+
+    // correct for backwards region selection
+    rectify_points(&startx, &starty, &endx, &endy);
 
     // this is a simple, stupid implementation it is highly
     // inefficient and WILL fail in under some common situations
