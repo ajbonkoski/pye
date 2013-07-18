@@ -8,6 +8,7 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.lexers import CLexer
 from pygments.lexers import CppLexer
+from pygments.lexers import JavaLexer
 from pygments.lexers import TextLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
@@ -31,6 +32,11 @@ def create(type):
         #lexer = CLexer()
         lexer = CppLexer()
         formatter = PyeFormatter(style=PyeCStyle)
+
+    elif type == 'java':
+        #lexer = CLexer()
+        lexer = JavaLexer()
+        formatter = PyeFormatter(style=PyeJavaStyle)
 
     else:
         debug("Cannot create a syntax highligher for '{}'... using TextLexer".format(type))
@@ -103,6 +109,19 @@ class PyeCStyle(Style):
         String:          PyeStyle("fg:green"),
         Generic.Emph:    PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
         Generic.Strong:  PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
+        }
+
+class PyeJavaStyle(Style):
+    styles = {
+        Comment:              PyeStyle("fg:red"),
+        Keyword:              PyeStyle("fg:cyan bold"),
+        Name.Function:        PyeStyle("fg:blue bold"),
+        Name.Class:           PyeStyle("fg:green"),
+        Name.Builtin:         PyeStyle("fg:blue bold"),
+        Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
+        String:               PyeStyle("fg:green"),
+        Generic.Emph:         PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
+        Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
         }
 
 class ExtractColorException(Exception): pass
