@@ -589,10 +589,8 @@ static bool key_handler(void *usr, key_event_t *e)
             return true;
     }
 
-    /* if(this->mb_mode) { */
-    /*     DEBUG("key will be handled by message box mode\n"); */
-    /*     return mb_key_handler(this, e); */
-    /* } */
+    // clear the mb
+    this->super->mb_write(this->super, NULL);
 
     // allow any registered handler to override functionality
     if(this->key_callback) {
