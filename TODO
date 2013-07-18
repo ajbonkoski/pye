@@ -22,9 +22,9 @@
      DONE: - PyE crashes if passed a non-existent file as a command-line arg
      DONE: - PyE doesn't shut down correctly, causing a segfault every time
      - Background coloring is broken (ncurses stuff)
-     - PyE formatter will crash the process (on next key press) if it
-       cannot register a formatter
-        - This is related to C not handling the exceptions...
+     DONE: - PyE formatter will crash the process (on next key press) if it
+     DONE:   cannot register a formatter
+     DONE:    - This is related to C not handling the exceptions...
 
 
   7) Documentation: Mostly for the pye extenstion API

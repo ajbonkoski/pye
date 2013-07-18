@@ -41,9 +41,24 @@ static PyObject *pye_debug(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *pye_error(PyObject *self, PyObject *args)
+{
+    const char *str;
+
+    if(!PyArg_ParseTuple(args, "s", &str))
+        return NULL;
+
+    ERROR("%s\n", str);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef PyeMethods[] = {
     {"debug", pye_debug, METH_VARARGS,
     "Print debug message using the pye debug infustructure."},
+    {"error", pye_error, METH_VARARGS,
+    "Print error message using the pye error infustructure."},
     {NULL, NULL, 0, NULL}
 };
 

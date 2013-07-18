@@ -11,5 +11,6 @@ def buf_handler(index):
     if fn != None and '.' in fn:
         ext = fn.split('.')[-1]
         debug("buf_handler: filename='{}', ext='{}'".format(fn, ext));
-        b.register_formatter(syntax_highlighter.create(ext))
+        func = syntax_highlighter.create(ext)
+        if func != None: b.register_formatter(func)
         debug("Formatter registered on buffer #{}".format(index))

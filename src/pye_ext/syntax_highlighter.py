@@ -20,6 +20,8 @@ class UndefinedSyntaxType(Exception):
 
 def create(type):
 
+    valid = True
+
     if type == 'py':
         lexer = PythonLexer()
         formatter = PyeFormatter(style=PyePythonStyle)
@@ -30,13 +32,12 @@ def create(type):
         formatter = PyeFormatter(style=PyeCStyle)
 
     else:
-        raise UndefinedSyntaxType("Cannot create a syntax highligher for '{}'".format(type))
-
+        error("Cannot create a syntax highligher for '{}'".format(type))
+        valid = False
 
     def fmt_handler(data, regions):
         #debug("regions: {}".format(regions))
         try:
-            #formatter.set_lineno(lineno)
             formatter.set_highlight_regions(regions)
             highlight(data, lexer, formatter)
             ret = formatter.get_formatted(data)
@@ -49,7 +50,7 @@ def create(type):
 
         return ret
 
-    return fmt_handler
+    return fmt_handler if valid else None
 
 def PyeConvertColors(s):
     if s.startswith("fg:"):
