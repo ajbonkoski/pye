@@ -358,9 +358,6 @@ static void internal_initialize(display_t *disp)
     noecho();
     keypad(stdscr, TRUE);
     start_color();
-    getmaxyx(this->wind, this->height, this->width);
-    clear();
-    refresh();
 
     const char *term = getenv("TERM");
     DEBUG("Initialed ncurses with TERM='%s' and %d colors and %d pairs", term, COLORS, COLOR_PAIRS);
@@ -372,13 +369,16 @@ static void internal_initialize(display_t *disp)
     // initialize the color pairs
     display_curses_init_color_pairs();
 
+    getmaxyx(this->wind, this->height, this->width);
+    clear();
+    refresh();
+
     set_crash_func((crash_func_t)endwin, NULL);
 
     // register the key handler
     register_kbrd_callback(disp,
                            (key_event_func_t)key_handler,
                            disp);
-
 }
 
 display_t *display_curses_create(void)
