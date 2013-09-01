@@ -13,3 +13,14 @@ def buf_handler(index):
         debug("buf_handler: filename='{}', ext='{}'".format(fn, ext));
         b.register_formatter(syntax_highlighter.create(ext))
         debug("Formatter registered on buffer #{}".format(index))
+
+
+class EditModeDeriveFrom(object):
+
+    def __init__(self, parent):
+        self.parent = parent
+
+    def __call__(self, f):
+        def wrapped_f(*args):
+            f(*args)
+        return wrapped_f

@@ -537,6 +537,16 @@ static void open_file(void *usr, varargs_t *va)
 
 }
 
+static char *open_file_autocomplete(const char *s, void *usr)
+{
+    uint len = strlen(s);
+    char *ret = malloc((len+2) * sizeof(char));
+    strcpy(ret, s);
+    ret[len] = 'A';
+    ret[len+1] = '\0';
+    return ret;
+}
+
 static void save_current_buffer(screen_internal_t *this)
 {
     const char *filename = this->cb->get_filename(this->cb);
@@ -615,9 +625,11 @@ static bool key_handler(void *usr, key_event_t *e)
     }
 
     else if(c == KBRD_CTRL('f')) {
-        varargs_t *va = varargs_create_v(2,
+        varargs_t *va = varargs_create_v(4,
                                          "s", "File",
-                                         "c", callable_create_c(open_file, this));
+                                         "c", callable_create_c(open_file, this),
+                                         "o", open_file_autocomplete,
+                                         "o", NULL);
 
         this->super->trigger_mode(this->super, "mb_ask", va);
         varargs_destroy(va);

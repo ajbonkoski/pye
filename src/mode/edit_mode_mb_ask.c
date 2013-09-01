@@ -14,6 +14,8 @@ typedef struct {
 
     screen_t *scrn;
     bool mode_running;
+    autocomplete_f autocomplete_func;
+    void *autocomplete_usr;
     callable_t *mb_response_func;
     char *mb_question;
     char mb_response[MB_RESPONSE_SIZE+1];
@@ -56,6 +58,8 @@ static void finish_mb_ask(edit_mode_mb_ask_t *this, bool complete)
 
     // send the data off to the original requester
     this->mode_running = false;
+    this->autocomplete_func = NULL;
+    this->autocomplete_usr = NULL;
     this->mb_response_index = 0;
     if(this->mb_question != NULL) {
         free(this->mb_question);
@@ -78,7 +82,7 @@ static void begin_mode(edit_mode_t *m, varargs_t *va)
 {
     DEBUG("inside begin_mode()\n");
     uint size = varargs_size(va);
-    ASSERT(size == 2, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
+    ASSERT(size == 2 || size == 4, "wrong number of args passed to edit_mode_mb_ask->begin_mode()");
     edit_mode_mb_ask_t *this = cast_this(m);
 
     // get the question
@@ -92,6 +96,17 @@ static void begin_mode(edit_mode_t *m, varargs_t *va)
     callable_t *ctmp = varargs_get(va, 1);
     ASSERT(ctmp != NULL, "edit_mode_mb_ask_t->begin_mode() was passed mb_response_func == NULL!");
     this->mb_response_func = callable_copy(ctmp);
+
+    // the third/forth args are an optional "autocomplete" bound-function
+    if(size == 4) {
+        void *func = varargs_get(va, 2);
+        void *usr = varargs_get(va, 3);
+        this->autocomplete_func = func;
+        this->autocomplete_usr = usr;
+    } else {
+        this->autocomplete_func = NULL;
+        this->autocomplete_usr = NULL;
+    }
 
     // enable the mode
     this->mode_running = true;
@@ -140,6 +155,22 @@ static edit_mode_result_t on_key(edit_mode_t *m, key_event_t *e)
                 }
                 break;
 
+            case KBRD_TAB:
+                if(this->autocomplete_func != NULL) {
+                    char *str = this->autocomplete_func(this->mb_response, this->autocomplete_usr);
+                    if(str != NULL) {
+                        strncpy(this->mb_response, str, MB_RESPONSE_SIZE);
+                        this->mb_response_index = strlen(str);
+                        if(this->mb_response_index > MB_RESPONSE_SIZE)
+                           this->mb_response_index = MB_RESPONSE_SIZE;
+                        this->mb_response[this->mb_response_index] = '\0';
+                        free(str);
+
+                        mb_redraw(this);
+                    }
+                }
+                break;
+
             default:
                 ERROR("Invisible key on mb_response... Ignoring...\n");
         }
@@ -169,6 +200,8 @@ static edit_mode_mb_ask_t *edit_mode_create_internal(edit_mode_t *m, screen_t *s
     this->super = m;
     this->scrn = scrn;
     this->mode_running = false;
+    this->autocomplete_func = NULL;
+    this->autocomplete_usr = NULL;
     this->mb_response_func = NULL;
     this->mb_question = NULL;
     this->mb_response_index = 0;
