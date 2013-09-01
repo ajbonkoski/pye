@@ -11,7 +11,7 @@
 
   4) User configuration settings and user/project/directory config files
 
-  5) Mult-buffer and Split-screen modes
+  5) Multi-buffer and Split-screen modes
 
   6) Bug fixes: do we need a tracker (and where?)
      DONE: - Cursor refresh glitching
@@ -23,8 +23,8 @@
      DONE:   cannot register a formatter
      DONE:    - This is related to C not handling the exceptions...
      DONE: - Backwards highlight mode doesn't work correctly
-     - Canceling search mode with Ctrl-G crahes the process
-        - Should modes have an edit_mode->cancel method for handling this?
+     DONE: - Canceling search mode with Ctrl-G crahes the process
+     DONE:     - Should modes have an edit_mode->cancel method for handling this?
 
   7) Documentation: Mostly for the pye extenstion API
 

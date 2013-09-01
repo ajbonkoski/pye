@@ -585,6 +585,7 @@ static bool key_handler(void *usr, key_event_t *e)
             varray_pop(this->mode_stack);
             update_all(this);
         }
+
         if(res.key_handled)
             return true;
     }

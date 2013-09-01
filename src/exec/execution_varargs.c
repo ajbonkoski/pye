@@ -24,7 +24,7 @@ struct PyMethodDef def = {
     "A python function object wrapping a C callback", /* ml_doc   */
 };
 
-void c_wrapped_python_callback(void *this, varargs_t *va)
+static void c_wrapped_python_callback(void *this, varargs_t *va)
 {
     PyObject *func = (PyObject *)this;
     ASSERT(PyCallable_Check(func), "func must be callable in c_wrapped_python_callback");
@@ -60,6 +60,20 @@ PyObject *convert_callable_to_py(callable_t *c)
     return NULL;
 }
 
+// s could be NULL, in which case it should become Py_None
+static PyObject *convert_string_to_py(const char *s)
+{
+    if(s == NULL) {
+        PyObject *ret = Py_None;
+        Py_INCREF(ret);
+        return ret;
+    }
+
+    else {
+        return PyString_FromString(s);
+    }
+}
+
 PyObject *execution_varargs_to_py(varargs_t *va)
 {
     ASSERT(va != NULL, "varargs must be non-null");
@@ -70,11 +84,12 @@ PyObject *execution_varargs_to_py(varargs_t *va)
 
         char datatype = varargs_get_type(va, i);
         PyObject *obj = NULL;
+        void *va_obj = varargs_get(va, i);
         switch(datatype) {
-            case 's': obj = PyString_FromString(varargs_get(va, i));    break;
-            case 'i': obj = PyInt_FromLong((long)varargs_get(va, i));   break;
-            case 'c': obj = convert_callable_to_py(varargs_get(va, i)); break;
-            case 'o': obj = (PyObject *)varargs_get(va, i);             break;
+            case 's': obj = convert_string_to_py(va_obj);   break;
+            case 'i': obj = PyInt_FromLong((long)va_obj);   break;
+            case 'c': obj = convert_callable_to_py(va_obj); break;
+            case 'o': obj = (PyObject *)va_obj;             break;
             default:
                 ERROR("Unrecognized type character: %c\n", datatype);
                 goto ret;

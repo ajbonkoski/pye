@@ -9,14 +9,18 @@ def point_cmp(x1, y1, x2, y2):
 class SearchMode:
 
     def begin_mode(self, b):
+        self.mb_ask_fail = False
         screen.trigger_mode("mb_ask", "Search", self.handle_mb_ask_result)
         return True
 
     def handle_mb_ask_result(self, data):
-        b = screen.get_active_buffer()
-        self.search_buffer_for_regions(b, data)
-        self.enable_region_highlight(True)
-        self.next_match()
+        if data is None:
+            self.mb_ask_fail = True
+        else:
+            b = screen.get_active_buffer()
+            self.search_buffer_for_regions(b, data)
+            self.enable_region_highlight(True)
+            self.next_match()
 
     def search_buffer_for_regions(self, b, data):
         self.regions = []
@@ -53,6 +57,10 @@ class SearchMode:
 
     def on_key(self, key):
         debug("SearchMode: on_key");
+
+        if self.mb_ask_fail:
+            return (True, False)
+
         try:
             if key == keyboard.CTRL('g'):
                 self.enable_region_highlight(False)
