@@ -87,7 +87,9 @@ class PyeDefaultStyle(Style):
     styles = {
         Comment:              PyeStyle("fg:red"),
         Comment.Preproc:      PyeStyle("fg:blue bold"),
-        Keyword:              PyeStyle("fg:cyan bold"),
+        Keyword:              PyeStyle("fg:cyan"),
+        Keyword.Type:         PyeStyle("fg:green"),
+        Keyword.Declaration:  PyeStyle("fg:yellow"),
         Name.Function:        PyeStyle("fg:blue bold"),
         Name.Class:           PyeStyle("fg:green"),
         Name.Builtin:         PyeStyle("fg:blue bold"),
@@ -109,6 +111,9 @@ class PyeCLexer(CLexer):
         preproc_index = 0
         preproc_text = ''
 
+        seen_name = False
+        buffered_name_token = None
+        buffered_spacing = []
         for index, token, value in CLexer.get_tokens_unprocessed(self, text):
 
             if token == Token.Comment.Preproc:
@@ -121,18 +126,44 @@ class PyeCLexer(CLexer):
                 else:
                     preproc_text += value
 
-            elif handling_preproc:
-                handling_preproc = False
-                first_space = preproc_text.find(' ')
-                yield preproc_index, Token.Comment.Preproc, preproc_text[:first_space]
-                rest = preproc_text[first_space:]
-                rest_index = preproc_index + first_space
-                sublexer = CLexer()
-                for i,t,v in sublexer.get_tokens_unprocessed(rest):
-                    yield i+first_space,t,v
-
             else:
-                yield index, token, value
+                if handling_preproc:
+                    handling_preproc = False
+                    first_space = preproc_text.find(' ')
+                    yield preproc_index, Token.Comment.Preproc, preproc_text[:first_space]
+                    rest = preproc_text[first_space:]
+                    rest_index = preproc_index + first_space
+                    sublexer = CLexer()
+                    for i,t,v in sublexer.get_tokens_unprocessed(rest):
+                        yield i+first_space,t,v
+
+                if token == Token.Name or token == Token.Keyword.Type:
+                    if not seen_name:
+                        seen_name = True
+                        buffered_name_token = (index, token, value)
+                    else:
+                        seen_name = False
+                        _index, _type, _value = buffered_name_token
+                        buffered_name_token = None
+                        yield _index, Token.Keyword.Type, _value
+                        for i in buffered_spacing:
+                            yield i
+                        buffered_spacing = []
+                        yield index, Token.Keyword.Declaration, value
+
+                else:
+                    if seen_name:
+                        if value == ' ' or value == '*':
+                            buffered_spacing.append((index,token,value))
+                            continue
+                        seen_name = False
+                        yield buffered_name_token
+                        buffered_name_token = None
+                        for i in buffered_spacing:
+                            yield i
+                        buffered_spacing = []
+
+                    yield index, token, value
 
 class ExtractColorException(Exception): pass
 def extract_color(c):
