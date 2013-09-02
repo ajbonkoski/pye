@@ -29,6 +29,8 @@
   7) Documentation: Mostly for the pye extenstion API
 
   8) Auto-complete
+     DONE: I)  For filenames
+     II) For syntax
 
   9) Extension hot-reloading
 
