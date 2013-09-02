@@ -118,5 +118,5 @@ def switch_buffer(b):
         except ValueError:
             error("Expected numerical data in switch_buffer_done... Ignoring...")
 
-    screen.trigger_mode("mb_ask", "Switch to buffer", switch_buffer_done)
+    screen.trigger_mode("mb_ask", "Switch to buffer (max {})".format(num_buffers-1), switch_buffer_done)
     return True
