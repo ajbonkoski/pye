@@ -87,13 +87,12 @@ class PyeDefaultStyle(Style):
     styles = {
         Comment:              PyeStyle("fg:red"),
         Comment.Preproc:      PyeStyle("fg:blue bold"),
-        Keyword:              PyeStyle("fg:cyan"),
-        Keyword.Type:         PyeStyle("fg:green"),
-        Keyword.Declaration:  PyeStyle("fg:yellow"),
+        Keyword:              PyeStyle("fg:cyan bold"),
         Name.Function:        PyeStyle("fg:blue bold"),
         Name.Class:           PyeStyle("fg:green"),
-        Name.Builtin:         PyeStyle("fg:blue bold"),
-        Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
+        Name.Builtin:         PyeStyle("fg:magenta"),
+        Name.Other:           PyeStyle("fg:green"),            ## Hack: VarDecl Type
+        Name.Variable:        PyeStyle("fg:yellow"),           ## Hack: VarDecl Variable name
         String:               PyeStyle("fg:green"),
         Generic.Emph:         PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
         Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
@@ -145,11 +144,11 @@ class PyeCLexer(CLexer):
                         seen_name = False
                         _index, _type, _value = buffered_name_token
                         buffered_name_token = None
-                        yield _index, Token.Keyword.Type, _value
+                        yield _index, Token.Name.Other, _value
                         for i in buffered_spacing:
                             yield i
                         buffered_spacing = []
-                        yield index, Token.Keyword.Declaration, value
+                        yield index, Token.Name.Variable, value
 
                 else:
                     if seen_name:
@@ -274,6 +273,8 @@ class PyeFormatter(Formatter):
             newtokens = self.highlighting_token_chop(index, ttype, value)
             debug("newtokens: {}".format(newtokens))
             for n_ttype, n_value in newtokens:
+                ## make sure the lexer didn't add a trailing newline -- ARGH pygments!
+                if len(n_value) != 0 and n_value[-1] == '\n': n_value = n_value[:-1]
                 token_style_id = self.token_map[n_ttype]
                 if token_style_id != -1:
                     self.regions.append({'start_index': index,
