@@ -12,7 +12,6 @@ from pygments.lexers import JavaLexer
 from pygments.lexers import TextLexer
 from pygments.formatters import TerminalFormatter
 from pygments.formatter import Formatter
-from pygments.formatters import TerminalFormatter
 from pygments.style import Style
 from pygments.token import *
 
@@ -23,20 +22,22 @@ class UndefinedSyntaxType(Exception):
 def create(type):
 
     valid = True
+    postproc = None
 
     if type == 'py':
         lexer = PythonLexer()
-        formatter = PyeFormatter(style=PyePythonStyle)
+        formatter = PyeFormatter(style=PyeDefaultStyle)
 
     elif type == 'c' or type == 'h':
         #lexer = CLexer()
-        lexer = CppLexer()
-        formatter = PyeFormatter(style=PyeCStyle)
+        lexer = PyeCLexer()
+        #postproc = CPostProc
+        formatter = PyeFormatter(style=PyeDefaultStyle)
 
     elif type == 'java':
         #lexer = CLexer()
         lexer = JavaLexer()
-        formatter = PyeFormatter(style=PyeJavaStyle)
+        formatter = PyeFormatter(style=PyeDefaultStyle)
 
     else:
         debug("Cannot create a syntax highligher for '{}'... using TextLexer".format(type))
@@ -82,9 +83,10 @@ def PyeStyle(s):
     #debug("style: '{}'".format(cs))
     return cs
 
-class PyePythonStyle(Style):
+class PyeDefaultStyle(Style):
     styles = {
         Comment:              PyeStyle("fg:red"),
+        Comment.Preproc:      PyeStyle("fg:blue bold"),
         Keyword:              PyeStyle("fg:cyan bold"),
         Name.Function:        PyeStyle("fg:blue bold"),
         Name.Class:           PyeStyle("fg:green"),
@@ -101,28 +103,36 @@ class PyeTextStyle(Style):
         Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
         }
 
-class PyeCStyle(Style):
-    styles = {
-        Comment:         "#000004 bold",
-        Keyword:         PyeStyle("fg:cyan bold"),
-        #Name:            "#000004 bold",
-        String:          PyeStyle("fg:green"),
-        Generic.Emph:    PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
-        Generic.Strong:  PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
-        }
+class PyeCLexer(CLexer):
+    def get_tokens_unprocessed(self, text):
+        handling_preproc = False
+        preproc_index = 0
+        preproc_text = ''
 
-class PyeJavaStyle(Style):
-    styles = {
-        Comment:              PyeStyle("fg:red"),
-        Keyword:              PyeStyle("fg:cyan bold"),
-        Name.Function:        PyeStyle("fg:blue bold"),
-        Name.Class:           PyeStyle("fg:green"),
-        Name.Builtin:         PyeStyle("fg:blue bold"),
-        Name.Builtin.Pseudo:  PyeStyle("fg:cyan bold"),
-        String:               PyeStyle("fg:green"),
-        Generic.Emph:         PyeStyle("fg:white bg:blue"),    ## this is used for highlighting features (really just a hack...)
-        Generic.Strong:       PyeStyle("fg:white bg:magenta")  ## this is used for highlighting features (really just a hack...)
-        }
+        for index, token, value in CLexer.get_tokens_unprocessed(self, text):
+
+            if token == Token.Comment.Preproc:
+                if value == '#':
+                    handling_preproc = True
+                    preproc_index = index+1
+                    preproc_text = ''
+                    yield index, token, value
+
+                else:
+                    preproc_text += value
+
+            elif handling_preproc:
+                handling_preproc = False
+                first_space = preproc_text.find(' ')
+                yield preproc_index, Token.Comment.Preproc, preproc_text[:first_space]
+                rest = preproc_text[first_space:]
+                rest_index = preproc_index + first_space
+                sublexer = CLexer()
+                for i,t,v in sublexer.get_tokens_unprocessed(rest):
+                    yield i+first_space,t,v
+
+            else:
+                yield index, token, value
 
 class ExtractColorException(Exception): pass
 def extract_color(c):
@@ -231,10 +241,9 @@ class PyeFormatter(Formatter):
         self.regions = []
         for ttype, value in tokensource:
             newtokens = self.highlighting_token_chop(index, ttype, value)
-            #debug("newtokens: {}".format(newtokens))
+            debug("newtokens: {}".format(newtokens))
             for n_ttype, n_value in newtokens:
                 token_style_id = self.token_map[n_ttype]
-
                 if token_style_id != -1:
                     self.regions.append({'start_index': index,
                                          'length': len(n_value),
