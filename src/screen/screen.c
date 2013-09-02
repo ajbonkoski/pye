@@ -258,7 +258,13 @@ static void update_sb(screen_internal_t *this)
     const char *is_edited_marker = this->cb->get_is_edited(this->cb) ? "*" : "";
     line_formatter_add_str(lf, is_edited_marker, 1, ' ');
     const char *cb_name = this->cb->get_filename(this->cb);
-    line_formatter_add_str(lf, cb_name, 70, ' ');
+    line_formatter_add_str(lf, cb_name, 35, ' ');
+    uint buf_x, buf_y;
+    this->cb->get_cursor(this->cb, &buf_x, &buf_y);
+    char position[50];
+    snprintf(position, 50, "Line %d", buf_y+1);
+    line_formatter_add_str(lf, position, 10, ' ');
+
     this->display->write(this->display, line_formatter_cstr(lf), w, 0);
     line_formatter_destroy(lf);
 
