@@ -24,6 +24,12 @@ def start_search_mode(b):
     screen.trigger_mode("search", b)
     return True
 
+def print_buffer_list(b):
+    for i,b in enumerate(screen.list_buffers()):
+        debug("Buffer id #{}: {}".format(i, b.get_filename()))
+    return True
+
+
 bindings = {
     ord('\t'):            lambda b: b.insert(GS.get_tab()),
     keyboard.CTRL_SPACE:  CF.set_mark,
@@ -38,8 +44,9 @@ bindings = {
     keyboard.CTRL('y'):   CF.yank,
     keyboard.CTRL('w'):   CF.copy_region,
     keyboard.CTRL('q'):   CF.kill_region,
-
     keyboard.CTRL('s'):   start_search_mode,
+    keyboard.CTRL('l'):   print_buffer_list,
+    keyboard.CTRL('g'):   CF.switch_buffer,
 }
 
 def handle_buffer_key(b, key):

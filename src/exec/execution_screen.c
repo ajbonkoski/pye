@@ -100,6 +100,22 @@ static PyObject *Screen_register_buf_callback(pye_Screen *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *Screen_list_buffers(pye_Screen *self)
+{
+    varray_t *va_buffers = self->screen->list_buffers(self->screen);
+    PyObject *ret = PyList_New(varray_size(va_buffers));
+
+    int i = 0;
+    buffer_t *buf;
+    varray_iter(buf, va_buffers) {
+        PyObject *py_buf = execution_buffer_create(buf);
+        PyList_SET_ITEM(ret, i, py_buf);
+        i++;
+    }
+
+    return ret;
+}
+
 static PyObject *Screen_get_buffer(pye_Screen *self, PyObject *args)
 {
     uint i;
@@ -109,6 +125,18 @@ static PyObject *Screen_get_buffer(pye_Screen *self, PyObject *args)
     buffer_t *b = self->screen->get_buffer(self->screen, i);
     PyObject *pBuffer = execution_buffer_create(b);
     return pBuffer;
+}
+
+static PyObject *Screen_set_active_buffer(pye_Screen *self, PyObject *args)
+{
+    uint i;
+    if(!PyArg_ParseTuple(args, "i", &i))
+        return NULL;
+
+    self->screen->set_active_buffer(self->screen, i);
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static PyObject *Screen_get_active_buffer(pye_Screen *self)
@@ -297,8 +325,12 @@ static PyMethodDef Screen_methods[] = {
      "Register a key event handler for the screen object."},
     {"on_buffer_added", (PyCFunction)Screen_register_buf_callback, METH_VARARGS,
      "Register a buffer added event handler for the screen object."},
+    {"list_buffers", (PyCFunction)Screen_list_buffers, METH_NOARGS,
+     "Return a list of all buffer objects."},
     {"get_buffer", (PyCFunction)Screen_get_buffer, METH_VARARGS,
      "Get a buffer by its integer id number."},
+    {"set_active_buffer", (PyCFunction)Screen_set_active_buffer, METH_VARARGS,
+     "Set a the Screen's active Buffer by its integer id number."},
     {"get_active_buffer", (PyCFunction)Screen_get_active_buffer, METH_NOARGS,
      "Get the Screen's active Buffer."},
     {"refresh", (PyCFunction)Screen_refresh, METH_NOARGS,

@@ -100,3 +100,23 @@ def kill_region(b):
 ## basically: API-level aliases
 def goto_line_start(b): b.goto_line_start()
 def goto_line_end(b): b.goto_line_end()
+
+def switch_buffer(b):
+    num_buffers = len(screen.list_buffers())
+
+    def switch_buffer_done(data):
+        if data is None: return
+        try:
+            i = int(data)
+            if i >= num_buffers:
+                error("Received an out of range buffer id... Ignoring...")
+                return
+
+            ## all is good, change the buffer
+            screen.set_active_buffer(i)
+
+        except ValueError:
+            error("Expected numerical data in switch_buffer_done... Ignoring...")
+
+    screen.trigger_mode("mb_ask", "Switch to buffer", switch_buffer_done)
+    return True
