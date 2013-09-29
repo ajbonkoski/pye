@@ -3,7 +3,8 @@
  ==============================================================================
 
   1) Support for Search (and replace)
-     - Hopefully with regex from the beginning
+     DONE: - basic
+     - regex support
 
   DONE: 2) Region selection highlighting
 
@@ -35,3 +36,9 @@
   9) Extension hot-reloading
 
   10) Python exception handling on the C side
+
+  11) A.D.D. (Annoyance Driven Development)
+     - Ctrl-Z support
+     - Tabs render wrong
+     - Moar syntax highlighting support
+     - Split-screen
