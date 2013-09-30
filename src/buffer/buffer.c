@@ -157,47 +157,105 @@ static void clear_mark(buffer_t *b)
 }
 
 
-static void move_cursor_delta(buffer_internal_t *this, int dx, int dy)
+static void move_cursor_left(buffer_internal_t *this)
 {
     buffer_t *b = this->super;
+    uint x, y; get_cursor_visual(b, &x, &y);
 
-    uint x, y;
-    data_buffer_t *d = this->databuf;
-    get_cursor_visual(b, &x, &y);
+    enum cursor_rounding cr = CR_DOWN;
+    int newx = (int)x - 1;
+    int newy = (int)y;
 
-    enum cursor_rounding cr = (dx >= 0) ? CR_UP : CR_DOWN;
-    int newx = (int)x + (int)dx;
-    int newy = (int)y + (int)dy;
-    uint nlines = d->num_lines(d);
-    if(newy < 0 || newy >= nlines)
-        return;
-
-    uint linelen = line_len_visual(this, newy);
-
+    // have we underflowed the line?
     if(newx < 0) {
-        if(newy <= 0) {
-            newx = 0;
-            newy = 0;
-        } else {
-            newy -= 1;
-                linelen = line_len_visual(this, newy);
-                newx = linelen;
+        // are we already on the first line
+        if(newy == 0) {
+            newx = 0; // refuse to move left
         }
-    }
 
-    if(newx > linelen) {
-        if(newy + 1 < nlines) {
-            newx = 0;
-            newy += 1;
-        } else {
-            newx = linelen;
-            newy = nlines-1;
+        // go up a line
+        else {
+            newy -= 1;
+            newx = line_len_visual(this, newy);
         }
     }
 
     set_cursor_visual_cr(b, newx, newy, cr);
+}
 
-    return;
+static void move_cursor_right(buffer_internal_t *this)
+{
+    buffer_t *b = this->super;
+    uint x, y; get_cursor_visual(b, &x, &y);
+
+    enum cursor_rounding cr = CR_UP;
+    int newx = (int)x + 1;
+    int newy = (int)y;
+
+    data_buffer_t *d = this->databuf;
+    uint nlines = d->num_lines(d);
+    uint linelen = line_len_visual(this, newy);
+
+    // have we underflowed the line?
+    if(newx > linelen) {
+        // are we already on the last line
+        if(newy+1 == nlines) {
+            newx = linelen; // refuse to move right
+        }
+
+        // go down a line
+        else {
+            newy += 1;
+            newx = 0;
+        }
+    }
+
+    set_cursor_visual_cr(b, newx, newy, cr);
+}
+
+static void move_cursor_up(buffer_internal_t *this)
+{
+    buffer_t *b = this->super;
+    uint x, y; get_cursor_visual(b, &x, &y);
+
+    int newx = (int)x;
+    int newy = (int)y - 1;
+
+    // have we attempted to move to a up to far
+    if(newy < 0) {
+        newy = 0;
+    }
+
+    uint linelen = line_len_visual(this, newy);
+    if(newx > linelen) {
+        newx = linelen;
+    }
+
+    set_cursor_visual(b, newx, newy);
+}
+
+static void move_cursor_down(buffer_internal_t *this)
+{
+    buffer_t *b = this->super;
+    uint x, y; get_cursor_visual(b, &x, &y);
+
+    int newx = (int)x;
+    int newy = (int)y + 1;
+
+    data_buffer_t *d = this->databuf;
+    uint nlines = d->num_lines(d);
+
+    // have we attempted to move to a up to far
+    if(newy >= nlines) {
+        newy = nlines-1;
+    }
+
+    uint linelen = line_len_visual(this, newy);
+    if(newx > linelen) {
+        newx = linelen;
+    }
+
+    set_cursor_visual(b, newx, newy);
 }
 
 static void goto_line_start(buffer_t *b)
@@ -292,7 +350,7 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
         DEBUG("line: '%s' has %d tabs\n", raw, numtabs);
 
         uint newraw_len = raw_len + numtabs*(TABSIZE-1);
-        char *newraw = malloc(newraw_len * sizeof(char));
+        char *newraw = malloc((newraw_len+1) * sizeof(char));
         char *newraw_ptr = newraw;
         for(char *raw_ptr=raw; *raw_ptr; raw_ptr++) {
             if(*raw_ptr == '\t') {
@@ -382,10 +440,10 @@ static void input_key_internal(buffer_internal_t *this, u32 c)
 
     // handle special chars
     switch(c) {
-        case KBRD_ARROW_LEFT:  move_cursor_delta(this, -1,  0); break;
-        case KBRD_ARROW_RIGHT: move_cursor_delta(this,  1,  0); break;
-        case KBRD_ARROW_UP:    move_cursor_delta(this,  0, -1); break;
-        case KBRD_ARROW_DOWN:  move_cursor_delta(this,  0,  1); break;
+        case KBRD_ARROW_LEFT:  move_cursor_left(this);  break;
+        case KBRD_ARROW_RIGHT: move_cursor_right(this); break;
+        case KBRD_ARROW_UP:    move_cursor_up(this);    break;
+        case KBRD_ARROW_DOWN:  move_cursor_down(this);  break;
         default:  // hande "normal" keys
             d->insert(d, c);
     }
