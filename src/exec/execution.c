@@ -9,8 +9,8 @@
 
 #define CONFIG_MODULE "config"
 
-#undef ENABLE_DEBUG
-#define ENABLE_DEBUG 1
+//#undef ENABLE_DEBUG
+//#define ENABLE_DEBUG 1
 
 struct execution
 {

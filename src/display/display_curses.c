@@ -56,9 +56,9 @@ static bool key_handler(void *usr, key_event_t *e)
         case KBRD_CTRL('c'):
             this->main_quit(this);
             return true;
-        /* case KBRD_CTRL('z'): */
-        /*     raise(SIGSTOP); */
-        /*     return true; */
+        case KBRD_CTRL('z'):
+            raise(SIGTSTP);
+            return true;
     }
 
     return false;
