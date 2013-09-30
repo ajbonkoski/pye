@@ -51,6 +51,11 @@ FILE *common_get_debug_file(void)
         }
 
         debug_file = fopen(path, "w");
+        if(debug_file == NULL) {
+            fprintf(stderr, "Fatal Error: failed to open debug_file: '%s'\n", path);
+            exit(1);
+        }
+
         setbuf(debug_file, NULL); // disable buffering
 
         // cleanup
