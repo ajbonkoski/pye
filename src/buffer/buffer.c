@@ -4,8 +4,10 @@
 
 #define IMPL_TYPE 0x689a9794
 
-//#undef ENABLE_DEBUG
-//#define ENABLE_DEBUG 1
+#undef ENABLE_DEBUG
+#define ENABLE_DEBUG 1
+
+#define TABSIZE 4
 
 typedef struct
 {
@@ -52,13 +54,17 @@ static inline buffer_internal_t *cast_this(buffer_t *s)
 
 static inline bool is_visible(u32 c){ return c >= 0x20 && c <= 0x7e; }
 
+enum cursor_rounding { CR_UP, CR_DOWN };
+
 // forward declarations
 static bool get_mark(buffer_t *b, uint *x, uint *y);
 static void set_mark(buffer_t *b, uint x, uint y);
 static void clear_mark(buffer_t *b);
 static void goto_line_start(buffer_t *this);
 static void goto_line_end(buffer_t *this);
-static void get_cursor(buffer_t *this, uint *x, uint *y);
+static void get_cursor_visual(buffer_t *b, uint *x, uint *y);
+static inline void set_cursor_visual_cr(buffer_t *b, uint x, uint y, enum cursor_rounding cr);
+static void set_cursor_visual(buffer_t *b, uint x, uint y);
 static bool get_is_edited(buffer_t *b);
 static void set_is_edited(buffer_t *b, bool e);
 static char *get_line_data(buffer_t *this, uint i);
@@ -69,6 +75,63 @@ static void enable_highlight(buffer_t *b, uint startx, uint starty,
                              uint endx, uint endy, uint style);
 static void clear_highlight(buffer_t *b);
 static void destroy(buffer_t *b);
+
+// the length pf the line after expanding tabs
+static inline uint line_len_visual(buffer_internal_t *this, uint i)
+{
+    data_buffer_t *d = this->databuf;
+    uint rawlen = d->line_len(d, i);
+
+    uint tabcount = 0;
+    char *linedata = get_line_data(this->super, i);
+    for(char *linedata_ptr=linedata; *linedata_ptr; linedata_ptr++) {
+        if(*linedata_ptr == '\t')
+            tabcount++;
+    }
+    free(linedata);
+
+    return rawlen + tabcount*(TABSIZE-1);
+}
+
+static inline void cursor_convert_visual_to_raw(buffer_internal_t *this, uint *x, uint *y, enum cursor_rounding cr)
+{
+    uint tabcount = 0;
+    int i = 0;
+    char *linedata = get_line_data(this->super, *y);
+    for(char *linedata_ptr=linedata; *linedata_ptr && *x > i; linedata_ptr++) {
+        if(*linedata_ptr == '\t') {
+            tabcount++;
+            i += (TABSIZE-1);
+        }
+        i++;
+    }
+    free(linedata);
+
+    if(cr == CR_UP) {
+        *x = i - tabcount*(TABSIZE-1);
+    } else if(cr == CR_DOWN) {
+        while(*x < i)
+            i -= TABSIZE;
+        *x = i - tabcount*(TABSIZE-1);
+    } else {
+        ASSERT_FAIL("Unrecognized value for enum cursor_rounding");
+    }
+}
+
+static inline void cursor_convert_raw_to_visual(buffer_internal_t *this,  uint *x, uint *y)
+{
+    uint tabcount = 0;
+    int i = 0;
+    char *linedata = get_line_data(this->super, *y);
+    for(char *linedata_ptr=linedata; *linedata_ptr && *x > i; linedata_ptr++, i++) {
+        if(*linedata_ptr == '\t')
+            tabcount++;
+    }
+    free(linedata);
+
+    *x += tabcount*(TABSIZE-1);
+}
+
 
 
 static bool get_mark(buffer_t *b, uint *x, uint *y)
@@ -94,19 +157,22 @@ static void clear_mark(buffer_t *b)
 }
 
 
-static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
+static void move_cursor_delta(buffer_internal_t *this, int dx, int dy)
 {
+    buffer_t *b = this->super;
+
     uint x, y;
     data_buffer_t *d = this->databuf;
-    d->get_cursor(d, &x, &y);
+    get_cursor_visual(b, &x, &y);
 
+    enum cursor_rounding cr = (dx >= 0) ? CR_UP : CR_DOWN;
     int newx = (int)x + (int)dx;
     int newy = (int)y + (int)dy;
     uint nlines = d->num_lines(d);
     if(newy < 0 || newy >= nlines)
         return;
 
-    uint linelen = d->line_len(d, newy);
+    uint linelen = line_len_visual(this, newy);
 
     if(newx < 0) {
         if(newy <= 0) {
@@ -114,7 +180,7 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
             newy = 0;
         } else {
             newy -= 1;
-                linelen = d->line_len(d, newy);
+                linelen = line_len_visual(this, newy);
                 newx = linelen;
         }
     }
@@ -129,30 +195,24 @@ static void move_cursor_delta(buffer_internal_t *this, uint dx, uint dy)
         }
     }
 
-    d->set_cursor(d, newx, newy);
+    set_cursor_visual_cr(b, newx, newy, cr);
 
     return;
 }
 
 static void goto_line_start(buffer_t *b)
 {
-    buffer_internal_t *this = cast_this(b);
-
     uint x, y;
-    data_buffer_t *d = this->databuf;
-    d->get_cursor(d, &x, &y);
-    d->set_cursor(d, 0, y);
+    get_cursor_visual(b, &x, &y);
+    set_cursor_visual(b, 0, y);
 }
 
 static void goto_line_end(buffer_t *b)
 {
-    buffer_internal_t *this = cast_this(b);
-
     uint x, y;
-    data_buffer_t *d = this->databuf;
-    d->get_cursor(d, &x, &y);
-    uint ll = d->line_len(d, y);
-    d->set_cursor(d, ll, y);
+    get_cursor_visual(b, &x, &y);
+    uint ll = line_len_visual(cast_this(b), y);
+    set_cursor_visual(b, ll, y);
 }
 
 static void set_filename(buffer_t *b, const char *filename)
@@ -169,18 +229,25 @@ static const char *get_filename(buffer_t *b)
     return this->filename;
 }
 
-static void get_cursor(buffer_t *b, uint *x, uint *y)
+static void get_cursor_visual(buffer_t *b, uint *x, uint *y)
 {
     buffer_internal_t *this = cast_this(b);
     data_buffer_t *d = this->databuf;
     d->get_cursor(d, x, y);
+    cursor_convert_raw_to_visual(this, x, y);
 }
 
-static void set_cursor(buffer_t *b, uint x, uint y)
+static inline void set_cursor_visual_cr(buffer_t *b, uint x, uint y, enum cursor_rounding cr)
 {
     buffer_internal_t *this = cast_this(b);
     data_buffer_t *d = this->databuf;
+    cursor_convert_visual_to_raw(this, &x, &y, cr);
     d->set_cursor(d, x, y);
+}
+
+static void set_cursor_visual(buffer_t *b, uint x, uint y)
+{
+    set_cursor_visual_cr(b, x, y, CR_UP);
 }
 
 static bool get_is_edited(buffer_t *b)
@@ -212,6 +279,36 @@ static buffer_line_t *get_line_data_fmt(buffer_t *b, uint i)
     char *raw = d->get_line_data(d, i, NULL);
     uint raw_len = strlen(raw);
     buffer_line_t *bl = NULL;
+
+
+    // convert raw tabs into spaces
+    {
+        int numtabs = 0;
+        for(char *raw_ptr = raw; *raw_ptr; raw_ptr++) {
+            if(*raw_ptr == '\t')
+                numtabs++;
+        }
+
+        DEBUG("line: '%s' has %d tabs\n", raw, numtabs);
+
+        uint newraw_len = raw_len + numtabs*(TABSIZE-1);
+        char *newraw = malloc(newraw_len * sizeof(char));
+        char *newraw_ptr = newraw;
+        for(char *raw_ptr=raw; *raw_ptr; raw_ptr++) {
+            if(*raw_ptr == '\t') {
+                for(int i = 0; i < TABSIZE; i++)
+                    *newraw_ptr++ = ' ';
+            } else {
+                *newraw_ptr++ = *raw_ptr;
+            }
+        }
+        *newraw_ptr = '\0';
+
+        free(raw);
+        raw = newraw;
+        raw_len = newraw_len;
+    }
+
 
     if(this->formatter_callback != NULL) {
         buffer_line_t *pre_bl = calloc(1, sizeof(buffer_line_t));
@@ -478,8 +575,8 @@ buffer_t *buffer_create(void)
 
     b->set_filename = set_filename;
     b->get_filename = get_filename;
-    b->get_cursor = get_cursor;
-    b->set_cursor = set_cursor;
+    b->get_cursor = get_cursor_visual;
+    b->set_cursor = set_cursor_visual;
     b->get_is_edited = get_is_edited;
     b->set_is_edited = set_is_edited;
     b->goto_line_start = goto_line_start;

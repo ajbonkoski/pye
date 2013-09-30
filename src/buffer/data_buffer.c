@@ -148,7 +148,7 @@ static void insert(data_buffer_t *db, int c)
     db->set_is_edited(db, true);
 
     // "normal" case
-    if(is_visible(c)) {
+    if(is_visible(c) || c == '\t') {
         char ch = (char)c;
         gap_buffer_t *line = get_line_gb(this, this->cursor_y);
         gap_buffer_insert(line, this->cursor_x, &ch);
