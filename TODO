@@ -42,3 +42,4 @@
      DONE: - Tabs render wrong
      - Moar syntax highlighting support
      - Split-screen
+     - Line numbers impl. as an extention
