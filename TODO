@@ -39,6 +39,6 @@
 
   11) A.D.D. (Annoyance Driven Development)
      DONE: - Ctrl-Z support
-     - Tabs render wrong
+     DONE: - Tabs render wrong
      - Moar syntax highlighting support
      - Split-screen
